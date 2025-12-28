@@ -57,9 +57,16 @@ class ScatterChartRenderer(ChartTypeRenderer):
         if y_min == y_max:
             y_max = y_min + 1
 
-        # Calculate plot area (use slightly wider Y-axis label area)
+        # Calculate Y-axis label width dynamically
+        y_label_width = max(
+            len(f"{y_max:.1f}"),
+            len(f"{y_min:.1f}"),
+            len(f"{(y_max + y_min) / 2:.1f}")
+        )
+
+        # Calculate plot area
         plot_height = ctx.height - len(lines) - 3
-        plot_width = ctx.width - 10
+        plot_width = ctx.width - y_label_width - 1
 
         if plot_height < 3 or plot_width < 10:
             return self.render_too_small(ctx)
@@ -78,15 +85,15 @@ class ScatterChartRenderer(ChartTypeRenderer):
         # Build output with Y-axis labels
         for i, row in enumerate(plot):
             if i == 0:
-                label = f"{y_max:7.1f}"
+                label = f"{y_max:.1f}".rjust(y_label_width)
             elif i == plot_height - 1:
-                label = f"{y_min:7.1f}"
+                label = f"{y_min:.1f}".rjust(y_label_width)
             else:
-                label = "       "
+                label = " " * y_label_width
             lines.append(f"{label}{BOX_VERTICAL}{''.join(row)}")
 
         # X-axis
-        lines.append("       " + BOX_CORNER_BL + BOX_HORIZONTAL * plot_width)
+        lines.append(" " * y_label_width + BOX_CORNER_BL + BOX_HORIZONTAL * plot_width)
 
         return lines
 

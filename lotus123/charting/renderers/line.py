@@ -37,6 +37,16 @@ class LineChartRenderer(ChartTypeRenderer):
         if not ctx.all_values:
             return self.render_no_data(ctx)
 
+        # Calculate Y-axis label width dynamically
+        y_label_width = max(
+            len(f"{ctx.max_val:.1f}"),
+            len(f"{ctx.min_val:.1f}"),
+            len(f"{(ctx.max_val + ctx.min_val) / 2:.1f}")
+        )
+
+        # Recalculate plot width with dynamic Y-axis
+        ctx.plot_width = ctx.width - y_label_width - 1
+
         if ctx.plot_height < 3 or ctx.plot_width < 10:
             return self.render_too_small(ctx)
 
@@ -53,10 +63,10 @@ class LineChartRenderer(ChartTypeRenderer):
             self._plot_series(plot, values, symbol, ctx)
 
         # Build output with Y-axis labels
-        lines.extend(self._build_plot_output(plot, ctx))
+        lines.extend(self._build_plot_output(plot, ctx, y_label_width))
 
         # X-axis
-        lines.append("      " + BOX_CORNER_BL + BOX_HORIZONTAL * ctx.plot_width)
+        lines.append(" " * y_label_width + BOX_CORNER_BL + BOX_HORIZONTAL * ctx.plot_width)
 
         # Legend
         if ctx.chart.options.show_legend and ctx.chart.series:
@@ -98,13 +108,15 @@ class LineChartRenderer(ChartTypeRenderer):
     def _build_plot_output(
         self,
         plot: list[list[str]],
-        ctx: RenderContext
+        ctx: RenderContext,
+        y_label_width: int
     ) -> list[str]:
         """Build output lines with Y-axis labels.
 
         Args:
             plot: 2D plot grid
             ctx: Render context
+            y_label_width: Width for Y-axis labels
 
         Returns:
             List of formatted output lines
@@ -113,14 +125,14 @@ class LineChartRenderer(ChartTypeRenderer):
         for i, row in enumerate(plot):
             # Y-axis label at top, middle, bottom
             if i == 0:
-                label = f"{ctx.max_val:6.1f}"
+                label = f"{ctx.max_val:.1f}".rjust(y_label_width)
             elif i == ctx.plot_height - 1:
-                label = f"{ctx.min_val:6.1f}"
+                label = f"{ctx.min_val:.1f}".rjust(y_label_width)
             elif i == ctx.plot_height // 2:
                 mid = (ctx.max_val + ctx.min_val) / 2
-                label = f"{mid:6.1f}"
+                label = f"{mid:.1f}".rjust(y_label_width)
             else:
-                label = "      "
+                label = " " * y_label_width
 
             lines.append(f"{label}{BOX_VERTICAL}{''.join(row)}")
 

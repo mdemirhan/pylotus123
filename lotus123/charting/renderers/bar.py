@@ -43,9 +43,17 @@ class BarChartRenderer(ChartTypeRenderer):
         if ctx.max_val == ctx.min_val:
             ctx.max_val = ctx.min_val + 1
 
+        # Calculate Y-axis label width dynamically
+        y_label_width = max(
+            len(f"{ctx.max_val:.1f}"),
+            len(f"{ctx.min_val:.1f}"),
+            len(f"{(ctx.max_val + ctx.min_val) / 2:.1f}")
+        )
+        y_axis_width = y_label_width + 1  # +1 for vertical line
+
         # Calculate bar dimensions
         num_bars = len(ctx.all_values)
-        available_width = ctx.width - 8  # Reserve for Y-axis labels
+        available_width = ctx.width - y_axis_width - 2  # Reserve for Y-axis labels + padding
 
         # Each bar needs bar_width + 2 (for spacing between bars)
         bar_width = max(3, (available_width - num_bars * 2) // max(1, num_bars))
@@ -58,12 +66,12 @@ class BarChartRenderer(ChartTypeRenderer):
 
         # Build plot rows
         for row in range(ctx.plot_height):
-            line = self._build_row(row, bar_heights, bar_width, ctx)
+            line = self._build_row(row, bar_heights, bar_width, ctx, y_label_width)
             lines.append(line)
 
         # X-axis
         axis_width = num_bars * (bar_width + 2)
-        lines.append("      " + BOX_CORNER_BL + BOX_HORIZONTAL * axis_width)
+        lines.append(" " * y_label_width + BOX_CORNER_BL + BOX_HORIZONTAL * axis_width)
 
         return lines
 
@@ -92,7 +100,8 @@ class BarChartRenderer(ChartTypeRenderer):
         row: int,
         bar_heights: list[int],
         bar_width: int,
-        ctx: RenderContext
+        ctx: RenderContext,
+        y_label_width: int
     ) -> str:
         """Build a single row of the bar chart.
 
@@ -101,20 +110,21 @@ class BarChartRenderer(ChartTypeRenderer):
             bar_heights: Heights of each bar
             bar_width: Width of each bar
             ctx: Render context
+            y_label_width: Width for Y-axis labels
 
         Returns:
             Formatted row string
         """
         # Y-axis label
         if row == 0:
-            y_label = f"{ctx.max_val:6.1f}"
+            y_label = f"{ctx.max_val:.1f}".rjust(y_label_width)
         elif row == ctx.plot_height - 1:
-            y_label = f"{ctx.min_val:6.1f}"
+            y_label = f"{ctx.min_val:.1f}".rjust(y_label_width)
         elif row == ctx.plot_height // 2:
             mid_val = (ctx.max_val + ctx.min_val) / 2
-            y_label = f"{mid_val:6.1f}"
+            y_label = f"{mid_val:.1f}".rjust(y_label_width)
         else:
-            y_label = "      "
+            y_label = " " * y_label_width
 
         line = y_label + BOX_VERTICAL
 
