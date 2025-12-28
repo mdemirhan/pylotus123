@@ -15,7 +15,8 @@ from rich.text import Text
 from rich.style import Style
 
 from .themes import Theme
-from ..spreadsheet import Spreadsheet, index_to_col, parse_cell_ref
+from ..core.spreadsheet import Spreadsheet
+from ..core.reference import index_to_col, parse_cell_ref
 
 if TYPE_CHECKING:
     pass

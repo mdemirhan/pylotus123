@@ -1,7 +1,7 @@
 """Comprehensive tests for all formula functions."""
 import pytest
 import math
-from lotus123.spreadsheet import Spreadsheet
+from lotus123 import Spreadsheet
 
 
 class TestMathFunctions:

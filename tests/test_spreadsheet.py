@@ -2,7 +2,7 @@
 import pytest
 import tempfile
 import os
-from lotus123.spreadsheet import (
+from lotus123 import (
     Spreadsheet, Cell, col_to_index, index_to_col, parse_cell_ref, make_cell_ref
 )
 
@@ -65,15 +65,14 @@ class TestCell:
     def test_formula_cell_plus(self):
         cell = Cell(raw_value="+A1+B1")
         assert cell.is_formula
-        assert cell.formula == "A1+B1"
+        assert cell.formula == "+A1+B1"  # + prefix is kept for formula evaluation
 
     def test_to_dict_from_dict(self):
-        cell = Cell(raw_value="=SUM(A1:A10)", format_str="0.00", width=15)
+        cell = Cell(raw_value="=SUM(A1:A10)", format_code="F2")
         d = cell.to_dict()
         restored = Cell.from_dict(d)
         assert restored.raw_value == cell.raw_value
-        assert restored.format_str == cell.format_str
-        assert restored.width == cell.width
+        assert restored.format_code == cell.format_code
 
 
 class TestSpreadsheet:

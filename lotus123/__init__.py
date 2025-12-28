@@ -12,8 +12,7 @@ This package provides:
 - Lotus-style menu system
 """
 
-# For backwards compatibility, import from both old and new locations
-# Core data model (new modular structure)
+# Core data model
 from .core import (
     Cell,
     CellType,
@@ -31,7 +30,7 @@ from .core import (
 )
 from .core.spreadsheet import Spreadsheet
 
-# Formula engine (new modular structure)
+# Formula engine
 from .formula import (
     FormulaParser,
     FormulaEvaluator,
@@ -92,7 +91,7 @@ from .ui import (
     TitleFreezeType,
 )
 
-# App (still uses old app.py, will be updated separately)
+# App
 from .app import LotusApp
 
 __version__ = "1.0.0"

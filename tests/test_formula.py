@@ -1,7 +1,7 @@
 """Tests for formula parser and evaluator."""
 import pytest
 import math
-from lotus123.spreadsheet import Spreadsheet
+from lotus123 import Spreadsheet
 from lotus123.formula import FormulaParser
 
 

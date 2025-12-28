@@ -23,9 +23,9 @@ MAX_ROWS = 65536  # 65,536 rows (early versions had 8,192)
 MAX_COLS = 256    # 256 columns (A through IV)
 
 # Default column width
-DEFAULT_COL_WIDTH = 9
-MIN_COL_WIDTH = 1
-MAX_COL_WIDTH = 72
+DEFAULT_COL_WIDTH = 10
+MIN_COL_WIDTH = 3
+MAX_COL_WIDTH = 50
 
 # Default row height
 DEFAULT_ROW_HEIGHT = 1

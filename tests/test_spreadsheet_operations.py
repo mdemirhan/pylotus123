@@ -3,8 +3,8 @@ import pytest
 import json
 import tempfile
 import os
-from lotus123.spreadsheet import Spreadsheet, Cell
-from lotus123.spreadsheet import col_to_index, index_to_col, parse_cell_ref, make_cell_ref
+from lotus123 import Spreadsheet, Cell
+from lotus123 import col_to_index, index_to_col, parse_cell_ref, make_cell_ref
 
 
 class TestCellReferenceUtils:
@@ -66,8 +66,7 @@ class TestCell:
         """Test empty cell defaults."""
         cell = Cell()
         assert cell.raw_value == ""
-        assert cell.format_str == ""
-        assert cell.width == 10
+        assert cell.format_code == "G"  # General format
         assert cell.is_formula is False
         assert cell.formula == ""
 
@@ -87,7 +86,7 @@ class TestCell:
         """Test cell with + formula."""
         cell = Cell(raw_value="+A1+B1")
         assert cell.is_formula is True
-        assert cell.formula == "A1+B1"
+        assert cell.formula == "+A1+B1"  # + prefix is kept for formula evaluation
 
     def test_formula_cell_at(self):
         """Test cell with @ formula."""
@@ -97,19 +96,17 @@ class TestCell:
 
     def test_cell_to_dict(self):
         """Test cell serialization."""
-        cell = Cell(raw_value="test", format_str="0.00", width=15)
+        cell = Cell(raw_value="test", format_code="F2")
         d = cell.to_dict()
         assert d["raw_value"] == "test"
-        assert d["format_str"] == "0.00"
-        assert d["width"] == 15
+        assert d["format_code"] == "F2"
 
     def test_cell_from_dict(self):
         """Test cell deserialization."""
-        d = {"raw_value": "test", "format_str": "0.00", "width": 15}
+        d = {"raw_value": "test", "format_code": "F2"}
         cell = Cell.from_dict(d)
         assert cell.raw_value == "test"
-        assert cell.format_str == "0.00"
-        assert cell.width == 15
+        assert cell.format_code == "F2"
 
 
 class TestSpreadsheetBasics:
@@ -118,10 +115,10 @@ class TestSpreadsheetBasics:
     def test_initialization(self):
         """Test spreadsheet initialization.
 
-        Default grid size matches Lotus 1-2-3 Release 2: 256 columns × 8192 rows.
+        Default grid size matches Lotus 1-2-3: 256 columns × 65536 rows.
         """
         ss = Spreadsheet()
-        assert ss.rows == 8192
+        assert ss.rows == 65536
         assert ss.cols == 256
 
     def test_custom_size(self):

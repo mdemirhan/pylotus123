@@ -147,7 +147,7 @@ class TestSpreadsheetGrid:
     def test_grid_initialization(self):
         """Test grid initializes with correct state."""
         from lotus123.app import SpreadsheetGrid, THEMES, ThemeType
-        from lotus123.spreadsheet import Spreadsheet
+        from lotus123 import Spreadsheet
 
         ss = Spreadsheet()
         theme = THEMES[ThemeType.LOTUS]
@@ -162,7 +162,7 @@ class TestSpreadsheetGrid:
     def test_grid_move_cursor(self):
         """Test cursor movement."""
         from lotus123.app import SpreadsheetGrid, THEMES, ThemeType
-        from lotus123.spreadsheet import Spreadsheet
+        from lotus123 import Spreadsheet
 
         ss = Spreadsheet()
         theme = THEMES[ThemeType.LOTUS]
@@ -180,7 +180,7 @@ class TestSpreadsheetGrid:
     def test_grid_cursor_bounds(self):
         """Test cursor respects grid bounds."""
         from lotus123.app import SpreadsheetGrid, THEMES, ThemeType
-        from lotus123.spreadsheet import Spreadsheet
+        from lotus123 import Spreadsheet
 
         ss = Spreadsheet(rows=100, cols=26)
         theme = THEMES[ThemeType.LOTUS]

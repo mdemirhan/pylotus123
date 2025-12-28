@@ -157,7 +157,7 @@ class DeleteRowCommand(Command):
         self.spreadsheet.insert_row(self.row)
 
         # Restore saved cells - use the Cell class from spreadsheet module
-        from ..spreadsheet import Cell
+        from ..core.cell import Cell
         for col, cell_data in self.saved_data.items():
             self.spreadsheet._cells[(self.row, col)] = Cell.from_dict(cell_data)
 
@@ -215,7 +215,7 @@ class DeleteColCommand(Command):
                 self.saved_data[r] = cell.to_dict()
 
         # Save column width
-        self.saved_width = self.spreadsheet._col_widths.get(self.col)
+        self.saved_width = self.spreadsheet.get_col_width(self.col)
 
         self.spreadsheet.delete_col(self.col)
 
@@ -225,13 +225,13 @@ class DeleteColCommand(Command):
         self.spreadsheet.insert_col(self.col)
 
         # Restore saved cells - use the Cell class from spreadsheet module
-        from ..spreadsheet import Cell
+        from ..core.cell import Cell
         for row, cell_data in self.saved_data.items():
             self.spreadsheet._cells[(row, self.col)] = Cell.from_dict(cell_data)
 
         # Restore width
         if self.saved_width is not None:
-            self.spreadsheet._col_widths[self.col] = self.saved_width
+            self.spreadsheet.set_col_width(self.col, self.saved_width)
 
         self.spreadsheet._invalidate_cache()
 
@@ -270,7 +270,7 @@ class ClearRangeCommand(Command):
 
     def undo(self) -> None:
         """Restore the cleared data."""
-        from ..spreadsheet import Cell
+        from ..core.cell import Cell
         for (r, c), cell_data in self.saved_data.items():
             self.spreadsheet._cells[(r, c)] = Cell.from_dict(cell_data)
 

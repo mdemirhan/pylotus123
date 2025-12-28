@@ -6,7 +6,7 @@ import operator
 from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
-    from .spreadsheet import Spreadsheet
+    from .core.spreadsheet import Spreadsheet
 
 CELL_REF_PATTERN = re.compile(r'\$?([A-Za-z]+)\$?(\d+)')
 RANGE_PATTERN = re.compile(r'([A-Za-z]+\d+):([A-Za-z]+\d+)')

@@ -79,15 +79,21 @@ class Cell:
 
     @property
     def is_formula(self) -> bool:
-        """Check if cell contains a formula."""
+        """Check if cell contains a formula.
+
+        Lotus 1-2-3 formulas can start with:
+        - = (standard)
+        - @ (Lotus 1-2-3 function prefix)
+        - + or - (followed by non-numeric content)
+        """
         if not self.raw_value:
             return False
-        # Formulas start with = or + or - followed by something other than just a number
         first = self.raw_value[0]
-        if first == "=":
+        # = and @ always indicate a formula
+        if first in "=@":
             return True
+        # + or - are formulas only if followed by non-numeric content
         if first in "+-" and len(self.raw_value) > 1:
-            # Check if it's not just a number like -5 or +3.14
             rest = self.raw_value[1:]
             try:
                 float(rest)
@@ -98,10 +104,10 @@ class Cell:
 
     @property
     def formula(self) -> str:
-        """Return the formula without the leading prefix."""
+        """Return the formula without the leading prefix (=, @)."""
         if self.is_formula:
             first = self.raw_value[0]
-            if first == "=":
+            if first in "=@":
                 return self.raw_value[1:]
             return self.raw_value  # For + formulas, keep the +
         return ""
@@ -203,10 +209,15 @@ class Cell:
 
     @classmethod
     def from_dict(cls, data: dict) -> Cell:
-        """Deserialize cell from dictionary."""
+        """Deserialize cell from dictionary.
+
+        Accepts both 'format_code' and legacy 'format_str' keys for file compatibility.
+        """
+        # Accept both format_code and legacy format_str
+        format_code = data.get("format_code") or data.get("format_str") or "G"
         return cls(
             raw_value=data.get("raw_value", ""),
-            format_code=data.get("format_code", "G"),
+            format_code=format_code,
             is_protected=data.get("is_protected", False),
         )
 

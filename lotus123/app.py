@@ -10,7 +10,8 @@ from textual.containers import Container, Horizontal
 from textual.widgets import Static, Input, Footer
 from textual.css.query import NoMatches
 
-from .spreadsheet import Spreadsheet, index_to_col, make_cell_ref, parse_cell_ref, col_to_index
+from .core.spreadsheet import Spreadsheet
+from .core.reference import index_to_col, make_cell_ref, parse_cell_ref, col_to_index
 from .core.reference import adjust_formula_references
 from .utils.undo import (
     UndoManager, CellChangeCommand, RangeChangeCommand,
@@ -19,7 +20,7 @@ from .utils.undo import (
 from .charting.chart import Chart, ChartType
 from .charting.renderer import TextChartRenderer
 
-# Import UI components from new modular structure
+# UI components
 from .ui import (
     Theme, ThemeType, THEMES, get_theme_type,
     AppConfig,
@@ -1052,7 +1053,7 @@ class LotusApp(App):
         for r in range(r1, r2 + 1):
             for c in range(c1, c2 + 1):
                 cell = self.spreadsheet.get_cell(r, c)
-                cell.format_str = format_code
+                cell.format_code = format_code
         grid.refresh_grid()
         self._update_status()
         self.notify(f"Format set to {format_code}")

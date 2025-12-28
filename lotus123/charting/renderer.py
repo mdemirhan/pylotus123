@@ -38,7 +38,6 @@ class TextChartRenderer(ChartRenderer):
     """Renders charts using ASCII/Unicode characters.
 
     This class delegates to type-specific renderers for each chart type.
-    It maintains backward compatibility while using the new modular architecture.
     """
 
     def __init__(self, spreadsheet: Spreadsheet = None) -> None:
