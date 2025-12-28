@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Iterator
 import re
 import datetime
 
@@ -206,7 +206,7 @@ class FillOperations:
             # Default to copy
             self._fill_copy(start_row, start_col, end_row, end_col, direction)
 
-    def _detect_pattern(self, values: list) -> dict:
+    def _detect_pattern(self, values: list[Any]) -> dict[str, Any]:
         """Detect the pattern in a list of values."""
         if not values:
             return {'type': 'none'}
@@ -289,7 +289,7 @@ class FillOperations:
 
     def _iter_cells(self, start_row: int, start_col: int,
                     end_row: int, end_col: int,
-                    direction: str):
+                    direction: str) -> Iterator[tuple[int, int]]:
         """Iterate over cells in specified direction."""
         if direction == "down":
             for r in range(start_row, end_row + 1):

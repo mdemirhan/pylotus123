@@ -345,5 +345,5 @@ class _DummyNamedRanges:
     def exists(self, name: str) -> bool:
         return False
 
-    def get(self, name: str):
+    def get(self, name: str) -> None:
         return None

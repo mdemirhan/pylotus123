@@ -5,6 +5,8 @@ column width values, and other text inputs.
 """
 from __future__ import annotations
 
+from typing import Any
+
 from textual import on
 from textual.binding import Binding
 from textual.containers import Container
@@ -36,7 +38,7 @@ class CommandInput(ModalScreen[str | None]):
     }
     """
 
-    def __init__(self, prompt: str, **kwargs):
+    def __init__(self, prompt: str, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.prompt = prompt
 

@@ -5,7 +5,7 @@ and range selection capabilities.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from textual import events
 from textual.message import Message
@@ -58,7 +58,7 @@ class SpreadsheetGrid(Static, can_focus=True):
             self.end_col = end_col
             super().__init__()
 
-    def __init__(self, spreadsheet: Spreadsheet, theme: Theme, **kwargs):
+    def __init__(self, spreadsheet: Spreadsheet, theme: Theme, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.spreadsheet = spreadsheet
         self.theme = theme

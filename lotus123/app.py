@@ -433,7 +433,7 @@ class LotusApp(App):
             value = cell_input.value
             if value.startswith("=") or value.startswith("@"):
                 import re
-                def toggle_ref(m):
+                def toggle_ref(m: re.Match[str]) -> str:
                     ref = m.group(0)
                     if ref.startswith("$") and "$" in ref[1:]:
                         return ref[1:].replace("$", "", 1)
@@ -1422,7 +1422,7 @@ class LotusApp(App):
             event.prevent_default()
 
 
-def main():
+def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(
         description="Lotus 1-2-3 Clone - A terminal-based spreadsheet application"

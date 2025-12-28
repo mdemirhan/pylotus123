@@ -5,6 +5,8 @@ with directory tree navigation and filename input.
 """
 from __future__ import annotations
 
+from typing import Any
+
 from textual import on
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
@@ -52,7 +54,7 @@ class FileDialog(ModalScreen[str | None]):
     }
     """
 
-    def __init__(self, mode: str = "open", initial_path: str = ".", **kwargs):
+    def __init__(self, mode: str = "open", initial_path: str = ".", **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.mode = mode
         self.initial_path = initial_path

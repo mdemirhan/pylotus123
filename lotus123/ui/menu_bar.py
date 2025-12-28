@@ -5,6 +5,8 @@ featuring single-letter shortcuts and hierarchical navigation.
 """
 from __future__ import annotations
 
+from typing import Any
+
 from textual import events
 from textual.message import Message
 from textual.widgets import Static
@@ -65,7 +67,7 @@ class LotusMenu(Static, can_focus=True):
         "Quit": {"key": "Q", "items": [("Y", "Yes"), ("N", "No")]},
     }
 
-    def __init__(self, theme: Theme, **kwargs):
+    def __init__(self, theme: Theme, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.theme = theme
         self.active = False

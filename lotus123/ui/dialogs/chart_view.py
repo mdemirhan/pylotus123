@@ -4,6 +4,8 @@ Provides a modal screen for displaying rendered ASCII/Unicode charts.
 """
 from __future__ import annotations
 
+from typing import Any
+
 from textual.binding import Binding
 from textual.containers import Container
 from textual.screen import ModalScreen
@@ -45,7 +47,7 @@ class ChartViewScreen(ModalScreen):
     }
     """
 
-    def __init__(self, chart_lines: list[str], **kwargs):
+    def __init__(self, chart_lines: list[str], **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.chart_lines = chart_lines
 

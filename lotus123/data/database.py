@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
@@ -70,7 +70,7 @@ class DatabaseOperations:
             rows.append((r, row_values))
 
         # Sort using the keys
-        def sort_key(item):
+        def sort_key(item: tuple[int, list[Any]]) -> tuple[Any, ...]:
             row_idx, values = item
             key_values = []
             for sk in keys:
@@ -99,7 +99,7 @@ class DatabaseOperations:
         for sk in reversed(keys):
             if sk.order == SortOrder.DESCENDING:
                 # Re-sort with this key in reverse
-                def desc_key(item, col=sk.column):
+                def desc_key(item: tuple[int, list[Any]], col: int = sk.column) -> str:
                     row_idx, values = item
                     if 0 <= col < len(values):
                         val = values[col]
@@ -121,8 +121,8 @@ class DatabaseOperations:
             cell_data.append(row_data)
 
         # Sort cell data
-        def cell_sort_key(row_data):
-            key_values = []
+        def cell_sort_key(row_data: list[tuple[str, str]]) -> tuple[Any, ...]:
+            key_values: list[Any] = []
             for sk in keys:
                 if 0 <= sk.column < len(row_data):
                     raw_val = row_data[sk.column][0]
@@ -167,7 +167,7 @@ class DatabaseOperations:
 
     def query(self, data_range: tuple[int, int, int, int],
               criteria_range: tuple[int, int, int, int] | None = None,
-              criteria_func: callable = None) -> list[int]:
+              criteria_func: Callable[[list[Any]], bool] | None = None) -> list[int]:
         """Query records matching criteria.
 
         Args:
@@ -285,7 +285,7 @@ class DatabaseOperations:
         return unique_rows
 
     def subtotal(self, data_range: tuple[int, int, int, int],
-                 group_col: int, sum_cols: list[int]) -> dict:
+                 group_col: int, sum_cols: list[int]) -> dict[Any, dict[int, float]]:
         """Calculate subtotals by group.
 
         Args:

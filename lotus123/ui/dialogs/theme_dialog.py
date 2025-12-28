@@ -5,6 +5,8 @@ with keyboard and mouse support.
 """
 from __future__ import annotations
 
+from typing import Any
+
 from textual import on
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
@@ -17,7 +19,7 @@ from ..themes import Theme, ThemeType, THEMES
 
 class ThemeItem(ListItem):
     """A theme list item."""
-    def __init__(self, theme_type: ThemeType, theme: Theme, **kwargs):
+    def __init__(self, theme_type: ThemeType, theme: Theme, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.theme_type = theme_type
         self.theme_data = theme
@@ -76,7 +78,7 @@ class ThemeDialog(ModalScreen[ThemeType | None]):
     }
     """
 
-    def __init__(self, current: ThemeType = ThemeType.LOTUS, **kwargs):
+    def __init__(self, current: ThemeType = ThemeType.LOTUS, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.current = current
         self._theme_types = list(THEMES.keys())

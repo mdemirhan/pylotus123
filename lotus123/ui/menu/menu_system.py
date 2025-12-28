@@ -106,11 +106,11 @@ class MenuContext:
 class MenuSystem:
     """Lotus 1-2-3 style menu system manager."""
 
-    def __init__(self, spreadsheet: Spreadsheet = None):
+    def __init__(self, spreadsheet: Spreadsheet | None = None) -> None:
         self.spreadsheet = spreadsheet
         self.context = MenuContext()
         self.main_menu = self._build_main_menu()
-        self.handlers: dict[str, Callable] = {}
+        self.handlers: dict[str, Callable[..., Any]] = {}
 
     def _build_main_menu(self) -> Menu:
         """Build the main menu structure."""
