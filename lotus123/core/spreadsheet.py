@@ -1,0 +1,668 @@
+"""Main spreadsheet class with expanded dimensions and features."""
+from __future__ import annotations
+
+import json
+from typing import Any, Iterator, TYPE_CHECKING
+
+from .cell import Cell, CellType, TextAlignment
+from .reference import (
+    CellReference, RangeReference,
+    parse_cell_ref, make_cell_ref, index_to_col, col_to_index,
+    adjust_formula_references,
+)
+from .formatting import FormatSpec, parse_format_code, format_value
+from .named_ranges import NamedRangeManager
+from .protection import ProtectionManager
+
+if TYPE_CHECKING:
+    from ..formula.recalc import RecalcEngine
+
+
+# Lotus 1-2-3 dimensions
+MAX_ROWS = 65536  # 65,536 rows (early versions had 8,192)
+MAX_COLS = 256    # 256 columns (A through IV)
+
+# Default column width
+DEFAULT_COL_WIDTH = 9
+MIN_COL_WIDTH = 1
+MAX_COL_WIDTH = 72
+
+# Default row height
+DEFAULT_ROW_HEIGHT = 1
+MIN_ROW_HEIGHT = 1
+MAX_ROW_HEIGHT = 72
+
+
+class Spreadsheet:
+    """Main spreadsheet class managing a grid of cells.
+
+    Supports Lotus 1-2-3 compatible features:
+    - 256 columns (A through IV) x 65,536 rows
+    - Cell formulas with circular reference detection
+    - Named ranges
+    - Cell and worksheet protection
+    - Multiple recalculation modes
+    - Row heights and column widths
+
+    Cells are stored sparsely - only non-empty cells use memory.
+    """
+
+    def __init__(self, rows: int = MAX_ROWS, cols: int = MAX_COLS) -> None:
+        """Initialize spreadsheet.
+
+        Args:
+            rows: Number of rows (default 65,536)
+            cols: Number of columns (default 256)
+        """
+        self.rows = min(rows, MAX_ROWS)
+        self.cols = min(cols, MAX_COLS)
+
+        # Sparse cell storage
+        self._cells: dict[tuple[int, int], Cell] = {}
+
+        # Cache for computed values
+        self._cache: dict[tuple[int, int], Any] = {}
+
+        # Track cells currently being computed (for circular reference detection)
+        self._computing: set[tuple[int, int]] = set()
+
+        # Column widths (sparse - only store non-default)
+        self._col_widths: dict[int, int] = {}
+
+        # Row heights (sparse - only store non-default)
+        self._row_heights: dict[int, int] = {}
+
+        # Named ranges
+        self.named_ranges = NamedRangeManager()
+
+        # Protection
+        self.protection = ProtectionManager(self)
+
+        # File info
+        self.filename: str = ""
+        self.modified: bool = False
+
+        # Frozen rows/cols (titles)
+        self.frozen_rows: int = 0
+        self.frozen_cols: int = 0
+
+        # Recalculation engine (set by formula module)
+        self._recalc_engine: RecalcEngine | None = None
+
+        # Circular references detected
+        self._circular_refs: set[tuple[int, int]] = set()
+
+    # -------------------------------------------------------------------------
+    # Cell Access
+    # -------------------------------------------------------------------------
+
+    def get_cell(self, row: int, col: int) -> Cell:
+        """Get cell at position, creating if needed.
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+
+        Returns:
+            Cell at position (creates empty cell if none exists)
+        """
+        if (row, col) not in self._cells:
+            self._cells[(row, col)] = Cell()
+        return self._cells[(row, col)]
+
+    def get_cell_if_exists(self, row: int, col: int) -> Cell | None:
+        """Get cell if it exists, without creating.
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+
+        Returns:
+            Cell if exists, None otherwise
+        """
+        return self._cells.get((row, col))
+
+    def set_cell(self, row: int, col: int, value: str) -> None:
+        """Set cell value and invalidate cache.
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+            value: Raw value string
+        """
+        if self.protection.is_cell_protected(row, col):
+            return  # Cannot edit protected cell
+
+        cell = self.get_cell(row, col)
+        cell.set_value(value)
+        self.modified = True
+        self._invalidate_cache()
+
+    def set_cell_by_ref(self, ref: str, value: str) -> None:
+        """Set cell by reference string like 'A1'."""
+        row, col = parse_cell_ref(ref)
+        self.set_cell(row, col, value)
+
+    def get_cell_by_ref(self, ref: str) -> Cell:
+        """Get cell by reference string like 'A1'."""
+        row, col = parse_cell_ref(ref)
+        return self.get_cell(row, col)
+
+    def delete_cell(self, row: int, col: int) -> None:
+        """Delete a cell (remove from sparse storage)."""
+        if (row, col) in self._cells:
+            del self._cells[(row, col)]
+            self.modified = True
+            self._invalidate_cache()
+
+    def cell_exists(self, row: int, col: int) -> bool:
+        """Check if a cell has content."""
+        cell = self._cells.get((row, col))
+        return cell is not None and not cell.is_empty
+
+    # -------------------------------------------------------------------------
+    # Value Computation
+    # -------------------------------------------------------------------------
+
+    def get_value(self, row: int, col: int) -> Any:
+        """Get computed value of cell.
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+
+        Returns:
+            Computed value (number, string, or error)
+        """
+        if (row, col) in self._cache:
+            return self._cache[(row, col)]
+
+        cell = self._cells.get((row, col))
+        if not cell or cell.is_empty:
+            return ""
+
+        if cell.is_formula:
+            value = self._evaluate_formula(row, col)
+        else:
+            value = self._parse_literal(cell.display_value)
+
+        self._cache[(row, col)] = value
+        return value
+
+    def get_value_by_ref(self, ref: str) -> Any:
+        """Get computed value by reference string."""
+        row, col = parse_cell_ref(ref)
+        return self.get_value(row, col)
+
+    def _parse_literal(self, value: str) -> Any:
+        """Parse a literal value (number or string)."""
+        if not value:
+            return ""
+        try:
+            # Try integer first
+            if '.' not in value and 'e' not in value.lower():
+                return int(value.replace(",", ""))
+            return float(value.replace(",", ""))
+        except ValueError:
+            return value
+
+    def _evaluate_formula(self, row: int, col: int) -> Any:
+        """Evaluate a formula at the given cell position."""
+        # Import here to avoid circular dependency
+        from ..formula import FormulaParser
+
+        if (row, col) in self._computing:
+            self._circular_refs.add((row, col))
+            return "#CIRC!"
+
+        self._computing.add((row, col))
+        try:
+            cell = self.get_cell(row, col)
+            parser = FormulaParser(self)
+            result = parser.evaluate(cell.formula)
+            return result
+        except Exception as e:
+            return f"#ERR!"
+        finally:
+            self._computing.discard((row, col))
+
+    def _invalidate_cache(self) -> None:
+        """Clear the computation cache."""
+        self._cache.clear()
+        self._circular_refs.clear()
+
+    def recalculate(self) -> None:
+        """Force recalculation of all cells."""
+        self._invalidate_cache()
+        if self._recalc_engine:
+            self._recalc_engine.recalculate()
+
+    @property
+    def needs_recalc(self) -> bool:
+        """Check if spreadsheet needs recalculation."""
+        # In manual mode, check if cache is invalid
+        return len(self._cache) == 0 and any(
+            c.is_formula for c in self._cells.values() if not c.is_empty
+        )
+
+    @property
+    def has_circular_refs(self) -> bool:
+        """Check if circular references were detected."""
+        return len(self._circular_refs) > 0
+
+    # -------------------------------------------------------------------------
+    # Display
+    # -------------------------------------------------------------------------
+
+    def get_display_value(self, row: int, col: int) -> str:
+        """Get formatted string for display.
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+
+        Returns:
+            Formatted value string
+        """
+        value = self.get_value(row, col)
+        cell = self._cells.get((row, col))
+
+        if cell and cell.format_code != "G":
+            spec = parse_format_code(cell.format_code)
+            return format_value(value, spec, self.get_col_width(col))
+
+        # Default formatting
+        if isinstance(value, float):
+            if value == int(value):
+                return str(int(value))
+            return f"{value:.2f}"
+        return str(value) if value != "" else ""
+
+    # -------------------------------------------------------------------------
+    # Column/Row Dimensions
+    # -------------------------------------------------------------------------
+
+    def get_col_width(self, col: int) -> int:
+        """Get width of column."""
+        return self._col_widths.get(col, DEFAULT_COL_WIDTH)
+
+    def set_col_width(self, col: int, width: int) -> None:
+        """Set width of column."""
+        width = max(MIN_COL_WIDTH, min(MAX_COL_WIDTH, width))
+        if width == DEFAULT_COL_WIDTH:
+            self._col_widths.pop(col, None)
+        else:
+            self._col_widths[col] = width
+        self.modified = True
+
+    def get_row_height(self, row: int) -> int:
+        """Get height of row."""
+        return self._row_heights.get(row, DEFAULT_ROW_HEIGHT)
+
+    def set_row_height(self, row: int, height: int) -> None:
+        """Set height of row."""
+        height = max(MIN_ROW_HEIGHT, min(MAX_ROW_HEIGHT, height))
+        if height == DEFAULT_ROW_HEIGHT:
+            self._row_heights.pop(row, None)
+        else:
+            self._row_heights[row] = height
+        self.modified = True
+
+    # -------------------------------------------------------------------------
+    # Range Operations
+    # -------------------------------------------------------------------------
+
+    def get_range(self, start_ref: str, end_ref: str) -> list[list[Any]]:
+        """Get values in a range as 2D list.
+
+        Args:
+            start_ref: Start cell reference (e.g., 'A1')
+            end_ref: End cell reference (e.g., 'B10')
+
+        Returns:
+            2D list of values
+        """
+        start_row, start_col = parse_cell_ref(start_ref)
+        end_row, end_col = parse_cell_ref(end_ref)
+
+        # Normalize direction
+        if start_row > end_row:
+            start_row, end_row = end_row, start_row
+        if start_col > end_col:
+            start_col, end_col = end_col, start_col
+
+        result = []
+        for r in range(start_row, end_row + 1):
+            row_vals = []
+            for c in range(start_col, end_col + 1):
+                row_vals.append(self.get_value(r, c))
+            result.append(row_vals)
+        return result
+
+    def get_range_flat(self, start_ref: str, end_ref: str) -> list[Any]:
+        """Get values in a range as flat list."""
+        rows = self.get_range(start_ref, end_ref)
+        return [val for row in rows for val in row]
+
+    def set_range_format(self, start_row: int, start_col: int,
+                         end_row: int, end_col: int, format_code: str) -> None:
+        """Set format for a range of cells."""
+        for r in range(start_row, end_row + 1):
+            for c in range(start_col, end_col + 1):
+                cell = self.get_cell(r, c)
+                cell.format_code = format_code
+        self.modified = True
+
+    # -------------------------------------------------------------------------
+    # Row/Column Operations
+    # -------------------------------------------------------------------------
+
+    def delete_row(self, row: int) -> None:
+        """Delete a row and shift cells up."""
+        if not self.protection.can_delete_row():
+            return
+
+        new_cells = {}
+        for (r, c), cell in self._cells.items():
+            if r < row:
+                new_cells[(r, c)] = cell
+            elif r > row:
+                # Adjust formula references
+                if cell.is_formula:
+                    adjusted = adjust_formula_references(
+                        cell.raw_value, -1, 0, self.rows - 1, self.cols - 1
+                    )
+                    cell.set_value(adjusted)
+                new_cells[(r - 1, c)] = cell
+        self._cells = new_cells
+
+        # Adjust row heights
+        new_heights = {}
+        for r, h in self._row_heights.items():
+            if r < row:
+                new_heights[r] = h
+            elif r > row:
+                new_heights[r - 1] = h
+        self._row_heights = new_heights
+
+        # Adjust named ranges and protection
+        self.named_ranges.adjust_for_delete_row(row)
+        self.protection.adjust_for_delete_row(row)
+
+        self.modified = True
+        self._invalidate_cache()
+
+    def insert_row(self, row: int) -> None:
+        """Insert a row and shift cells down."""
+        if not self.protection.can_insert_row():
+            return
+
+        new_cells = {}
+        for (r, c), cell in self._cells.items():
+            if r < row:
+                new_cells[(r, c)] = cell
+            else:
+                # Adjust formula references
+                if cell.is_formula:
+                    adjusted = adjust_formula_references(
+                        cell.raw_value, 1, 0, self.rows - 1, self.cols - 1
+                    )
+                    cell.set_value(adjusted)
+                new_cells[(r + 1, c)] = cell
+        self._cells = new_cells
+
+        # Adjust row heights
+        new_heights = {}
+        for r, h in self._row_heights.items():
+            if r < row:
+                new_heights[r] = h
+            else:
+                new_heights[r + 1] = h
+        self._row_heights = new_heights
+
+        # Adjust named ranges and protection
+        self.named_ranges.adjust_for_insert_row(row)
+        self.protection.adjust_for_insert_row(row)
+
+        self.modified = True
+        self._invalidate_cache()
+
+    def delete_col(self, col: int) -> None:
+        """Delete a column and shift cells left."""
+        if not self.protection.can_delete_col():
+            return
+
+        new_cells = {}
+        for (r, c), cell in self._cells.items():
+            if c < col:
+                new_cells[(r, c)] = cell
+            elif c > col:
+                # Adjust formula references
+                if cell.is_formula:
+                    adjusted = adjust_formula_references(
+                        cell.raw_value, 0, -1, self.rows - 1, self.cols - 1
+                    )
+                    cell.set_value(adjusted)
+                new_cells[(r, c - 1)] = cell
+        self._cells = new_cells
+
+        # Adjust column widths
+        new_widths = {}
+        for c, w in self._col_widths.items():
+            if c < col:
+                new_widths[c] = w
+            elif c > col:
+                new_widths[c - 1] = w
+        self._col_widths = new_widths
+
+        # Adjust named ranges and protection
+        self.named_ranges.adjust_for_delete_col(col)
+        self.protection.adjust_for_delete_col(col)
+
+        self.modified = True
+        self._invalidate_cache()
+
+    def insert_col(self, col: int) -> None:
+        """Insert a column and shift cells right."""
+        if not self.protection.can_insert_col():
+            return
+
+        new_cells = {}
+        for (r, c), cell in self._cells.items():
+            if c < col:
+                new_cells[(r, c)] = cell
+            else:
+                # Adjust formula references
+                if cell.is_formula:
+                    adjusted = adjust_formula_references(
+                        cell.raw_value, 0, 1, self.rows - 1, self.cols - 1
+                    )
+                    cell.set_value(adjusted)
+                new_cells[(r, c + 1)] = cell
+        self._cells = new_cells
+
+        # Adjust column widths
+        new_widths = {}
+        for c, w in self._col_widths.items():
+            if c < col:
+                new_widths[c] = w
+            else:
+                new_widths[c + 1] = w
+        self._col_widths = new_widths
+
+        # Adjust named ranges and protection
+        self.named_ranges.adjust_for_insert_col(col)
+        self.protection.adjust_for_insert_col(col)
+
+        self.modified = True
+        self._invalidate_cache()
+
+    # -------------------------------------------------------------------------
+    # Copy Operations
+    # -------------------------------------------------------------------------
+
+    def copy_cell(self, from_row: int, from_col: int,
+                  to_row: int, to_col: int, adjust_refs: bool = True) -> None:
+        """Copy a cell to another location.
+
+        Args:
+            from_row, from_col: Source cell
+            to_row, to_col: Destination cell
+            adjust_refs: Whether to adjust relative references
+        """
+        src = self._cells.get((from_row, from_col))
+        if not src:
+            return
+
+        if self.protection.is_cell_protected(to_row, to_col):
+            return
+
+        value = src.raw_value
+        if adjust_refs and src.is_formula:
+            row_delta = to_row - from_row
+            col_delta = to_col - from_col
+            value = adjust_formula_references(
+                value, row_delta, col_delta, self.rows - 1, self.cols - 1
+            )
+
+        dest = self.get_cell(to_row, to_col)
+        dest.set_value(value)
+        dest.format_code = src.format_code
+
+        self.modified = True
+        self._invalidate_cache()
+
+    def copy_range(self, src_start: tuple[int, int], src_end: tuple[int, int],
+                   dest_start: tuple[int, int], adjust_refs: bool = True) -> None:
+        """Copy a range of cells.
+
+        Args:
+            src_start: (row, col) of source top-left
+            src_end: (row, col) of source bottom-right
+            dest_start: (row, col) of destination top-left
+            adjust_refs: Whether to adjust relative references
+        """
+        src_r1, src_c1 = src_start
+        src_r2, src_c2 = src_end
+        dest_r, dest_c = dest_start
+
+        for r in range(src_r1, src_r2 + 1):
+            for c in range(src_c1, src_c2 + 1):
+                dr = dest_r + (r - src_r1)
+                dc = dest_c + (c - src_c1)
+                self.copy_cell(r, c, dr, dc, adjust_refs)
+
+    # -------------------------------------------------------------------------
+    # File Operations
+    # -------------------------------------------------------------------------
+
+    def save(self, filename: str) -> None:
+        """Save spreadsheet to JSON file."""
+        data = {
+            "version": 2,
+            "rows": self.rows,
+            "cols": self.cols,
+            "col_widths": self._col_widths,
+            "row_heights": self._row_heights,
+            "cells": {
+                f"{r},{c}": cell.to_dict()
+                for (r, c), cell in self._cells.items()
+                if not cell.is_empty
+            },
+            "named_ranges": self.named_ranges.to_dict(),
+            "protection": self.protection.to_dict(),
+            "frozen_rows": self.frozen_rows,
+            "frozen_cols": self.frozen_cols,
+        }
+        with open(filename, 'w') as f:
+            json.dump(data, f, indent=2)
+        self.filename = filename
+        self.modified = False
+
+    def load(self, filename: str) -> None:
+        """Load spreadsheet from JSON file."""
+        with open(filename, 'r') as f:
+            data = json.load(f)
+
+        self.clear()
+
+        self.rows = data.get("rows", MAX_ROWS)
+        self.cols = data.get("cols", MAX_COLS)
+        self._col_widths = {int(k): v for k, v in data.get("col_widths", {}).items()}
+        self._row_heights = {int(k): v for k, v in data.get("row_heights", {}).items()}
+
+        for key, cell_data in data.get("cells", {}).items():
+            r, c = map(int, key.split(','))
+            self._cells[(r, c)] = Cell.from_dict(cell_data)
+
+        if "named_ranges" in data:
+            self.named_ranges.from_dict(data["named_ranges"])
+
+        if "protection" in data:
+            self.protection.from_dict(data["protection"])
+
+        self.frozen_rows = data.get("frozen_rows", 0)
+        self.frozen_cols = data.get("frozen_cols", 0)
+
+        self.filename = filename
+        self.modified = False
+        self._invalidate_cache()
+
+    def clear(self) -> None:
+        """Clear all cells and reset to empty state."""
+        self._cells.clear()
+        self._cache.clear()
+        self._col_widths.clear()
+        self._row_heights.clear()
+        self.named_ranges.clear()
+        self.protection.clear()
+        self.frozen_rows = 0
+        self.frozen_cols = 0
+        self.modified = False
+        self._circular_refs.clear()
+
+    # -------------------------------------------------------------------------
+    # Iteration
+    # -------------------------------------------------------------------------
+
+    def iter_cells(self) -> Iterator[tuple[int, int, Cell]]:
+        """Iterate over all non-empty cells.
+
+        Yields:
+            Tuples of (row, col, cell)
+        """
+        for (row, col), cell in sorted(self._cells.items()):
+            if not cell.is_empty:
+                yield row, col, cell
+
+    def get_used_range(self) -> tuple[tuple[int, int], tuple[int, int]] | None:
+        """Get the bounding box of used cells.
+
+        Returns:
+            ((min_row, min_col), (max_row, max_col)) or None if empty
+        """
+        if not self._cells:
+            return None
+
+        min_row = min_col = float('inf')
+        max_row = max_col = 0
+
+        for (r, c), cell in self._cells.items():
+            if not cell.is_empty:
+                min_row = min(min_row, r)
+                min_col = min(min_col, c)
+                max_row = max(max_row, r)
+                max_col = max(max_col, c)
+
+        if min_row == float('inf'):
+            return None
+
+        return ((int(min_row), int(min_col)), (int(max_row), int(max_col)))
+
+    # -------------------------------------------------------------------------
+    # Utility
+    # -------------------------------------------------------------------------
+
+    def __repr__(self) -> str:
+        cell_count = sum(1 for c in self._cells.values() if not c.is_empty)
+        return f"Spreadsheet({self.rows}x{self.cols}, {cell_count} cells)"
