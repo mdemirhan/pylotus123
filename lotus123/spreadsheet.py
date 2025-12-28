@@ -110,8 +110,10 @@ class Spreadsheet:
         self._cells: dict[tuple[int, int], Cell] = {}
         self._cache: dict[tuple[int, int], Any] = {}
         self._computing: set[tuple[int, int]] = set()
+        self._circular_refs: set[tuple[int, int]] = set()
         self.col_widths: dict[int, int] = {}
         self.filename: str = ""
+        self.modified: bool = False
         # For new formula parser compatibility
         self.named_ranges = _DummyNamedRanges()
 
@@ -189,6 +191,18 @@ class Spreadsheet:
     def _invalidate_cache(self) -> None:
         """Clear the computation cache."""
         self._cache.clear()
+
+    @property
+    def needs_recalc(self) -> bool:
+        """Check if spreadsheet needs recalculation."""
+        return len(self._cache) == 0 and any(
+            c.is_formula for c in self._cells.values() if c.raw_value
+        )
+
+    @property
+    def has_circular_refs(self) -> bool:
+        """Check if circular references were detected."""
+        return len(self._circular_refs) > 0
 
     def get_display_value(self, row: int, col: int) -> str:
         """Get string representation for display, using cell's format code."""

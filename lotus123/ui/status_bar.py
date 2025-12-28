@@ -14,6 +14,8 @@ from enum import Enum, auto
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from textual.widgets import Static
+
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
 
@@ -225,3 +227,68 @@ class StatusBar:
             return f"{bytes_available // 1024}K"
         else:
             return f"{bytes_available / (1024 * 1024):.1f}M"
+
+
+class StatusBarWidget(Static):
+    """Textual widget for the Lotus 1-2-3 status bar.
+
+    This widget wraps the StatusBar data class and renders it
+    as a Textual Static widget with automatic updates.
+    """
+
+    def __init__(self, spreadsheet: Spreadsheet = None, **kwargs) -> None:
+        super().__init__(" A1:                                                                    READY ", **kwargs)
+        self._status = StatusBar(spreadsheet)
+
+    def on_mount(self) -> None:
+        """Initialize status bar content on mount."""
+        self.refresh_status()
+
+    @property
+    def status(self) -> StatusBar:
+        """Get the underlying StatusBar data object."""
+        return self._status
+
+    def set_spreadsheet(self, spreadsheet: Spreadsheet) -> None:
+        """Set the spreadsheet reference."""
+        self._status.spreadsheet = spreadsheet
+
+    def set_mode(self, mode: Mode) -> None:
+        """Set the current mode and refresh display."""
+        self._status.set_mode(mode)
+        self.refresh_status()
+
+    def update_cell(self, row: int, col: int) -> None:
+        """Update status for the current cell."""
+        self._status.update_cell(row, col)
+        self.refresh_status()
+
+    def update_from_spreadsheet(self) -> None:
+        """Update indicators from spreadsheet state."""
+        self._status.update_from_spreadsheet()
+        self.refresh_status()
+
+    def set_modified(self, modified: bool) -> None:
+        """Set the modified indicator."""
+        self._status.modified = modified
+        self.refresh_status()
+
+    def set_message(self, message: str) -> None:
+        """Set a temporary message."""
+        self._status.set_message(message)
+        self.refresh_status()
+
+    def clear_message(self) -> None:
+        """Clear the temporary message."""
+        self._status.clear_message()
+        self.refresh_status()
+
+    def refresh_status(self) -> None:
+        """Refresh the status bar display."""
+        # Get available width (default to 80 if not mounted)
+        try:
+            width = self.size.width or 80
+        except Exception:
+            width = 80
+
+        self.update(self._status.get_full_status(width))
