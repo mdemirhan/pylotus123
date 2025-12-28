@@ -37,7 +37,8 @@ class ChartViewScreen(ModalScreen):
 
     #chart-content {
         width: 100%;
-        height: 100%;
+        height: 1fr;
+        content-align: center middle;
     }
 
     #chart-footer {

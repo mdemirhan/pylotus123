@@ -1028,7 +1028,10 @@ class LotusApp(App):
             self.notify("No data series defined. Use A-Range to set data.")
             return
         self._chart_renderer.spreadsheet = self.spreadsheet
-        chart_lines = self._chart_renderer.render(self.chart, width=70, height=20)
+        # Use ~75% of terminal size for the chart (dialog is 80%, minus padding/border)
+        chart_width = int(self.size.width * 0.75)
+        chart_height = int(self.size.height * 0.70)
+        chart_lines = self._chart_renderer.render(self.chart, width=chart_width, height=chart_height)
         self.push_screen(ChartViewScreen(chart_lines))
 
     def _reset_chart(self) -> None:

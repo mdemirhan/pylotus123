@@ -95,6 +95,22 @@ class ScatterChartRenderer(ChartTypeRenderer):
         # X-axis
         lines.append(" " * y_label_width + BOX_CORNER_BL + BOX_HORIZONTAL * plot_width)
 
+        # X-axis title
+        if ctx.chart.x_axis.title:
+            lines.append("")
+            lines.append(ctx.chart.x_axis.title.center(ctx.width))
+
+        # Y-axis title
+        if ctx.chart.y_axis.title:
+            lines.append("")
+            lines.append(f"Y: {ctx.chart.y_axis.title}".center(ctx.width))
+
+        # Legend for scatter
+        if ctx.chart.options.show_legend and ctx.chart.series:
+            lines.append("")
+            series_name = ctx.chart.series[0].name or "Data"
+            lines.append(f"[*] {series_name}".center(ctx.width))
+
         return lines
 
     def _get_x_values(self, ctx: RenderContext, default_count: int) -> list[float]:

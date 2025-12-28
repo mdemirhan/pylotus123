@@ -10,14 +10,15 @@ from .base import (
     BOX_VERTICAL,
     BOX_CORNER_BL,
     BOX_HORIZONTAL,
+    get_series_values,
 )
 
 
 class BarChartRenderer(ChartTypeRenderer):
     """Renders vertical bar charts with clean, solid bars."""
 
-    # Fill character for bars (ASCII # works well across terminals)
-    FILL_CHAR = '#'
+    # Fill characters for different series
+    FILL_CHARS = ['#', '@', '*', '+', '=', '%']
 
     def render(self, ctx: RenderContext) -> list[str]:
         """Render a bar chart.
@@ -51,54 +52,59 @@ class BarChartRenderer(ChartTypeRenderer):
         )
         y_axis_width = y_label_width + 1  # +1 for vertical line
 
-        # Calculate bar dimensions
-        num_bars = len(ctx.all_values)
-        available_width = ctx.width - y_axis_width - 2  # Reserve for Y-axis labels + padding
+        # Get values per series for grouped bars
+        series_values = []
+        for series in ctx.chart.series:
+            vals = get_series_values(series, ctx.spreadsheet)
+            if vals:
+                series_values.append(vals)
 
-        # Each bar needs bar_width + 2 (for spacing between bars)
-        bar_width = max(3, (available_width - num_bars * 2) // max(1, num_bars))
+        if not series_values:
+            return self.render_no_data(ctx)
+
+        # Calculate bar dimensions
+        num_groups = max(len(vals) for vals in series_values)
+        num_series = len(series_values)
+        available_width = ctx.width - y_axis_width - 4  # Reserve for Y-axis + padding
+
+        # Each group has num_series bars + spacing
+        group_width = max(num_series * 2, (available_width - num_groups * 2) // max(1, num_groups))
+        bar_width = max(1, (group_width - 1) // max(1, num_series))
 
         if ctx.plot_height < 3:
             return self.render_too_small(ctx)
 
-        # Calculate bar heights
-        bar_heights = self._calculate_bar_heights(ctx.all_values, ctx)
-
         # Build plot rows
         for row in range(ctx.plot_height):
-            line = self._build_row(row, bar_heights, bar_width, ctx, y_label_width)
+            line = self._build_row(row, series_values, bar_width, ctx, y_label_width)
             lines.append(line)
 
-        # X-axis
-        axis_width = num_bars * (bar_width + 2)
+        # X-axis line
+        axis_width = num_groups * (num_series * (bar_width + 1) + 2)
         lines.append(" " * y_label_width + BOX_CORNER_BL + BOX_HORIZONTAL * axis_width)
 
+        # X-axis title
+        if ctx.chart.x_axis.title:
+            lines.append("")
+            lines.append(ctx.chart.x_axis.title.center(ctx.width))
+
+        # Y-axis title (shown at left of chart)
+        if ctx.chart.y_axis.title:
+            lines.append("")
+            lines.append(f"Y: {ctx.chart.y_axis.title}".center(ctx.width))
+
+        # Legend
+        if ctx.chart.options.show_legend and ctx.chart.series:
+            lines.append("")
+            legend = self._build_legend(ctx)
+            lines.append(legend.center(ctx.width))
+
         return lines
-
-    def _calculate_bar_heights(
-        self,
-        values: list[float],
-        ctx: RenderContext
-    ) -> list[int]:
-        """Calculate the height of each bar in rows.
-
-        Args:
-            values: Data values
-            ctx: Render context
-
-        Returns:
-            List of bar heights in rows
-        """
-        bar_heights = []
-        for val in values:
-            ratio = (val - ctx.min_val) / (ctx.max_val - ctx.min_val)
-            bar_heights.append(round(ratio * ctx.plot_height))
-        return bar_heights
 
     def _build_row(
         self,
         row: int,
-        bar_heights: list[int],
+        series_values: list[list[float]],
         bar_width: int,
         ctx: RenderContext,
         y_label_width: int
@@ -107,7 +113,7 @@ class BarChartRenderer(ChartTypeRenderer):
 
         Args:
             row: Row index (0 = top)
-            bar_heights: Heights of each bar
+            series_values: Values for each series
             bar_width: Width of each bar
             ctx: Render context
             y_label_width: Width for Y-axis labels
@@ -129,13 +135,39 @@ class BarChartRenderer(ChartTypeRenderer):
         line = y_label + BOX_VERTICAL
 
         row_from_bottom = ctx.plot_height - row - 1
+        num_groups = max(len(vals) for vals in series_values)
 
-        for bar_height in bar_heights:
-            line += ' '  # Space before bar
-            if row_from_bottom < bar_height:
-                line += self.FILL_CHAR * bar_width
-            else:
-                line += ' ' * bar_width
-            line += ' '  # Space after bar
+        for group_idx in range(num_groups):
+            line += ' '  # Space before group
+            for series_idx, vals in enumerate(series_values):
+                fill_char = self.FILL_CHARS[series_idx % len(self.FILL_CHARS)]
+                if group_idx < len(vals):
+                    val = vals[group_idx]
+                    ratio = (val - ctx.min_val) / (ctx.max_val - ctx.min_val)
+                    bar_height = round(ratio * ctx.plot_height)
+                    if row_from_bottom < bar_height:
+                        line += fill_char * bar_width
+                    else:
+                        line += ' ' * bar_width
+                else:
+                    line += ' ' * bar_width
+                line += ' '  # Space between bars in group
+            line += ' '  # Extra space between groups
 
         return line
+
+    def _build_legend(self, ctx: RenderContext) -> str:
+        """Build legend string showing series names with their symbols.
+
+        Args:
+            ctx: Render context
+
+        Returns:
+            Formatted legend string
+        """
+        legend_parts = []
+        for i, series in enumerate(ctx.chart.series):
+            fill_char = self.FILL_CHARS[i % len(self.FILL_CHARS)]
+            name = series.name or f"Series {i+1}"
+            legend_parts.append(f"[{fill_char}] {name}")
+        return "  ".join(legend_parts)

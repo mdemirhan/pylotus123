@@ -68,8 +68,19 @@ class LineChartRenderer(ChartTypeRenderer):
         # X-axis
         lines.append(" " * y_label_width + BOX_CORNER_BL + BOX_HORIZONTAL * ctx.plot_width)
 
+        # X-axis title
+        if ctx.chart.x_axis.title:
+            lines.append("")
+            lines.append(ctx.chart.x_axis.title.center(ctx.width))
+
+        # Y-axis title
+        if ctx.chart.y_axis.title:
+            lines.append("")
+            lines.append(f"Y: {ctx.chart.y_axis.title}".center(ctx.width))
+
         # Legend
         if ctx.chart.options.show_legend and ctx.chart.series:
+            lines.append("")
             legend = self._build_legend(ctx)
             lines.append(legend.center(ctx.width))
 
