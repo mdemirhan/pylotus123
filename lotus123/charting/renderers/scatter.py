@@ -124,7 +124,7 @@ class ScatterChartRenderer(ChartTypeRenderer):
             List of X values
         """
         # Default to indices
-        x_values = list(range(default_count))
+        x_values: list[float] = [float(i) for i in range(default_count)]
 
         if ctx.chart.x_range and ctx.spreadsheet and ':' in ctx.chart.x_range:
             parts = ctx.chart.x_range.split(':')

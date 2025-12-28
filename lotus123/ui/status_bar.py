@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from enum import Enum, auto
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from textual.widgets import Static
 
@@ -94,7 +94,7 @@ class StatusBar:
     - Warnings
     """
 
-    def __init__(self, spreadsheet: Spreadsheet = None) -> None:
+    def __init__(self, spreadsheet: Spreadsheet | None = None) -> None:
         self.spreadsheet = spreadsheet
         self.mode = ModeIndicator()
         self.locks = LockIndicators()
@@ -236,7 +236,7 @@ class StatusBarWidget(Static):
     as a Textual Static widget with automatic updates.
     """
 
-    def __init__(self, spreadsheet: Spreadsheet = None, **kwargs) -> None:
+    def __init__(self, spreadsheet: Spreadsheet | None = None, **kwargs: Any) -> None:
         super().__init__(" A1:                                                                    READY ", **kwargs)
         self._status = StatusBar(spreadsheet)
 

@@ -1194,12 +1194,12 @@ class MenuSystem:
 
     def _cmd_protection_enable(self) -> str:
         if self.spreadsheet:
-            self.spreadsheet.protection.enable_protection()
+            self.spreadsheet.protection.enable()
         return "Protection enabled"
 
     def _cmd_protection_disable(self) -> str:
         if self.spreadsheet:
-            self.spreadsheet.protection.disable_protection()
+            self.spreadsheet.protection.disable()
         return "Protection disabled"
 
     def _cmd_default_directory(self, path: str) -> str:

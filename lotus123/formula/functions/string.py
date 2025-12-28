@@ -276,12 +276,12 @@ def fn_exact(text1: Any, text2: Any) -> bool:
     return _to_string(text1) == _to_string(text2)
 
 
-def fn_concatenate(*args) -> str:
+def fn_concatenate(*args: Any) -> str:
     """@CONCATENATE - Join text values."""
     return "".join(_to_string(arg) for arg in args)
 
 
-def fn_concat(*args) -> str:
+def fn_concat(*args: Any) -> str:
     """@CONCAT - Alias for @CONCATENATE."""
     return fn_concatenate(*args)
 

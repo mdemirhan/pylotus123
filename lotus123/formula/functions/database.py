@@ -24,7 +24,7 @@ def _to_number(value: Any) -> float | None:
     return None
 
 
-def _get_field_index(database: list, field: Any) -> int | None:
+def _get_field_index(database: list[Any], field: Any) -> int | None:
     """Get the column index for a field.
 
     field can be:
@@ -50,7 +50,7 @@ def _get_field_index(database: list, field: Any) -> int | None:
     return None
 
 
-def _matches_criteria(row: list, headers: list, criteria: list) -> bool:
+def _matches_criteria(row: list[Any], headers: list[Any], criteria: list[Any]) -> bool:
     """Check if a row matches the criteria.
 
     Criteria format:
@@ -159,7 +159,7 @@ def _matches_criteria(row: list, headers: list, criteria: list) -> bool:
     )
 
 
-def _get_matching_values(database: list, field: Any, criteria: list) -> list[float]:
+def _get_matching_values(database: list[Any], field: Any, criteria: list[Any]) -> list[float]:
     """Get numeric values from matching rows."""
     if not database or len(database) < 2:
         return []

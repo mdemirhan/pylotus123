@@ -13,7 +13,7 @@ from textual.widgets import Static
 from textual.app import ComposeResult
 
 
-class ChartViewScreen(ModalScreen):
+class ChartViewScreen(ModalScreen[None]):
     """Modal screen for viewing a chart."""
 
     BINDINGS = [

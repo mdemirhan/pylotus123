@@ -62,7 +62,7 @@ class TextImporter:
     def __init__(self, spreadsheet: Spreadsheet) -> None:
         self.spreadsheet = spreadsheet
 
-    def import_file(self, filename: str | Path, options: ImportOptions = None) -> int:
+    def import_file(self, filename: str | Path, options: ImportOptions | None = None) -> int:
         """Import a text file into the spreadsheet.
 
         Args:
@@ -242,7 +242,7 @@ class TextImporter:
 
         return widths if widths else []
 
-    def import_text(self, text: str, options: ImportOptions = None) -> int:
+    def import_text(self, text: str, options: ImportOptions | None = None) -> int:
         """Import from a text string.
 
         Args:

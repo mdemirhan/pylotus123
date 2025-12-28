@@ -186,8 +186,8 @@ class FormulaParser:
                 match = self.NUMBER_PATTERN.match(formula, i)
                 if match:
                     num_str = match.group(0)
-                    value = float(num_str) if '.' in num_str or 'e' in num_str.lower() else int(num_str)
-                    tokens.append(Token(TokenType.NUMBER, value, i))
+                    num_value: int | float = float(num_str) if '.' in num_str or 'e' in num_str.lower() else int(num_str)
+                    tokens.append(Token(TokenType.NUMBER, num_value, i))
                     i = match.end()
                     continue
 
@@ -399,7 +399,7 @@ class FormulaParser:
         except ValueError:
             return "#REF!"
 
-    def _get_range_values(self, start_ref: str, end_ref: str) -> list:
+    def _get_range_values(self, start_ref: str, end_ref: str) -> list[Any]:
         """Get flat list of values from a range."""
         try:
             start = start_ref.replace('$', '')

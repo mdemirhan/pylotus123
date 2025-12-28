@@ -34,10 +34,10 @@ def _is_match(lookup_value: Any, table_value: Any, range_lookup: bool = True) ->
         # Exact match
         if isinstance(lookup_value, str) and isinstance(table_value, str):
             return lookup_value.upper() == table_value.upper()
-        return lookup_value == table_value
+        return bool(lookup_value == table_value)
 
 
-def fn_vlookup(lookup_value: Any, table: list, col_index: Any,
+def fn_vlookup(lookup_value: Any, table: list[Any], col_index: Any,
                range_lookup: Any = True) -> Any:
     """@VLOOKUP - Vertical lookup.
 
@@ -92,7 +92,7 @@ def fn_vlookup(lookup_value: Any, table: list, col_index: Any,
     return "#N/A"
 
 
-def fn_hlookup(lookup_value: Any, table: list, row_index: Any,
+def fn_hlookup(lookup_value: Any, table: list[Any], row_index: Any,
                range_lookup: Any = True) -> Any:
     """@HLOOKUP - Horizontal lookup.
 
@@ -168,7 +168,7 @@ def fn_index(array: Any, row_num: Any, col_num: Any = None) -> Any:
     return row[col_idx]
 
 
-def fn_match(lookup_value: Any, lookup_array: list, match_type: Any = 1) -> int:
+def fn_match(lookup_value: Any, lookup_array: list[Any], match_type: Any = 1) -> int:
     """@MATCH - Find position of value in array.
 
     Usage: @MATCH(lookup_value, lookup_array, match_type)
@@ -231,7 +231,7 @@ def fn_match(lookup_value: Any, lookup_array: list, match_type: Any = 1) -> int:
         return last_match or 0
 
 
-def fn_lookup(lookup_value: Any, lookup_vector: list, result_vector: list = None) -> Any:
+def fn_lookup(lookup_value: Any, lookup_vector: list[Any], result_vector: list[Any] | None = None) -> Any:
     """@LOOKUP - Simple lookup.
 
     Usage: @LOOKUP(lookup_value, lookup_vector, result_vector)
@@ -298,7 +298,7 @@ def fn_columns(array: Any) -> int:
     return fn_cols(array)
 
 
-def fn_transpose(array: Any) -> list:
+def fn_transpose(array: Any) -> list[Any]:
     """@TRANSPOSE - Transpose rows and columns."""
     if not isinstance(array, list):
         return [[array]]

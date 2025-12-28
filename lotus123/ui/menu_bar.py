@@ -15,6 +15,10 @@ from rich.style import Style
 
 from .themes import Theme
 
+# Menu item can be a 2-tuple (key, name) or 3-tuple (key, name, subitems)
+MenuItem = tuple[str, str] | tuple[str, str, list[Any]]
+MenuData = dict[str, str | list[MenuItem]]
+
 
 class LotusMenu(Static, can_focus=True):
     """Lotus-style menu bar with mouse and keyboard support."""
@@ -33,7 +37,7 @@ class LotusMenu(Static, can_focus=True):
         """Sent when menu is deactivated."""
         pass
 
-    MENU_STRUCTURE = {
+    MENU_STRUCTURE: dict[str, MenuData] = {
         "Worksheet": {"key": "W", "items": [
             ("G", "Global", [
                 ("F", "Format"),
@@ -83,16 +87,17 @@ class LotusMenu(Static, can_focus=True):
     def on_mount(self) -> None:
         self._update_display()
 
-    def _get_current_items(self) -> list:
+    def _get_current_items(self) -> list[Any]:
         """Get the current menu items based on navigation state."""
         if self.current_menu is None:
             return []
-        items = self.MENU_STRUCTURE[self.current_menu]["items"]
+        menu_items = self.MENU_STRUCTURE[self.current_menu]["items"]
+        items: list[Any] = list(menu_items) if isinstance(menu_items, list) else []
         # Navigate into submenus
         for submenu_name in self.submenu_path:
             for item in items:
                 if len(item) >= 3 and item[1] == submenu_name:
-                    items = item[2]
+                    items = list(item[2])
                     break
         return items
 
@@ -111,7 +116,7 @@ class LotusMenu(Static, can_focus=True):
             x_pos = 21
             self._menu_positions = []
             for name, data in self.MENU_STRUCTURE.items():
-                key = data["key"]
+                key = str(data["key"])
                 start_x = x_pos
                 text.append(key, highlight)
                 text.append(name[1:] + "  ", style)
@@ -124,7 +129,7 @@ class LotusMenu(Static, can_focus=True):
                 x_pos = 7
                 self._menu_positions = []
                 for name, data in self.MENU_STRUCTURE.items():
-                    key = data["key"]
+                    key = str(data["key"])
                     start_x = x_pos
                     text.append(key, highlight)
                     text.append(name[1:] + "  ", style)

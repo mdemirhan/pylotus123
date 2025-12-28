@@ -155,7 +155,7 @@ def fn_rand() -> float:
 
 def fn_power(base: Any, exponent: Any) -> float:
     """@POWER - Raise base to exponent (alternative to ^ operator)."""
-    return _to_number(base) ** _to_number(exponent)
+    return float(_to_number(base) ** _to_number(exponent))
 
 
 def fn_sign(value: Any) -> int:
@@ -172,8 +172,8 @@ def fn_trunc(value: Any, decimals: Any = 0) -> float:
     """@TRUNC - Truncate to specified decimal places."""
     n = _to_number(value)
     d = int(_to_number(decimals))
-    factor = 10 ** d
-    return int(n * factor) / factor
+    factor = 10.0 ** d
+    return float(int(n * factor) / factor)
 
 
 def fn_ceiling(value: Any) -> int:

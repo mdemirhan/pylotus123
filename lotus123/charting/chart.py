@@ -115,7 +115,7 @@ class Chart:
     options: ChartOptions = field(default_factory=ChartOptions)
 
     def add_series(self, name: str, data_range: str = "",
-                   values: list[float] = None) -> ChartSeries:
+                   values: list[float] | None = None) -> ChartSeries:
         """Add a data series to the chart.
 
         Args:
@@ -153,8 +153,8 @@ class Chart:
         self.y_axis.title = y_title
 
     def set_scale(self, axis: str = "y",
-                  min_val: float = None,
-                  max_val: float = None,
+                  min_val: float | None = None,
+                  max_val: float | None = None,
                   scale_type: ScaleType = ScaleType.LINEAR) -> None:
         """Set axis scale options.
 
@@ -180,7 +180,7 @@ class Chart:
         self.y_axis = ChartAxis()
         self.options = ChartOptions()
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize chart to dictionary."""
         return {
             "chart_type": self.chart_type.name,
@@ -220,7 +220,7 @@ class Chart:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> Chart:
+    def from_dict(cls, data: dict[str, Any]) -> Chart:
         """Deserialize chart from dictionary."""
         chart = cls()
         chart.chart_type = ChartType[data.get("chart_type", "LINE")]

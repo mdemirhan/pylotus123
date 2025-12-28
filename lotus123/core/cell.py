@@ -200,7 +200,7 @@ class Cell:
 
     def to_dict(self) -> dict:
         """Serialize cell to dictionary."""
-        data = {"raw_value": self.raw_value}
+        data: dict = {"raw_value": self.raw_value}
         if self.format_code != "G":
             data["format_code"] = self.format_code
         if self.is_protected:

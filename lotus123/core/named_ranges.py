@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Iterator
+from typing import Any, Iterator
 
 from .reference import RangeReference, CellReference
 
@@ -34,9 +34,9 @@ class NamedRange:
         """Check if this name refers to a single cell."""
         return isinstance(self.reference, CellReference)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
-        data = {
+        data: dict[str, Any] = {
             "name": self.name,
             "reference": self.reference.to_string(),
             "is_range": isinstance(self.reference, RangeReference),
@@ -46,9 +46,10 @@ class NamedRange:
         return data
 
     @classmethod
-    def from_dict(cls, data: dict) -> NamedRange:
+    def from_dict(cls, data: dict[str, Any]) -> NamedRange:
         """Deserialize from dictionary."""
         ref_str = data["reference"]
+        reference: CellReference | RangeReference
         if data.get("is_range", ":" in ref_str):
             reference = RangeReference.parse(ref_str)
         else:
@@ -106,6 +107,7 @@ class NamedRangeManager:
         Returns:
             The created NamedRange
         """
+        reference: CellReference | RangeReference
         if ":" in ref_str:
             reference = RangeReference.parse(ref_str)
         else:
@@ -320,11 +322,11 @@ class NamedRangeManager:
 
         return True
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, dict[str, Any]]:
         """Serialize all named ranges."""
         return {name: nr.to_dict() for name, nr in self._names.items()}
 
-    def from_dict(self, data: dict) -> None:
+    def from_dict(self, data: dict[str, dict[str, Any]]) -> None:
         """Load named ranges from dictionary."""
         self._names.clear()
         for name, nr_data in data.items():

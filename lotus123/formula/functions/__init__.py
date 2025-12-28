@@ -1,5 +1,5 @@
 """Formula function implementations organized by category."""
-from typing import Any, Callable
+from typing import Callable
 from .math import MATH_FUNCTIONS
 from .statistical import STATISTICAL_FUNCTIONS
 from .string import STRING_FUNCTIONS
@@ -19,23 +19,20 @@ class FunctionRegistry:
     """
 
     def __init__(self) -> None:
-        self._functions: dict[str, Callable] = {}
+        self._functions: dict = {}
         self._register_all()
 
     def _register_all(self) -> None:
         """Register all built-in functions."""
-        for funcs in [
-            MATH_FUNCTIONS,
-            STATISTICAL_FUNCTIONS,
-            STRING_FUNCTIONS,
-            LOGICAL_FUNCTIONS,
-            LOOKUP_FUNCTIONS,
-            DATETIME_FUNCTIONS,
-            INFO_FUNCTIONS,
-            FINANCIAL_FUNCTIONS,
-            DATABASE_FUNCTIONS,
-        ]:
-            self._functions.update(funcs)
+        self._functions.update(MATH_FUNCTIONS)
+        self._functions.update(STATISTICAL_FUNCTIONS)
+        self._functions.update(STRING_FUNCTIONS)
+        self._functions.update(LOGICAL_FUNCTIONS)
+        self._functions.update(LOOKUP_FUNCTIONS)
+        self._functions.update(DATETIME_FUNCTIONS)
+        self._functions.update(INFO_FUNCTIONS)
+        self._functions.update(FINANCIAL_FUNCTIONS)
+        self._functions.update(DATABASE_FUNCTIONS)
 
     def get(self, name: str) -> Callable | None:
         """Get a function by name.
@@ -69,7 +66,7 @@ class FunctionRegistry:
         return self.exists(name)
 
 
-def get_all_functions() -> dict[str, Callable]:
+def get_all_functions() -> dict:
     """Get dictionary of all registered functions."""
     registry = FunctionRegistry()
     return dict(registry._functions)

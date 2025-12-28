@@ -127,15 +127,16 @@ class DatabaseOperations:
                 if 0 <= sk.column < len(row_data):
                     raw_val = row_data[sk.column][0]
                     # Parse value for comparison
+                    sort_val: float | str
                     try:
-                        val = float(raw_val.replace(",", "")) if raw_val else 0
+                        sort_val = float(raw_val.replace(",", "")) if raw_val else 0.0
                     except ValueError:
-                        val = raw_val.lower() if raw_val else ""
+                        sort_val = raw_val.lower() if raw_val else ""
 
                     if sk.order == SortOrder.DESCENDING:
-                        if isinstance(val, (int, float)):
-                            val = -val
-                    key_values.append(val)
+                        if isinstance(sort_val, (int, float)):
+                            sort_val = -sort_val
+                    key_values.append(sort_val)
             return tuple(key_values)
 
         sorted_data = sorted(cell_data, key=cell_sort_key)
@@ -150,9 +151,12 @@ class DatabaseOperations:
                     if sk.column < len(row_data) and row_data[sk.column][0]
                 )
                 if has_strings:
-                    sorted_data = sorted(sorted_data,
-                                        key=lambda rd, col=sk.column: rd[col][0].lower() if col < len(rd) else "",
-                                        reverse=True)
+                    col = sk.column
+
+                    def string_sort_key(rd: list[tuple[str, str]]) -> str:
+                        return rd[col][0].lower() if col < len(rd) else ""
+
+                    sorted_data = sorted(sorted_data, key=string_sort_key, reverse=True)
 
         # Write back
         for i, row_data in enumerate(sorted_data):
@@ -299,13 +303,13 @@ class DatabaseOperations:
         start_row, start_col, end_row, end_col = data_range
         data_start = start_row + 1
 
-        totals = {}
+        totals: dict[Any, dict[int, float]] = {}
 
         for r in range(data_start, end_row + 1):
             group_val = self.spreadsheet.get_value(r, start_col + group_col)
 
             if group_val not in totals:
-                totals[group_val] = {c: 0 for c in sum_cols}
+                totals[group_val] = {c: 0.0 for c in sum_cols}
 
             for c in sum_cols:
                 val = self.spreadsheet.get_value(r, start_col + c)

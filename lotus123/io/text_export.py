@@ -63,7 +63,7 @@ class TextExporter:
     def __init__(self, spreadsheet: Spreadsheet) -> None:
         self.spreadsheet = spreadsheet
 
-    def export_file(self, filename: str | Path, options: ExportOptions = None) -> int:
+    def export_file(self, filename: str | Path, options: ExportOptions | None = None) -> int:
         """Export to a text file.
 
         Args:
@@ -208,7 +208,7 @@ class TextExporter:
 
         return rows_exported
 
-    def export_to_string(self, options: ExportOptions = None) -> str:
+    def export_to_string(self, options: ExportOptions | None = None) -> str:
         """Export to a string.
 
         Args:
@@ -247,7 +247,7 @@ class TextExporter:
     def export_range(self, start_row: int, start_col: int,
                      end_row: int, end_col: int,
                      filename: str | Path,
-                     options: ExportOptions = None) -> int:
+                     options: ExportOptions | None = None) -> int:
         """Export a specific range.
 
         Args:

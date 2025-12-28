@@ -170,9 +170,9 @@ class Clipboard:
                 if (src_row, src_col) in modified:
                     continue
 
-                cell = self.spreadsheet.get_cell_if_exists(src_row, src_col)
-                if cell:
-                    cell.set_value("")
+                src_cell = self.spreadsheet.get_cell_if_exists(src_row, src_col)
+                if src_cell is not None:
+                    src_cell.set_value("")
 
             # Clear clipboard after cut-paste
             self.clear()

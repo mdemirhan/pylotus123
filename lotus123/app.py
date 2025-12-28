@@ -31,7 +31,7 @@ from .ui import (
 )
 
 
-class LotusApp(App):
+class LotusApp(App[None]):
     """Main Lotus 1-2-3 Clone Application."""
 
     BINDINGS = [
@@ -261,7 +261,7 @@ class LotusApp(App):
     def _apply_theme(self) -> None:
         """Apply the current theme to all widgets."""
         t = self.color_theme
-        self.stylesheet.add_source(self._generate_css(), "theme")
+        self.stylesheet.add_source(self._generate_css())
 
         try:
             menu_bar = self.query_one("#menu-bar", LotusMenu)
@@ -381,14 +381,14 @@ class LotusApp(App):
             else:
                 cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
                 if cell.raw_value:
-                    cmd = CellChangeCommand(
+                    cell_cmd = CellChangeCommand(
                         spreadsheet=self.spreadsheet,
                         row=grid.cursor_row,
                         col=grid.cursor_col,
                         new_value="",
                         old_value=cell.raw_value,
                     )
-                    self.undo_manager.execute(cmd)
+                    self.undo_manager.execute(cell_cmd)
             grid.refresh_grid()
             self._update_status()
 
@@ -441,9 +441,12 @@ class LotusApp(App):
                     elif "$" in ref:
                         return ref.replace("$", "")
                     else:
-                        col = re.match(r"([A-Za-z]+)", ref).group(1)
-                        row = ref[len(col):]
-                        return f"${col}${row}"
+                        match = re.match(r"([A-Za-z]+)", ref)
+                        if match:
+                            col = match.group(1)
+                            row = ref[len(col):]
+                            return f"${col}${row}"
+                        return ref
                 new_value = re.sub(r'\$?[A-Za-z]+\$?\d+', toggle_ref, value)
                 cell_input.value = new_value
 
@@ -652,6 +655,8 @@ class LotusApp(App):
         self.push_screen(FileDialog(mode="open"), self._do_open)
 
     def _load_initial_file(self) -> None:
+        if not self._initial_file:
+            return
         try:
             filepath = Path(self._initial_file)
             if filepath.exists():
@@ -933,8 +938,8 @@ class LotusApp(App):
                 if new_value != old_value:
                     changes.append((target_row, target_col, new_value, old_value))
         if changes:
-            cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
-            self.undo_manager.execute(cmd)
+            range_cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
+            self.undo_manager.execute(range_cmd)
         if self._clipboard_is_cut:
             clear_changes = []
             for r_offset, row_data in enumerate(self._range_clipboard):
@@ -1106,9 +1111,7 @@ class LotusApp(App):
         name = result.strip().upper()
         if not name:
             return
-        if not hasattr(self.spreadsheet, '_named_ranges'):
-            self.spreadsheet._named_ranges = {}
-        self.spreadsheet._named_ranges[name] = self._pending_range
+        self.spreadsheet.named_ranges.add_from_string(name, self._pending_range)
         self.notify(f"Named range '{name}' created for {self._pending_range}")
 
     def _range_protect(self) -> None:
@@ -1118,10 +1121,8 @@ class LotusApp(App):
         for r in range(r1, r2 + 1):
             for c in range(c1, c2 + 1):
                 cell = self.spreadsheet.get_cell(r, c)
-                if not hasattr(cell, '_protected'):
-                    cell._protected = False
-                cell._protected = not cell._protected
-                if cell._protected:
+                cell.is_protected = not cell.is_protected
+                if cell.is_protected:
                     protected_count += 1
         total_cells = (r2 - r1 + 1) * (c2 - c1 + 1)
         if protected_count > 0:
@@ -1209,6 +1210,7 @@ class LotusApp(App):
                     cell = self.spreadsheet.get_cell(r, c)
                     row_values.append(cell.raw_value)
                 sort_val = self.spreadsheet.get_value(r, sort_col_abs)
+                sort_key: tuple[int, str | int | float]
                 if sort_val == "" or sort_val is None:
                     sort_key = (2, "")
                 elif isinstance(sort_val, (int, float)):

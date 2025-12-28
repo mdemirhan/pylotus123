@@ -161,7 +161,7 @@ def build_dependency_graph(spreadsheet: Spreadsheet) -> dict[tuple[int, int], se
     return graph
 
 
-def find_circular_references(dependency_graph: dict) -> list[tuple[int, int]]:
+def find_circular_references(dependency_graph: dict[tuple[int, int], set[tuple[int, int]]]) -> list[tuple[int, int]]:
     """Find cells involved in circular references.
 
     Uses Tarjan's algorithm to find strongly connected components.
@@ -179,7 +179,7 @@ def find_circular_references(dependency_graph: dict) -> list[tuple[int, int]]:
     on_stack = {}
     circular = []
 
-    def strongconnect(node):
+    def strongconnect(node: tuple[int, int]) -> None:
         index[node] = index_counter[0]
         lowlinks[node] = index_counter[0]
         index_counter[0] += 1
@@ -189,9 +189,9 @@ def find_circular_references(dependency_graph: dict) -> list[tuple[int, int]]:
         for dep in dependency_graph.get(node, set()):
             if dep not in index:
                 strongconnect(dep)
-                lowlinks[node] = min(lowlinks[node], lowlinks.get(dep, float('inf')))
+                lowlinks[node] = min(lowlinks[node], lowlinks.get(dep, index_counter[0]))
             elif on_stack.get(dep, False):
-                lowlinks[node] = min(lowlinks[node], index.get(dep, float('inf')))
+                lowlinks[node] = min(lowlinks[node], index.get(dep, index_counter[0]))
 
         if lowlinks[node] == index[node]:
             scc = []
@@ -213,7 +213,7 @@ def find_circular_references(dependency_graph: dict) -> list[tuple[int, int]]:
     return circular
 
 
-def topological_sort(dependency_graph: dict) -> list[tuple[int, int]]:
+def topological_sort(dependency_graph: dict[tuple[int, int], set[tuple[int, int]]]) -> list[tuple[int, int]]:
     """Sort cells in dependency order for recalculation.
 
     Args:
@@ -233,7 +233,7 @@ def topological_sort(dependency_graph: dict) -> list[tuple[int, int]]:
                 pass
 
     # Actually we need dependents, not dependencies
-    dependents = {node: set() for node in dependency_graph}
+    dependents: dict[tuple[int, int], set[tuple[int, int]]] = {node: set() for node in dependency_graph}
     for node, deps in dependency_graph.items():
         for dep in deps:
             if dep in dependents:

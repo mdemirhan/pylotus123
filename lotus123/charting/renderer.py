@@ -40,7 +40,7 @@ class TextChartRenderer(ChartRenderer):
     This class delegates to type-specific renderers for each chart type.
     """
 
-    def __init__(self, spreadsheet: Spreadsheet = None) -> None:
+    def __init__(self, spreadsheet: Spreadsheet | None = None) -> None:
         """Initialize the text chart renderer.
 
         Args:

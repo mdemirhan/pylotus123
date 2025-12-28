@@ -166,7 +166,7 @@ class WindowManager:
     - /Worksheet Window - Split view
     """
 
-    def __init__(self, spreadsheet: Spreadsheet = None) -> None:
+    def __init__(self, spreadsheet: Spreadsheet | None = None) -> None:
         self.spreadsheet = spreadsheet
         self.titles = FrozenTitles()
         self.split = WindowSplit()
@@ -326,7 +326,7 @@ class WindowManager:
         - row_range: (start, end) row indices
         - col_range: (start, end) column indices
         """
-        regions = []
+        regions: list = []
         vp = self.active_viewport
 
         # Frozen corner (if both frozen)

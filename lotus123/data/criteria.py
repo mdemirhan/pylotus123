@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any
+from typing import Any, Callable
 
 
 class CriterionOperator(Enum):
@@ -248,7 +248,7 @@ class CriteriaParser:
 
         return False
 
-    def create_filter(self) -> callable:
+    def create_filter(self) -> Callable[[list[Any]], bool]:
         """Create a filter function for use with DatabaseOperations.query().
 
         Returns:

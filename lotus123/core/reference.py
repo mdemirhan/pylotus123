@@ -271,14 +271,14 @@ def adjust_formula_references(formula: str, row_delta: int, col_delta: int,
     Returns:
         Formula with adjusted references
     """
-    def replace_ref(match: re.Match) -> str:
+    def replace_ref(match: re.Match[str]) -> str:
         ref_str = match.group(0)
         try:
             ref = CellReference.parse(ref_str)
             adjusted = ref.adjust(row_delta, col_delta, max_row, max_col)
             return adjusted.to_string()
         except ValueError:
-            return ref_str
+            return str(ref_str)
 
     # Match cell references but not function names
     pattern = r'\$?[A-Za-z]+\$?\d+'

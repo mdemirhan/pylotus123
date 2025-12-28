@@ -32,7 +32,7 @@ def _flatten_args(args: tuple) -> list:
     return result
 
 
-def _get_numbers(args: tuple) -> list[float]:
+def _get_numbers(args: tuple[Any, ...]) -> list[float]:
     """Extract all numeric values from arguments."""
     values = _flatten_args(args)
     numbers = []
@@ -63,7 +63,7 @@ def fn_count(*args) -> int:
     return len(numbers)
 
 
-def fn_counta(*args) -> int:
+def fn_counta(*args: Any) -> int:
     """@COUNTA - Count of non-empty values.
 
     Counts all non-empty cells including text.
@@ -72,7 +72,7 @@ def fn_counta(*args) -> int:
     return sum(1 for v in values if v != "" and v is not None)
 
 
-def fn_countblank(*args) -> int:
+def fn_countblank(*args: Any) -> int:
     """@COUNTBLANK - Count of empty cells."""
     values = _flatten_args(args)
     return sum(1 for v in values if v == "" or v is None)
@@ -108,12 +108,12 @@ def fn_std(*args) -> float:
     return math.sqrt(variance)
 
 
-def fn_stds(*args) -> float:
+def fn_stds(*args: Any) -> float:
     """@STDS - Alias for sample standard deviation."""
     return fn_std(*args)
 
 
-def fn_stdp(*args) -> float:
+def fn_stdp(*args: Any) -> float:
     """@STDP - Population standard deviation.
 
     Uses n denominator (population std dev).
@@ -140,12 +140,12 @@ def fn_var(*args) -> float:
     return sum((x - mean) ** 2 for x in numbers) / (len(numbers) - 1)
 
 
-def fn_vars(*args) -> float:
+def fn_vars(*args: Any) -> float:
     """@VARS - Alias for sample variance."""
     return fn_var(*args)
 
 
-def fn_varp(*args) -> float:
+def fn_varp(*args: Any) -> float:
     """@VARP - Population variance.
 
     Uses n denominator.
@@ -158,7 +158,7 @@ def fn_varp(*args) -> float:
     return sum((x - mean) ** 2 for x in numbers) / len(numbers)
 
 
-def fn_median(*args) -> float:
+def fn_median(*args: Any) -> float:
     """@MEDIAN - Middle value when sorted."""
     numbers = sorted(_get_numbers(args))
     if not numbers:
@@ -171,7 +171,7 @@ def fn_median(*args) -> float:
     return numbers[mid]
 
 
-def fn_mode(*args) -> float:
+def fn_mode(*args: Any) -> float:
     """@MODE - Most frequent value."""
     numbers = _get_numbers(args)
     if not numbers:
@@ -186,7 +186,7 @@ def fn_mode(*args) -> float:
     return min(modes)  # Return smallest mode
 
 
-def fn_large(*args) -> float:
+def fn_large(*args: Any) -> float:
     """@LARGE - k-th largest value.
 
     Usage: @LARGE(range, k)
@@ -203,7 +203,7 @@ def fn_large(*args) -> float:
     return numbers[k_val - 1]
 
 
-def fn_small(*args) -> float:
+def fn_small(*args: Any) -> float:
     """@SMALL - k-th smallest value.
 
     Usage: @SMALL(range, k)
@@ -220,7 +220,7 @@ def fn_small(*args) -> float:
     return numbers[k_val - 1]
 
 
-def fn_rank(*args) -> int:
+def fn_rank(*args: Any) -> int:
     """@RANK - Rank of a value in a list.
 
     Usage: @RANK(value, range, order)
@@ -234,7 +234,8 @@ def fn_rank(*args) -> int:
         return 0
 
     numbers = _get_numbers(args[1:-1] if len(args) > 2 else (args[1],))
-    order = int(_to_number(args[-1])) if len(args) > 2 else 0
+    order_val = _to_number(args[-1]) if len(args) > 2 else 0.0
+    order = int(order_val) if order_val is not None else 0
 
     if order == 0:
         # Descending - largest is rank 1
@@ -249,7 +250,7 @@ def fn_rank(*args) -> int:
         return 0
 
 
-def fn_percentile(*args) -> float:
+def fn_percentile(*args: Any) -> float:
     """@PERCENTILE - Value at given percentile.
 
     Usage: @PERCENTILE(range, k) where k is 0-1
@@ -276,7 +277,7 @@ def fn_percentile(*args) -> float:
     return numbers[lower] * (1 - frac) + numbers[upper] * frac
 
 
-def fn_quartile(*args) -> float:
+def fn_quartile(*args: Any) -> float:
     """@QUARTILE - Value at given quartile.
 
     Usage: @QUARTILE(range, quart) where quart is 0-4
@@ -285,13 +286,14 @@ def fn_quartile(*args) -> float:
         return float('nan')
 
     *range_args, quart = args
-    q = int(_to_number(quart) or 0)
+    q_val = _to_number(quart)
+    q = int(q_val) if q_val is not None else 0
 
     if q < 0 or q > 4:
         return float('nan')
 
     # Convert quartile to percentile
-    percentiles = {0: 0, 1: 0.25, 2: 0.5, 3: 0.75, 4: 1}
+    percentiles = {0: 0.0, 1: 0.25, 2: 0.5, 3: 0.75, 4: 1.0}
     return fn_percentile(*range_args, percentiles[q])
 
 
@@ -304,12 +306,14 @@ def fn_rand() -> float:
 def fn_randbetween(bottom: Any, top: Any) -> int:
     """@RANDBETWEEN - Random integer between two values."""
     import random
-    b = int(_to_number(bottom) if bottom is not None else 0)
-    t = int(_to_number(top) if top is not None else 1)
+    b_val = _to_number(bottom) if bottom is not None else 0.0
+    t_val = _to_number(top) if top is not None else 1.0
+    b = int(b_val) if b_val is not None else 0
+    t = int(t_val) if t_val is not None else 1
     return random.randint(b, t)
 
 
-def fn_sumproduct(*args) -> float:
+def fn_sumproduct(*args: Any) -> float:
     """@SUMPRODUCT - Sum of products of corresponding elements.
 
     Usage: @SUMPRODUCT(array1, array2, ...)
@@ -345,8 +349,10 @@ def fn_permut(n: Any, k: Any) -> int:
     Usage: @PERMUT(n, k)
     Returns n! / (n-k)!
     """
-    n_val = int(_to_number(n) if n is not None else 0)
-    k_val = int(_to_number(k) if k is not None else 0)
+    n_num = _to_number(n) if n is not None else 0.0
+    k_num = _to_number(k) if k is not None else 0.0
+    n_val = int(n_num) if n_num is not None else 0
+    k_val = int(k_num) if k_num is not None else 0
 
     if n_val < 0 or k_val < 0 or k_val > n_val:
         return 0
@@ -363,8 +369,10 @@ def fn_combin(n: Any, k: Any) -> int:
     Usage: @COMBIN(n, k)
     Returns n! / (k! * (n-k)!)
     """
-    n_val = int(_to_number(n) if n is not None else 0)
-    k_val = int(_to_number(k) if k is not None else 0)
+    n_num = _to_number(n) if n is not None else 0.0
+    k_num = _to_number(k) if k is not None else 0.0
+    n_val = int(n_num) if n_num is not None else 0
+    k_val = int(k_num) if k_num is not None else 0
 
     if n_val < 0 or k_val < 0 or k_val > n_val:
         return 0
@@ -381,7 +389,8 @@ def fn_combin(n: Any, k: Any) -> int:
 
 def fn_fact(n: Any) -> int:
     """@FACT - Factorial."""
-    n_val = int(_to_number(n) if n is not None else 0)
+    n_num = _to_number(n) if n is not None else 0.0
+    n_val = int(n_num) if n_num is not None else 0
     if n_val < 0:
         return 0
     result = 1
@@ -396,13 +405,13 @@ def fn_sum(*args) -> float:
     return sum(numbers)
 
 
-def fn_sumsq(*args) -> float:
+def fn_sumsq(*args: Any) -> float:
     """@SUMSQ - Sum of squares."""
     numbers = _get_numbers(args)
     return sum(x * x for x in numbers)
 
 
-def fn_product(*args) -> float:
+def fn_product(*args: Any) -> float:
     """@PRODUCT - Product of numeric values."""
     numbers = _get_numbers(args)
     if not numbers:

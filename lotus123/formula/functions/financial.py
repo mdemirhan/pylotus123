@@ -23,9 +23,9 @@ def fn_pmt(principal: Any, rate: Any, nper: Any) -> float:
     n = float(nper)
 
     if r == 0:
-        return pv / n
+        return float(pv / n)
 
-    return pv * (r * (1 + r) ** n) / ((1 + r) ** n - 1)
+    return float(pv * (r * (1 + r) ** n) / ((1 + r) ** n - 1))
 
 
 def fn_pv(payment: Any, rate: Any, nper: Any) -> float:
@@ -41,9 +41,9 @@ def fn_pv(payment: Any, rate: Any, nper: Any) -> float:
     n = float(nper)
 
     if r == 0:
-        return pmt * n
+        return float(pmt * n)
 
-    return pmt * ((1 - (1 + r) ** -n) / r)
+    return float(pmt * ((1 - (1 + r) ** -n) / r))
 
 
 def fn_fv(payment: Any, rate: Any, nper: Any) -> float:
@@ -59,12 +59,12 @@ def fn_fv(payment: Any, rate: Any, nper: Any) -> float:
     n = float(nper)
 
     if r == 0:
-        return pmt * n
+        return float(pmt * n)
 
-    return pmt * (((1 + r) ** n - 1) / r)
+    return float(pmt * (((1 + r) ** n - 1) / r))
 
 
-def fn_npv(rate: Any, *cash_flows) -> float:
+def fn_npv(rate: Any, *cash_flows: Any) -> float:
     """@NPV - Calculate net present value.
 
     Usage: @NPV(discount_rate, value1, value2, ...)
@@ -96,7 +96,7 @@ def fn_npv(rate: Any, *cash_flows) -> float:
     return npv
 
 
-def fn_irr(guess: Any, *cash_flows) -> float:
+def fn_irr(guess: Any, *cash_flows: Any) -> float | str:
     """@IRR - Calculate internal rate of return.
 
     Usage: @IRR(guess, value1, value2, ...)
@@ -105,7 +105,7 @@ def fn_irr(guess: Any, *cash_flows) -> float:
     Uses Newton-Raphson iteration.
     """
     # Flatten cash flows
-    flows = []
+    flows: list[Any] = []
     for cf in cash_flows:
         if isinstance(cf, list):
             for item in cf:
@@ -116,18 +116,18 @@ def fn_irr(guess: Any, *cash_flows) -> float:
         else:
             flows.append(cf)
 
-    flows = [float(f) for f in flows if isinstance(f, (int, float)) or
+    float_flows = [float(f) for f in flows if isinstance(f, (int, float)) or
              (isinstance(f, str) and f.replace('.', '').replace('-', '').isdigit())]
 
-    if not flows:
+    if not float_flows:
         return "#ERR!"
 
     rate = float(guess) if guess else 0.1
 
     # Newton-Raphson iteration
     for _ in range(100):
-        npv = sum(cf / ((1 + rate) ** i) for i, cf in enumerate(flows))
-        npv_deriv = sum(-i * cf / ((1 + rate) ** (i + 1)) for i, cf in enumerate(flows))
+        npv = sum(cf / ((1 + rate) ** i) for i, cf in enumerate(float_flows))
+        npv_deriv = sum(-i * cf / ((1 + rate) ** (i + 1)) for i, cf in enumerate(float_flows))
 
         if abs(npv_deriv) < 1e-10:
             break
@@ -198,7 +198,7 @@ def fn_nper(rate: Any, pmt: Any, pv: Any, fv: Any = 0) -> float:
     return math.log((payment - future * r) / (payment + present * r)) / math.log(1 + r)
 
 
-def fn_cterm(rate: Any, fv: Any, pv: Any) -> float:
+def fn_cterm(rate: Any, fv: Any, pv: Any) -> float | str:
     """@CTERM - Calculate compounding term.
 
     Usage: @CTERM(interest_rate, future_value, present_value)
@@ -233,7 +233,7 @@ def fn_term(pmt: Any, rate: Any, fv: Any) -> float:
     return math.log(1 + (future * r / payment)) / math.log(1 + r)
 
 
-def fn_sln(cost: Any, salvage: Any, life: Any) -> float:
+def fn_sln(cost: Any, salvage: Any, life: Any) -> float | str:
     """@SLN - Straight-line depreciation.
 
     Usage: @SLN(cost, salvage_value, useful_life)
@@ -250,7 +250,7 @@ def fn_sln(cost: Any, salvage: Any, life: Any) -> float:
     return (c - s) / n
 
 
-def fn_syd(cost: Any, salvage: Any, life: Any, period: Any) -> float:
+def fn_syd(cost: Any, salvage: Any, life: Any, period: Any) -> float | str:
     """@SYD - Sum-of-years-digits depreciation.
 
     Usage: @SYD(cost, salvage_value, useful_life, period)
@@ -269,7 +269,7 @@ def fn_syd(cost: Any, salvage: Any, life: Any, period: Any) -> float:
     return (c - s) * (n - per + 1) / sum_years
 
 
-def fn_ddb(cost: Any, salvage: Any, life: Any, period: Any, factor: Any = 2) -> float:
+def fn_ddb(cost: Any, salvage: Any, life: Any, period: Any, factor: Any = 2) -> float | str:
     """@DDB - Double-declining balance depreciation.
 
     Usage: @DDB(cost, salvage_value, useful_life, period, factor)
@@ -300,10 +300,10 @@ def fn_ddb(cost: Any, salvage: Any, life: Any, period: Any, factor: Any = 2) -> 
     if book_value - depreciation < s:
         depreciation = book_value - s
 
-    return max(0, depreciation)
+    return max(0.0, depreciation)
 
 
-def fn_ipmt(rate: Any, period: Any, nper: Any, pv: Any) -> float:
+def fn_ipmt(rate: Any, period: Any, nper: Any, pv: Any) -> float | str:
     """@IPMT - Interest portion of payment.
 
     Usage: @IPMT(interest_rate, period, num_periods, present_value)
@@ -333,7 +333,7 @@ def fn_ipmt(rate: Any, period: Any, nper: Any, pv: Any) -> float:
     return remaining * r
 
 
-def fn_ppmt(rate: Any, period: Any, nper: Any, pv: Any) -> float:
+def fn_ppmt(rate: Any, period: Any, nper: Any, pv: Any) -> float | str:
     """@PPMT - Principal portion of payment.
 
     Usage: @PPMT(interest_rate, period, num_periods, present_value)
@@ -356,8 +356,10 @@ def fn_ppmt(rate: Any, period: Any, nper: Any, pv: Any) -> float:
         pmt = present * (r * (1 + r) ** n) / ((1 + r) ** n - 1)
 
     # Principal = Payment - Interest
-    ipmt = fn_ipmt(rate, period, nper, pv)
-    return pmt - ipmt
+    ipmt_result = fn_ipmt(rate, period, nper, pv)
+    if isinstance(ipmt_result, str):
+        return ipmt_result
+    return pmt - ipmt_result
 
 
 # Function registry for this module

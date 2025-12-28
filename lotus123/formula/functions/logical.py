@@ -97,7 +97,7 @@ def fn_not(value: Any) -> bool:
     return not _to_bool(value)
 
 
-def fn_xor(*args) -> bool:
+def fn_xor(*args: Any) -> bool:
     """@XOR - Logical exclusive OR.
 
     Returns TRUE if an odd number of arguments are true.
@@ -124,7 +124,7 @@ def fn_iserror(value: Any) -> bool:
 
 def fn_isna(value: Any) -> bool:
     """@ISNA - Check if value is #N/A error."""
-    return value == "#N/A"
+    return bool(value == "#N/A")
 
 
 def fn_isnumber(value: Any) -> bool:
@@ -231,7 +231,7 @@ def fn_ifna(value: Any, value_if_na: Any) -> Any:
     return value
 
 
-def fn_switch(expression: Any, *args) -> Any:
+def fn_switch(expression: Any, *args: Any) -> Any:
     """@SWITCH - Match value against list of cases.
 
     Usage: @SWITCH(expression, value1, result1, value2, result2, ..., default)
@@ -239,7 +239,7 @@ def fn_switch(expression: Any, *args) -> Any:
     pairs = list(args)
 
     # Check for default value (odd number of remaining args)
-    default = "" if len(pairs) % 2 == 0 else pairs.pop()
+    default: Any = "" if len(pairs) % 2 == 0 else pairs.pop()
 
     # Check each value/result pair
     for i in range(0, len(pairs), 2):
@@ -249,7 +249,7 @@ def fn_switch(expression: Any, *args) -> Any:
     return default
 
 
-def fn_choose(index: Any, *values) -> Any:
+def fn_choose(index: Any, *values: Any) -> Any:
     """@CHOOSE - Select from list by index.
 
     Usage: @CHOOSE(index, value1, value2, ...)
