@@ -27,11 +27,14 @@ class CommandInput(ModalScreen[str | None]):
     }
 
     #cmd-dialog-container {
-        width: 60;
-        height: 9;
-        background: $surface;
-        border: thick $accent;
+        width: 80;
+        height: auto;
+        min-height: 7;
         padding: 1 2;
+    }
+
+    #cmd-prompt {
+        width: 100%;
     }
 
     #cmd-input {
@@ -49,6 +52,14 @@ class CommandInput(ModalScreen[str | None]):
             yield Input(id="cmd-input")
 
     def on_mount(self) -> None:
+        # Get theme fresh from the app's current setting
+        from ..themes import THEMES
+        theme_type = self.app.current_theme_type  # type: ignore[attr-defined]
+        theme = THEMES[theme_type]
+
+        container = self.query_one("#cmd-dialog-container")
+        container.styles.background = theme.cell_bg
+        container.styles.border = ("thick", theme.accent)
         self.query_one("#cmd-input").focus()
 
     @on(Input.Submitted)

@@ -31,8 +31,6 @@ class FileDialog(ModalScreen[str | None]):
         height: 80%;
         max-width: 100;
         max-height: 40;
-        background: $surface;
-        border: thick $accent;
         padding: 1 2;
     }
 
@@ -69,6 +67,16 @@ class FileDialog(ModalScreen[str | None]):
             with Horizontal(id="dialog-buttons"):
                 yield Button("OK", id="ok-btn", variant="primary")
                 yield Button("Cancel", id="cancel-btn")
+
+    def on_mount(self) -> None:
+        # Get theme fresh from the app's current setting
+        from ..themes import THEMES
+        theme_type = self.app.current_theme_type  # type: ignore[attr-defined]
+        theme = THEMES[theme_type]
+
+        container = self.query_one("#file-dialog-container")
+        container.styles.background = theme.cell_bg
+        container.styles.border = ("thick", theme.accent)
 
     @on(DirectoryTree.FileSelected)
     def on_file_selected(self, event: DirectoryTree.FileSelected) -> None:

@@ -281,7 +281,9 @@ class LotusApp(App[None]):
 
     def _apply_theme(self) -> None:
         """Apply the current theme to all widgets."""
-        t = self.color_theme
+        # Get theme fresh from THEMES dict to avoid stale references
+        t = THEMES[self.current_theme_type]
+        self.color_theme = t  # Update the reference too
         self.stylesheet.add_source(self._generate_css())
 
         try:
@@ -674,7 +676,7 @@ class LotusApp(App[None]):
                     return
                 grid = self.query_one("#grid", SpreadsheetGrid)
                 self.spreadsheet.set_col_width(grid.cursor_col, width)
-                self._dirty = True
+                self._mark_dirty()
                 grid.recalculate_visible_area()
                 grid.refresh_grid()
             except ValueError:
@@ -855,6 +857,7 @@ class LotusApp(App[None]):
                 grid = self.query_one("#grid", SpreadsheetGrid)
                 grid.refresh_grid()
                 self._update_status()
+                self._mark_dirty()
                 self.notify(f"Copied {len(changes)} cell(s)")
         except ValueError as e:
             self.notify(f"Invalid destination: {e}", severity="error")
@@ -916,6 +919,7 @@ class LotusApp(App[None]):
                 grid.cursor_col = dest_col
                 grid.refresh_grid()
                 self._update_status()
+                self._mark_dirty()
                 self.notify(f"Moved cells to {make_cell_ref(dest_row, dest_col)}")
         except ValueError as e:
             self.notify(f"Invalid destination: {e}", severity="error")
@@ -965,6 +969,7 @@ class LotusApp(App[None]):
                 self.undo_manager.execute(cmd)
                 grid.refresh_grid()
                 self._update_status()
+                self._mark_dirty()
                 self.notify("Pasted")
             return
 
@@ -999,6 +1004,7 @@ class LotusApp(App[None]):
                 spreadsheet=self.spreadsheet, changes=changes
             )
             self.undo_manager.execute(range_cmd)
+        was_cut = self._clipboard_is_cut
         if self._clipboard_is_cut:
             clear_changes = []
             for r_offset, row_data in enumerate(self._range_clipboard):
@@ -1015,6 +1021,8 @@ class LotusApp(App[None]):
             self._clipboard_is_cut = False
         grid.refresh_grid()
         self._update_status()
+        if changes or was_cut:
+            self._mark_dirty()
         cells_count = (
             len(self._range_clipboard) * len(self._range_clipboard[0])
             if self._range_clipboard
@@ -1027,6 +1035,7 @@ class LotusApp(App[None]):
         cmd = InsertRowCommand(spreadsheet=self.spreadsheet, row=grid.cursor_row)
         self.undo_manager.execute(cmd)
         grid.refresh_grid()
+        self._mark_dirty()
         self.notify(f"Row {grid.cursor_row + 1} inserted")
 
     def _delete_row(self) -> None:
@@ -1035,6 +1044,7 @@ class LotusApp(App[None]):
         self.undo_manager.execute(cmd)
         grid.refresh_grid()
         self._update_status()
+        self._mark_dirty()
         self.notify(f"Row {grid.cursor_row + 1} deleted")
 
     # Chart methods
@@ -1143,6 +1153,7 @@ class LotusApp(App[None]):
                 cell.format_code = format_code
         grid.refresh_grid()
         self._update_status()
+        self._mark_dirty()
         self.notify(f"Format set to {format_code}")
 
     def _range_label(self) -> None:
@@ -1174,6 +1185,7 @@ class LotusApp(App[None]):
             self.undo_manager.execute(cmd)
             grid.refresh_grid()
             self._update_status()
+            self._mark_dirty()
         align_names = {"L": "Left", "R": "Right", "C": "Center"}
         self.notify(f"Label alignment set to {align_names.get(align_char, 'Left')}")
 
@@ -1193,6 +1205,7 @@ class LotusApp(App[None]):
         if not name:
             return
         self.spreadsheet.named_ranges.add_from_string(name, self._pending_range)
+        self._mark_dirty()
         self.notify(f"Named range '{name}' created for {self._pending_range}")
 
     def _range_protect(self) -> None:
@@ -1206,6 +1219,7 @@ class LotusApp(App[None]):
                 if cell.is_protected:
                     protected_count += 1
         total_cells = (r2 - r1 + 1) * (c2 - c1 + 1)
+        self._mark_dirty()
         if protected_count > 0:
             self.notify(f"Protected {protected_count} cell(s)")
         else:
@@ -1252,6 +1266,7 @@ class LotusApp(App[None]):
                 self.undo_manager.execute(cmd)
                 grid.refresh_grid()
                 self._update_status()
+                self._mark_dirty()
                 self.notify(f"Filled {len(changes)} cell(s)")
         except ValueError as e:
             self.notify(f"Invalid fill value: {e}", severity="error")
@@ -1318,6 +1333,7 @@ class LotusApp(App[None]):
                 self.undo_manager.execute(cmd)
                 grid.refresh_grid()
                 self._update_status()
+                self._mark_dirty()
                 order_name = "descending" if reverse else "ascending"
                 self.notify(
                     f"Sorted {len(rows_data)} rows by column {sort_col_letter} ({order_name})"
@@ -1560,6 +1576,7 @@ class LotusApp(App[None]):
         )
         grid = self.query_one("#grid", SpreadsheetGrid)
         grid.refresh_grid()
+        self._mark_dirty()
         self.notify(f"Extracted {count} record(s)")
 
     def _query_unique(self) -> None:
@@ -1598,6 +1615,7 @@ class LotusApp(App[None]):
         )
         grid = self.query_one("#grid", SpreadsheetGrid)
         grid.refresh_grid()
+        self._mark_dirty()
         self.notify(f"Extracted {count} unique record(s)")
 
     def _query_delete(self) -> None:
@@ -1620,6 +1638,7 @@ class LotusApp(App[None]):
         count = db.delete_matching(self._query_input_range, matching_rows)
         grid = self.query_one("#grid", SpreadsheetGrid)
         grid.refresh_grid()
+        self._mark_dirty()
         self.notify(f"Deleted {count} record(s)")
 
     def _query_reset(self) -> None:
@@ -1728,6 +1747,7 @@ class LotusApp(App[None]):
             grid = self.query_one("#grid", SpreadsheetGrid)
             grid.refresh_grid()
             self._update_status()
+            self._mark_dirty()
             self.notify("Worksheet erased")
 
     def on_key(self, event: events.Key) -> None:

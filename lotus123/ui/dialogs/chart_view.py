@@ -31,8 +31,6 @@ class ChartViewScreen(ModalScreen[None]):
     #chart-container {
         width: 80%;
         height: 80%;
-        border: thick $accent;
-        background: $surface;
         padding: 1;
     }
 
@@ -57,6 +55,16 @@ class ChartViewScreen(ModalScreen[None]):
         with Container(id="chart-container"):
             yield Static("\n".join(self.chart_lines), id="chart-content")
             yield Static("Press ESC or Enter to close", id="chart-footer")
+
+    def on_mount(self) -> None:
+        # Get theme fresh from the app's current setting
+        from ..themes import THEMES
+        theme_type = self.app.current_theme_type  # type: ignore[attr-defined]
+        theme = THEMES[theme_type]
+
+        container = self.query_one("#chart-container")
+        container.styles.background = theme.cell_bg
+        container.styles.border = ("thick", theme.accent)
 
     def action_dismiss_screen(self) -> None:
         self.dismiss(None)

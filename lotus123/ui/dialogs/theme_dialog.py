@@ -51,32 +51,25 @@ class ThemeDialog(ModalScreen[ThemeType | None]):
     #theme-dialog-container {
         width: 50;
         height: 15;
-        background: $surface;
-        border: thick $accent;
         padding: 1 2;
     }
 
     #theme-list {
         height: 1fr;
         margin: 1 0;
-        border: solid $primary;
     }
 
     #theme-list > ListItem {
         padding: 0 1;
     }
 
-    #theme-list > ListItem:hover {
-        background: $accent;
-    }
-
-    #theme-list > ListItem.-highlight {
-        background: $accent;
-    }
-
     #dialog-buttons {
         height: 3;
         align: center middle;
+    }
+
+    #dialog-buttons Button {
+        margin: 0 2;
     }
     """
 
@@ -95,10 +88,20 @@ class ThemeDialog(ModalScreen[ThemeType | None]):
                 id="theme-list",
             )
             with Horizontal(id="dialog-buttons"):
+                yield Button("OK", id="ok-btn", variant="primary")
                 yield Button("Cancel", id="cancel-btn")
 
     def on_mount(self) -> None:
+        # Get theme fresh from the app's current setting
+        theme_type = self.app.current_theme_type  # type: ignore[attr-defined]
+        theme = THEMES[theme_type]
+
+        container = self.query_one("#theme-dialog-container")
+        container.styles.background = theme.cell_bg
+        container.styles.border = ("thick", theme.accent)
+
         list_view = self.query_one("#theme-list", ListView)
+        list_view.styles.border = ("solid", theme.accent)
         list_view.focus()
         # Set initial selection
         idx = self._theme_types.index(self.current)
@@ -133,6 +136,10 @@ class ThemeDialog(ModalScreen[ThemeType | None]):
     def on_list_selected(self, event: ListView.Selected) -> None:
         if isinstance(event.item, ThemeItem):
             self.dismiss(event.item.theme_type)
+
+    @on(Button.Pressed, "#ok-btn")
+    def on_ok_pressed(self) -> None:
+        self.action_select()
 
     @on(Button.Pressed, "#cancel-btn")
     def on_cancel_pressed(self) -> None:

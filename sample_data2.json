@@ -51,7 +51,8 @@
       "raw_value": "'Sales"
     },
     "2,3": {
-      "raw_value": "75000"
+      "raw_value": "75000",
+      "format_code": "C2"
     },
     "2,4": {
       "raw_value": "2019"
@@ -72,7 +73,8 @@
       "raw_value": "'Engineering"
     },
     "3,3": {
-      "raw_value": "92000"
+      "raw_value": "92000",
+      "format_code": "C2"
     },
     "3,4": {
       "raw_value": "2018"
@@ -93,7 +95,8 @@
       "raw_value": "'Marketing"
     },
     "4,3": {
-      "raw_value": "68000"
+      "raw_value": "68000",
+      "format_code": "C2"
     },
     "4,4": {
       "raw_value": "2020"
@@ -114,7 +117,8 @@
       "raw_value": "'Engineering"
     },
     "5,3": {
-      "raw_value": "105000"
+      "raw_value": "105000",
+      "format_code": "C2"
     },
     "5,4": {
       "raw_value": "2015"
@@ -135,7 +139,8 @@
       "raw_value": "'Sales"
     },
     "6,3": {
-      "raw_value": "71000"
+      "raw_value": "71000",
+      "format_code": "C2"
     },
     "6,4": {
       "raw_value": "2021"
@@ -156,7 +161,8 @@
       "raw_value": "'HR"
     },
     "7,3": {
-      "raw_value": "62000"
+      "raw_value": "62000",
+      "format_code": "C2"
     },
     "7,4": {
       "raw_value": "2017"
@@ -177,7 +183,8 @@
       "raw_value": "'Engineering"
     },
     "8,3": {
-      "raw_value": "88000"
+      "raw_value": "88000",
+      "format_code": "C2"
     },
     "8,4": {
       "raw_value": "2019"
@@ -198,7 +205,8 @@
       "raw_value": "'Marketing"
     },
     "9,3": {
-      "raw_value": "73000"
+      "raw_value": "73000",
+      "format_code": "C2"
     },
     "9,4": {
       "raw_value": "2020"
@@ -219,7 +227,8 @@
       "raw_value": "'Sales"
     },
     "10,3": {
-      "raw_value": "82000"
+      "raw_value": "82000",
+      "format_code": "C2"
     },
     "10,4": {
       "raw_value": "2016"
@@ -240,7 +249,8 @@
       "raw_value": "'Engineering"
     },
     "11,3": {
-      "raw_value": "95000"
+      "raw_value": "95000",
+      "format_code": "C2"
     },
     "11,4": {
       "raw_value": "2018"
@@ -287,533 +297,540 @@
     "11,9": {
       "raw_value": "'Active"
     },
-    "13,8": {
+    "14,8": {
       "raw_value": "'--- Criteria 4: Name contains 'a' ---"
     },
-    "14,8": {
+    "15,8": {
       "raw_value": "'Name"
     },
-    "15,8": {
+    "16,8": {
       "raw_value": "'*a*"
     },
-    "17,8": {
+    "18,8": {
       "raw_value": "'--- Output Area ---"
     },
-    "18,8": {
+    "19,8": {
       "raw_value": "'(Set Output to I19 for Extract)"
     },
-    "14,0": {
+    "15,0": {
       "raw_value": "'=== MONTHLY REVENUE (Line/Bar charts) ==="
     },
-    "15,0": {
+    "16,0": {
       "raw_value": "'Month"
     },
-    "15,1": {
+    "16,1": {
       "raw_value": "'2023"
     },
-    "15,2": {
+    "16,2": {
       "raw_value": "'2024"
     },
-    "15,3": {
+    "16,3": {
       "raw_value": "'Growth%"
     },
-    "16,0": {
+    "17,0": {
       "raw_value": "'Jan"
     },
-    "16,1": {
+    "17,1": {
       "raw_value": "45000"
     },
-    "16,2": {
-      "raw_value": "52000"
-    },
-    "16,3": {
-      "raw_value": "=((C17-B17)/B17)*100"
-    },
-    "17,0": {
-      "raw_value": "'Feb"
-    },
-    "17,1": {
-      "raw_value": "48000"
-    },
     "17,2": {
-      "raw_value": "55000"
+      "raw_value": "52000"
     },
     "17,3": {
       "raw_value": "=((C18-B18)/B18)*100"
     },
     "18,0": {
-      "raw_value": "'Mar"
+      "raw_value": "'Feb"
     },
     "18,1": {
-      "raw_value": "52000"
+      "raw_value": "48000"
     },
     "18,2": {
-      "raw_value": "61000"
+      "raw_value": "55000"
     },
     "18,3": {
       "raw_value": "=((C19-B19)/B19)*100"
     },
     "19,0": {
-      "raw_value": "'Apr"
+      "raw_value": "'Mar"
     },
     "19,1": {
-      "raw_value": "49000"
+      "raw_value": "52000"
     },
     "19,2": {
-      "raw_value": "58000"
+      "raw_value": "61000"
     },
     "19,3": {
       "raw_value": "=((C20-B20)/B20)*100"
     },
     "20,0": {
-      "raw_value": "'May"
+      "raw_value": "'Apr"
     },
     "20,1": {
-      "raw_value": "54000"
+      "raw_value": "49000"
     },
     "20,2": {
-      "raw_value": "63000"
+      "raw_value": "58000"
     },
     "20,3": {
       "raw_value": "=((C21-B21)/B21)*100"
     },
     "21,0": {
-      "raw_value": "'Jun"
+      "raw_value": "'May"
     },
     "21,1": {
-      "raw_value": "58000"
+      "raw_value": "54000"
     },
     "21,2": {
-      "raw_value": "68000"
+      "raw_value": "63000"
     },
     "21,3": {
       "raw_value": "=((C22-B22)/B22)*100"
     },
     "22,0": {
-      "raw_value": "'Total"
+      "raw_value": "'Jun"
     },
     "22,1": {
-      "raw_value": "=SUM(B17:B22)"
+      "raw_value": "58000"
     },
     "22,2": {
-      "raw_value": "=SUM(C17:C22)"
-    },
-    "22,3": {
-      "raw_value": "=AVG(D17:D22)"
-    },
-    "25,0": {
-      "raw_value": "'=== PRODUCT MIX (Pie chart) ==="
-    },
-    "26,0": {
-      "raw_value": "'Product"
-    },
-    "26,1": {
-      "raw_value": "'Revenue"
-    },
-    "26,2": {
-      "raw_value": "'Share%"
-    },
-    "27,0": {
-      "raw_value": "'Software"
-    },
-    "27,1": {
-      "raw_value": "125000"
-    },
-    "27,2": {
-      "raw_value": "=B28/B32*100"
-    },
-    "28,0": {
-      "raw_value": "'Hardware"
-    },
-    "28,1": {
-      "raw_value": "85000"
-    },
-    "28,2": {
-      "raw_value": "=B29/B32*100"
-    },
-    "29,0": {
-      "raw_value": "'Services"
-    },
-    "29,1": {
-      "raw_value": "65000"
-    },
-    "29,2": {
-      "raw_value": "=B30/B32*100"
-    },
-    "30,0": {
-      "raw_value": "'Training"
-    },
-    "30,1": {
-      "raw_value": "25000"
-    },
-    "30,2": {
-      "raw_value": "=B31/B32*100"
-    },
-    "31,0": {
-      "raw_value": "'Total"
-    },
-    "31,1": {
-      "raw_value": "=SUM(B28:B31)"
-    },
-    "31,2": {
-      "raw_value": "=SUM(C28:C31)"
-    },
-    "34,0": {
-      "raw_value": "'=== XY SCATTER (Correlation) ==="
-    },
-    "35,0": {
-      "raw_value": "'AdSpend"
-    },
-    "35,1": {
-      "raw_value": "'Sales"
-    },
-    "36,0": {
-      "raw_value": "1000"
-    },
-    "36,1": {
-      "raw_value": "15000"
-    },
-    "37,0": {
-      "raw_value": "2000"
-    },
-    "37,1": {
-      "raw_value": "22000"
-    },
-    "38,0": {
-      "raw_value": "3000"
-    },
-    "38,1": {
-      "raw_value": "31000"
-    },
-    "39,0": {
-      "raw_value": "4000"
-    },
-    "39,1": {
-      "raw_value": "38000"
-    },
-    "40,0": {
-      "raw_value": "5000"
-    },
-    "40,1": {
-      "raw_value": "47000"
-    },
-    "41,0": {
-      "raw_value": "6000"
-    },
-    "41,1": {
-      "raw_value": "52000"
-    },
-    "42,0": {
-      "raw_value": "7000"
-    },
-    "42,1": {
-      "raw_value": "61000"
-    },
-    "43,0": {
-      "raw_value": "8000"
-    },
-    "43,1": {
       "raw_value": "68000"
     },
-    "34,3": {
-      "raw_value": "'=== STACKED BAR (Composition) ==="
+    "22,3": {
+      "raw_value": "=((C23-B23)/B23)*100"
     },
-    "35,3": {
-      "raw_value": "'Region"
-    },
-    "35,4": {
-      "raw_value": "'Q1"
-    },
-    "35,5": {
-      "raw_value": "'Q2"
-    },
-    "35,6": {
-      "raw_value": "'Q3"
-    },
-    "35,7": {
-      "raw_value": "'Q4"
-    },
-    "36,3": {
-      "raw_value": "'North"
-    },
-    "36,4": {
-      "raw_value": "12000"
-    },
-    "36,5": {
-      "raw_value": "15000"
-    },
-    "36,6": {
-      "raw_value": "18000"
-    },
-    "36,7": {
-      "raw_value": "22000"
-    },
-    "37,3": {
-      "raw_value": "'South"
-    },
-    "37,4": {
-      "raw_value": "9000"
-    },
-    "37,5": {
-      "raw_value": "11000"
-    },
-    "37,6": {
-      "raw_value": "13000"
-    },
-    "37,7": {
-      "raw_value": "16000"
-    },
-    "38,3": {
-      "raw_value": "'East"
-    },
-    "38,4": {
-      "raw_value": "14000"
-    },
-    "38,5": {
-      "raw_value": "16000"
-    },
-    "38,6": {
-      "raw_value": "19000"
-    },
-    "38,7": {
-      "raw_value": "23000"
-    },
-    "39,3": {
-      "raw_value": "'West"
-    },
-    "39,4": {
-      "raw_value": "11000"
-    },
-    "39,5": {
-      "raw_value": "13000"
-    },
-    "39,6": {
-      "raw_value": "15000"
-    },
-    "39,7": {
-      "raw_value": "18000"
-    },
-    "40,3": {
+    "23,0": {
       "raw_value": "'Total"
     },
+    "23,1": {
+      "raw_value": "=SUM(B18:B23)"
+    },
+    "23,2": {
+      "raw_value": "=SUM(C18:C23)"
+    },
+    "23,3": {
+      "raw_value": "=AVG(D18:D23)"
+    },
+    "26,0": {
+      "raw_value": "'=== PRODUCT MIX (Pie chart) ==="
+    },
+    "27,0": {
+      "raw_value": "'Product"
+    },
+    "27,1": {
+      "raw_value": "'Revenue"
+    },
+    "27,2": {
+      "raw_value": "'Share%"
+    },
+    "28,0": {
+      "raw_value": "'Software"
+    },
+    "28,1": {
+      "raw_value": "125000"
+    },
+    "28,2": {
+      "raw_value": "=B29/B33*100"
+    },
+    "29,0": {
+      "raw_value": "'Hardware"
+    },
+    "29,1": {
+      "raw_value": "85000"
+    },
+    "29,2": {
+      "raw_value": "=B30/B33*100"
+    },
+    "30,0": {
+      "raw_value": "'Services"
+    },
+    "30,1": {
+      "raw_value": "65000"
+    },
+    "30,2": {
+      "raw_value": "=B31/B33*100"
+    },
+    "31,0": {
+      "raw_value": "'Training"
+    },
+    "31,1": {
+      "raw_value": "25000"
+    },
+    "31,2": {
+      "raw_value": "=B32/B33*100"
+    },
+    "32,0": {
+      "raw_value": "'Total"
+    },
+    "32,1": {
+      "raw_value": "=SUM(B29:B32)"
+    },
+    "32,2": {
+      "raw_value": "=SUM(C29:C32)"
+    },
+    "35,0": {
+      "raw_value": "'=== XY SCATTER (Correlation) ==="
+    },
+    "36,0": {
+      "raw_value": "'AdSpend"
+    },
+    "36,1": {
+      "raw_value": "'Sales"
+    },
+    "37,0": {
+      "raw_value": "1000"
+    },
+    "37,1": {
+      "raw_value": "15000"
+    },
+    "38,0": {
+      "raw_value": "2000"
+    },
+    "38,1": {
+      "raw_value": "22000"
+    },
+    "39,0": {
+      "raw_value": "3000"
+    },
+    "39,1": {
+      "raw_value": "31000"
+    },
+    "40,0": {
+      "raw_value": "4000"
+    },
+    "40,1": {
+      "raw_value": "38000"
+    },
+    "41,0": {
+      "raw_value": "5000"
+    },
+    "41,1": {
+      "raw_value": "47000"
+    },
+    "42,0": {
+      "raw_value": "6000"
+    },
+    "42,1": {
+      "raw_value": "52000"
+    },
+    "43,0": {
+      "raw_value": "7000"
+    },
+    "43,1": {
+      "raw_value": "61000"
+    },
+    "44,0": {
+      "raw_value": "8000"
+    },
+    "44,1": {
+      "raw_value": "68000"
+    },
+    "35,3": {
+      "raw_value": "'=== STACKED BAR (Composition) ==="
+    },
+    "36,3": {
+      "raw_value": "'Region"
+    },
+    "36,4": {
+      "raw_value": "'Q1"
+    },
+    "36,5": {
+      "raw_value": "'Q2"
+    },
+    "36,6": {
+      "raw_value": "'Q3"
+    },
+    "36,7": {
+      "raw_value": "'Q4"
+    },
+    "37,3": {
+      "raw_value": "'North"
+    },
+    "37,4": {
+      "raw_value": "12000"
+    },
+    "37,5": {
+      "raw_value": "15000"
+    },
+    "37,6": {
+      "raw_value": "18000"
+    },
+    "37,7": {
+      "raw_value": "22000"
+    },
+    "38,3": {
+      "raw_value": "'South"
+    },
+    "38,4": {
+      "raw_value": "9000"
+    },
+    "38,5": {
+      "raw_value": "11000"
+    },
+    "38,6": {
+      "raw_value": "13000"
+    },
+    "38,7": {
+      "raw_value": "16000"
+    },
+    "39,3": {
+      "raw_value": "'East"
+    },
+    "39,4": {
+      "raw_value": "14000"
+    },
+    "39,5": {
+      "raw_value": "16000"
+    },
+    "39,6": {
+      "raw_value": "19000"
+    },
+    "39,7": {
+      "raw_value": "23000"
+    },
+    "40,3": {
+      "raw_value": "'West"
+    },
     "40,4": {
-      "raw_value": "=SUM(E37:E40)"
+      "raw_value": "11000"
     },
     "40,5": {
-      "raw_value": "=SUM(F37:F40)"
+      "raw_value": "13000"
     },
     "40,6": {
-      "raw_value": "=SUM(G37:G40)"
+      "raw_value": "15000"
     },
     "40,7": {
-      "raw_value": "=SUM(H37:H40)"
+      "raw_value": "18000"
     },
-    "46,0": {
-      "raw_value": "'=== FORMULA SHOWCASE ==="
+    "41,3": {
+      "raw_value": "'Total"
+    },
+    "41,4": {
+      "raw_value": "=SUM(E38:E41)"
+    },
+    "41,5": {
+      "raw_value": "=SUM(F38:F41)"
+    },
+    "41,6": {
+      "raw_value": "=SUM(G38:G41)"
+    },
+    "41,7": {
+      "raw_value": "=SUM(H38:H41)"
     },
     "47,0": {
-      "raw_value": "'Function"
-    },
-    "47,1": {
-      "raw_value": "'Formula"
-    },
-    "47,2": {
-      "raw_value": "'Result"
-    },
-    "47,3": {
-      "raw_value": "'Description"
+      "raw_value": "'=== FORMULA SHOWCASE ==="
     },
     "48,0": {
-      "raw_value": "'SUM"
+      "raw_value": "'Function"
     },
     "48,1": {
-      "raw_value": "'=SUM(B17:B22)"
+      "raw_value": "'Formula"
     },
     "48,2": {
-      "raw_value": "=SUM(B17:B22)"
+      "raw_value": "'Result"
     },
     "48,3": {
-      "raw_value": "'Sum of 2023 revenue"
+      "raw_value": "'Description"
     },
     "49,0": {
-      "raw_value": "'AVG"
+      "raw_value": "'SUM"
     },
     "49,1": {
-      "raw_value": "'=AVG(D4:D12)"
+      "raw_value": "'=SUM(B17:B22)"
     },
     "49,2": {
-      "raw_value": "=AVG(D4:D12)"
+      "raw_value": "=SUM(B18:B23)"
     },
     "49,3": {
-      "raw_value": "'Avg employee salary"
+      "raw_value": "'Sum of 2023 revenue"
     },
     "50,0": {
-      "raw_value": "'MAX"
+      "raw_value": "'AVG"
     },
     "50,1": {
-      "raw_value": "'=MAX(D4:D12)"
+      "raw_value": "'=AVG(D4:D12)"
     },
     "50,2": {
-      "raw_value": "=MAX(D4:D12)"
+      "raw_value": "=AVG(D5:D13)"
     },
     "50,3": {
-      "raw_value": "'Highest salary"
+      "raw_value": "'Avg employee salary"
     },
     "51,0": {
-      "raw_value": "'MIN"
+      "raw_value": "'MAX"
     },
     "51,1": {
-      "raw_value": "'=MIN(D4:D12)"
+      "raw_value": "'=MAX(D4:D12)"
     },
     "51,2": {
-      "raw_value": "=MIN(D4:D12)"
+      "raw_value": "=MAX(D5:D13)"
     },
     "51,3": {
-      "raw_value": "'Lowest salary"
+      "raw_value": "'Highest salary"
     },
     "52,0": {
-      "raw_value": "'COUNT"
+      "raw_value": "'MIN"
     },
     "52,1": {
-      "raw_value": "'=COUNT(D4:D12)"
+      "raw_value": "'=MIN(D4:D12)"
     },
     "52,2": {
-      "raw_value": "=COUNT(D4:D12)"
+      "raw_value": "=MIN(D5:D13)"
     },
     "52,3": {
-      "raw_value": "'Number of employees"
+      "raw_value": "'Lowest salary"
     },
     "53,0": {
-      "raw_value": "'IF"
+      "raw_value": "'COUNT"
     },
     "53,1": {
-      "raw_value": "'=IF(C23>300000,\"Good\",\"Low\")"
+      "raw_value": "'=COUNT(D4:D12)"
     },
     "53,2": {
-      "raw_value": "=IF(C23>300000,\"Good\",\"Low\")"
+      "raw_value": "=COUNT(D5:D13)"
     },
     "53,3": {
-      "raw_value": "'Conditional logic"
+      "raw_value": "'Number of employees"
     },
     "54,0": {
-      "raw_value": "'ROUND"
+      "raw_value": "'IF"
     },
     "54,1": {
-      "raw_value": "'=ROUND(D17,1)"
+      "raw_value": "'=IF(C23>300000,\"Good\",\"Low\")"
     },
     "54,2": {
-      "raw_value": "=ROUND(D17,1)"
+      "raw_value": "=IF(C24>300000,\"Good\",\"Low\")"
     },
     "54,3": {
-      "raw_value": "'Round to 1 decimal"
+      "raw_value": "'Conditional logic"
     },
     "55,0": {
-      "raw_value": "'ABS"
+      "raw_value": "'ROUND"
     },
     "55,1": {
-      "raw_value": "'=ABS(-500)"
+      "raw_value": "'=ROUND(D17,1)"
     },
     "55,2": {
-      "raw_value": "=ABS(-500)"
+      "raw_value": "=ROUND(D18,1)"
     },
     "55,3": {
-      "raw_value": "'Absolute value"
+      "raw_value": "'Round to 1 decimal"
     },
     "56,0": {
-      "raw_value": "'SQRT"
+      "raw_value": "'ABS"
     },
     "56,1": {
-      "raw_value": "'=SQRT(144)"
+      "raw_value": "'=ABS(-500)"
     },
     "56,2": {
-      "raw_value": "=SQRT(144)"
+      "raw_value": "=ABS(-500)"
     },
     "56,3": {
-      "raw_value": "'Square root"
+      "raw_value": "'Absolute value"
     },
     "57,0": {
-      "raw_value": "'POWER"
+      "raw_value": "'SQRT"
     },
     "57,1": {
-      "raw_value": "'=POWER(2,8)"
+      "raw_value": "'=SQRT(144)"
     },
     "57,2": {
-      "raw_value": "=POWER(2,8)"
+      "raw_value": "=SQRT(144)"
     },
     "57,3": {
-      "raw_value": "'2 to the 8th"
+      "raw_value": "'Square root"
     },
     "58,0": {
-      "raw_value": "'PI"
+      "raw_value": "'POWER"
     },
     "58,1": {
-      "raw_value": "'=PI()"
+      "raw_value": "'=POWER(2,8)"
     },
     "58,2": {
-      "raw_value": "=PI()"
+      "raw_value": "=POWER(2,8)"
     },
     "58,3": {
-      "raw_value": "'Pi constant"
+      "raw_value": "'2 to the 8th"
     },
     "59,0": {
-      "raw_value": "'MOD"
+      "raw_value": "'PI"
     },
     "59,1": {
-      "raw_value": "'=MOD(17,5)"
+      "raw_value": "'=PI()"
     },
     "59,2": {
-      "raw_value": "=MOD(17,5)"
+      "raw_value": "=PI()"
     },
     "59,3": {
-      "raw_value": "'Remainder of 17/5"
+      "raw_value": "'Pi constant"
     },
     "60,0": {
-      "raw_value": "'INT"
+      "raw_value": "'MOD"
     },
     "60,1": {
-      "raw_value": "'=INT(9.7)"
+      "raw_value": "'=MOD(17,5)"
     },
     "60,2": {
-      "raw_value": "=INT(9.7)"
+      "raw_value": "=MOD(17,5)"
     },
     "60,3": {
+      "raw_value": "'Remainder of 17/5"
+    },
+    "61,0": {
+      "raw_value": "'INT"
+    },
+    "61,1": {
+      "raw_value": "'=INT(9.7)"
+    },
+    "61,2": {
+      "raw_value": "=INT(9.7)"
+    },
+    "61,3": {
       "raw_value": "'Integer part"
     },
-    "46,5": {
+    "47,5": {
       "raw_value": "'=== QUERY TESTING GUIDE ==="
     },
-    "47,5": {
+    "48,5": {
       "raw_value": "'1. Input range: A2:G12 (employee DB)"
     },
-    "48,5": {
+    "49,5": {
       "raw_value": "'2. Criteria examples in column I"
     },
-    "49,5": {
+    "50,5": {
       "raw_value": "'3. Use wildcards: *text*, ?"
     },
-    "50,5": {
+    "51,5": {
       "raw_value": "'4. Comparisons: >80000, <=2019"
     },
-    "51,5": {
+    "52,5": {
       "raw_value": "'"
     },
-    "52,5": {
+    "53,5": {
       "raw_value": "'=== GRAPH TESTING GUIDE ==="
     },
-    "53,5": {
+    "54,5": {
       "raw_value": "'Line: X=A17:A22, A=B17:B22"
     },
-    "54,5": {
+    "55,5": {
       "raw_value": "'Bar: X=A17:A22, A=C17:C22"
     },
-    "55,5": {
+    "56,5": {
       "raw_value": "'Pie: A=A28:A31, B=B28:B31"
     },
-    "56,5": {
+    "57,5": {
       "raw_value": "'XY: X=A37:A44, A=B37:B44"
     },
-    "57,5": {
+    "58,5": {
       "raw_value": "'Stacked: X=D36:D40, A-D=E-H"
+    },
+    "12,3": {
+      "raw_value": "=SUM(D3:D12)",
+      "format_code": "C2"
+    },
+    "12,5": {
+      "raw_value": "=AVG(F3:F12)"
     }
   },
   "named_ranges": {},

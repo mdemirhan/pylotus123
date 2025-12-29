@@ -2,8 +2,8 @@
 
 ## Overview
 
-This document describes the modular architecture designed to support all Lotus 1-2-3 features
-while maintaining extensibility for future enhancements.
+This document describes the modular architecture of the Lotus 1-2-3 clone, a fully-functional
+terminal-based spreadsheet application built with Python and the Textual TUI framework.
 
 ## Directory Structure
 
@@ -26,35 +26,35 @@ lotus123/
 │   ├── parser.py            # Formula tokenizer and parser
 │   ├── evaluator.py         # Expression evaluation engine
 │   ├── recalc.py            # Recalculation engine with dependency tracking
-│   └── functions/           # Function implementations (organized by category)
+│   └── functions/           # Function implementations (180+ functions)
 │       ├── __init__.py      # Function registry
-│       ├── math.py          # @SUM, @ABS, @SQRT, @EXP, @LN, @LOG, trig, etc.
-│       ├── statistical.py   # @AVG, @STD, @VAR, @COUNT, @MIN, @MAX
-│       ├── string.py        # @LEFT, @RIGHT, @MID, @LEN, @TRIM, @UPPER, etc.
-│       ├── logical.py       # @IF, @AND, @OR, @NOT, @TRUE, @FALSE, @ISERR, etc.
-│       ├── lookup.py        # @VLOOKUP, @HLOOKUP, @INDEX, @CHOOSE, @CELL, etc.
-│       ├── datetime.py      # @DATE, @NOW, @TODAY, @YEAR, @MONTH, @DAY, etc.
-│       └── info.py          # @ISNUMBER, @ISSTRING, @ISNA, @ISERR, @COLS, @ROWS
+│       ├── math.py          # @SUM, @ABS, @SQRT, @EXP, @LN, @LOG, trig (27 functions)
+│       ├── statistical.py   # @AVG, @STD, @VAR, @COUNT, @MIN, @MAX (32 functions)
+│       ├── string.py        # @LEFT, @RIGHT, @MID, @LEN, @TRIM, @UPPER (29 functions)
+│       ├── logical.py       # @IF, @AND, @OR, @NOT, @TRUE, @FALSE (24 functions)
+│       ├── lookup.py        # @VLOOKUP, @HLOOKUP, @INDEX, @MATCH (14 functions)
+│       ├── datetime.py      # @DATE, @NOW, @TODAY, @YEAR, @MONTH (17 functions)
+│       ├── financial.py     # @PMT, @PV, @FV, @NPV, @IRR, @RATE (14 functions)
+│       ├── database.py      # @DSUM, @DAVG, @DCOUNT, @DMAX, @DMIN (13 functions)
+│       └── info.py          # @ISNUMBER, @ISSTRING, @TYPE, @CELL (10 functions)
 │
 ├── ui/                      # User interface components
 │   ├── __init__.py
-│   ├── grid.py              # SpreadsheetGrid widget
+│   ├── grid.py              # SpreadsheetGrid widget with selection
+│   ├── menu_bar.py          # LotusMenu widget with hierarchical menus
+│   ├── status_bar.py        # Status bar with mode indicators
+│   ├── themes.py            # Theme definitions and management
+│   ├── config.py            # Application configuration
+│   ├── window.py            # Window splitting and frozen titles
 │   ├── menu/                # Lotus-style menu system
 │   │   ├── __init__.py
-│   │   ├── main_menu.py     # Main slash menu
-│   │   ├── file_menu.py     # /File operations
-│   │   ├── worksheet_menu.py # /Worksheet commands
-│   │   ├── range_menu.py    # /Range commands
-│   │   ├── data_menu.py     # /Data commands
-│   │   └── graph_menu.py    # /Graph commands
-│   ├── dialogs/             # Modal dialog screens
-│   │   ├── __init__.py
-│   │   ├── file_dialog.py   # File open/save
-│   │   ├── input_dialog.py  # Generic command input
-│   │   ├── format_dialog.py # Format selection
-│   │   └── range_dialog.py  # Range input
-│   ├── status_bar.py        # Status bar with mode indicators
-│   └── chart_view.py        # Chart display widget
+│   │   └── menu_system.py   # Complete menu system with all commands
+│   └── dialogs/             # Modal dialog screens
+│       ├── __init__.py
+│       ├── file_dialog.py   # File open/save
+│       ├── command_input.py # Generic command/formula input
+│       ├── theme_dialog.py  # Theme selection dialog
+│       └── chart_view.py    # Chart display screen
 │
 ├── data/                    # Data operations
 │   ├── __init__.py
@@ -70,11 +70,14 @@ lotus123/
 │
 ├── charting/                # Graphics/charting module
 │   ├── __init__.py
-│   ├── chart.py             # Base chart data model
-│   ├── line_chart.py        # Line graph renderer
-│   ├── bar_chart.py         # Bar/stacked bar chart
-│   ├── pie_chart.py         # Pie chart
-│   └── scatter_chart.py     # XY scatter plot
+│   ├── chart.py             # Chart data model (ChartType, ChartSeries, etc.)
+│   ├── renderer.py          # Base chart renderer and TextChartRenderer
+│   └── renderers/           # Type-specific chart renderers
+│       ├── __init__.py      # Renderer registry
+│       ├── line.py          # Line chart renderer
+│       ├── bar.py           # Bar chart renderer
+│       ├── pie.py           # Pie chart renderer
+│       └── scatter.py       # Scatter plot renderer
 │
 └── utils/                   # Utility modules
     ├── __init__.py
@@ -209,40 +212,39 @@ class RecalcEngine:
 
 | Feature | Module | Status |
 |---------|--------|--------|
-| 256×65536 grid | core/spreadsheet.py | Pending |
-| Cell data types | core/cell.py | Pending |
-| Text alignment prefixes | core/cell.py | Pending |
-| Numeric formats | core/formatting.py | Pending |
-| Date/time formats | core/formatting.py | Pending |
-| Absolute references | core/reference.py | Pending |
-| Formula parsing | formula/parser.py | Exists (enhance) |
-| Math functions | formula/functions/math.py | Partial |
-| Statistical functions | formula/functions/statistical.py | Pending |
-| String functions | formula/functions/string.py | Partial |
-| Logical functions | formula/functions/logical.py | Partial |
-| Lookup functions | formula/functions/lookup.py | Pending |
-| Date/time functions | formula/functions/datetime.py | Pending |
-| Recalc engine | formula/recalc.py | Pending |
-| Menu system | ui/menu/ | Basic (expand) |
-| Worksheet commands | ui/menu/worksheet_menu.py | Pending |
-| Range commands | ui/menu/range_menu.py | Pending |
-| Named ranges | core/named_ranges.py | Pending |
-| Database operations | data/database.py | Pending |
-| Undo/redo | utils/undo.py | Pending |
-| Window splitting | ui/grid.py | Pending |
-| Frozen titles | ui/grid.py | Pending |
-| Cell protection | core/protection.py | Pending |
-| Charting | charting/ | Pending |
-| Text import/export | io/ | Pending |
-| Status indicators | ui/status_bar.py | Pending |
-
-## Migration Strategy
-
-1. **Phase 1**: Create new package structure alongside existing code
-2. **Phase 2**: Migrate core functionality to new modules
-3. **Phase 3**: Update imports in app.py to use new structure
-4. **Phase 4**: Add new features in modular fashion
-5. **Phase 5**: Comprehensive testing at each phase
+| 256×65536 grid | core/spreadsheet.py | ✓ Complete |
+| Cell data types | core/cell.py | ✓ Complete |
+| Text alignment prefixes | core/cell.py | ✓ Complete |
+| Numeric formats | core/formatting.py | ✓ Complete |
+| Date/time formats | core/formatting.py | ✓ Complete |
+| Absolute references | core/reference.py | ✓ Complete |
+| Formula parsing | formula/parser.py | ✓ Complete |
+| Math functions (27) | formula/functions/math.py | ✓ Complete |
+| Statistical functions (32) | formula/functions/statistical.py | ✓ Complete |
+| String functions (29) | formula/functions/string.py | ✓ Complete |
+| Logical functions (24) | formula/functions/logical.py | ✓ Complete |
+| Lookup functions (14) | formula/functions/lookup.py | ✓ Complete |
+| Date/time functions (17) | formula/functions/datetime.py | ✓ Complete |
+| Financial functions (14) | formula/functions/financial.py | ✓ Complete |
+| Database functions (13) | formula/functions/database.py | ✓ Complete |
+| Info functions (10) | formula/functions/info.py | ✓ Complete |
+| Recalc engine | formula/recalc.py | ✓ Complete |
+| Menu system | ui/menu/ | ✓ Complete |
+| Worksheet commands | ui/menu/menu_system.py | ✓ Complete |
+| Range commands | ui/menu/menu_system.py | ✓ Complete |
+| Named ranges | core/named_ranges.py | ✓ Complete |
+| Database operations | data/database.py | ✓ Complete |
+| Undo/redo | utils/undo.py | ✓ Complete |
+| Window splitting | ui/window.py | ✓ Complete |
+| Frozen titles | ui/window.py | ✓ Complete |
+| Cell protection | core/protection.py | ✓ Complete |
+| Charting (5 types) | charting/ | ✓ Complete |
+| Text import/export | io/ | ✓ Complete |
+| Status indicators | ui/status_bar.py | ✓ Complete |
+| Theme support | ui/themes.py | ✓ Complete |
+| Clipboard operations | utils/clipboard.py | ✓ Complete |
+| Fill operations | data/fill.py | ✓ Complete |
+| Criteria parsing | data/criteria.py | ✓ Complete |
 
 ## Testing Strategy
 

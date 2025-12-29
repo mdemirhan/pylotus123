@@ -4,14 +4,22 @@ A modern terminal-based spreadsheet application inspired by the classic Lotus 1-
 
 ## Features
 
-- Classic blue/cyan color scheme reminiscent of the original
+- 256 columns (A-IV) x 65,536 rows grid
+- 180+ formula functions across 9 categories
+- Cell references (A1 notation) with absolute/relative support ($A$1, A1, $A1, A$1)
+- Range references (A1:B10)
+- Lotus-style `/` menu system with hierarchical menus
+- Multiple themes (classic blue, modern dark, light, high contrast)
 - Full keyboard navigation
-- Formula support with 40+ functions
-- Cell references (A1 notation) and ranges (A1:B10)
-- Lotus-style `/` menu system
+- Row/column insert/delete with width/height adjustment
+- Copy/cut/paste with clipboard management
+- Undo/redo support
+- Named ranges
+- Cell protection
+- Data operations (sort, query, fill)
+- Text import/export (CSV, TSV, custom delimited)
+- Charting (line, bar, pie, scatter plots)
 - Save/load spreadsheets to JSON
-- Row/column insert/delete
-- Copy/cut/paste cells
 
 ## Installation
 
@@ -22,8 +30,6 @@ uv sync
 ## Usage
 
 ```bash
-uv run lotus123
-# or
 uv run python main.py
 ```
 
@@ -39,24 +45,50 @@ uv run python main.py
 | Ctrl+S | Save |
 | Ctrl+O | Open |
 | Ctrl+N | New |
-| Ctrl+G | Goto cell |
+| Ctrl+G/F5 | Goto cell |
 | Ctrl+Q | Quit |
+| Ctrl+Z | Undo |
+| Ctrl+Y | Redo |
+| Ctrl+C | Copy |
+| Ctrl+X | Cut |
+| Ctrl+V | Paste |
+| Ctrl+T | Change theme |
+| Ctrl+D | Scroll down |
+| Ctrl+U | Scroll up |
+| F3 | Find |
+| F4 | Toggle absolute reference |
+| F9 | Recalculate |
 | Page Up/Down | Scroll |
 | Home/End | First/last column |
 
 ## Formula Functions
 
-### Math
-`SUM`, `AVG`, `MIN`, `MAX`, `COUNT`, `COUNTA`, `ABS`, `INT`, `ROUND`, `SQRT`, `POWER`, `MOD`, `SIN`, `COS`, `TAN`, `LOG`, `LN`, `EXP`, `PI`
+### Math (27 functions)
+`SUM`, `ABS`, `INT`, `ROUND`, `MOD`, `SQRT`, `POWER`, `SIGN`, `TRUNC`, `CEILING`, `FLOOR`, `FACT`, `GCD`, `LCM`, `EXP`, `LN`, `LOG`, `SIN`, `COS`, `TAN`, `ASIN`, `ACOS`, `ATAN`, `ATAN2`, `DEGREES`, `RADIANS`, `PI`, `RAND`
 
-### String
-`LEN`, `LEFT`, `RIGHT`, `MID`, `UPPER`, `LOWER`, `TRIM`, `CONCATENATE`, `CONCAT`, `VALUE`, `TEXT`
+### Statistical (32 functions)
+`AVG`, `AVERAGE`, `COUNT`, `COUNTA`, `COUNTBLANK`, `MIN`, `MAX`, `MEDIAN`, `STD`, `STDEV`, `VAR`, `MODE`, `LARGE`, `SMALL`, `RANK`, `PERCENTILE`, `QUARTILE`, `GEOMEAN`, `HARMEAN`, `PRODUCT`, `SUMPRODUCT`, `SUMSQ`, `COMBIN`, `PERMUT`
 
-### Logical
-`IF`, `AND`, `OR`, `NOT`
+### String (29 functions)
+`LEFT`, `RIGHT`, `MID`, `LENGTH`, `LEN`, `FIND`, `SEARCH`, `REPLACE`, `SUBSTITUTE`, `UPPER`, `LOWER`, `PROPER`, `TRIM`, `CLEAN`, `VALUE`, `STRING`, `CHAR`, `CODE`, `CONCAT`, `CONCATENATE`, `EXACT`, `REPEAT`, `REPT`, `TEXT`
 
-### Date/Time
-`NOW`, `TODAY`
+### Logical (24 functions)
+`IF`, `TRUE`, `FALSE`, `AND`, `OR`, `NOT`, `XOR`, `ISERR`, `ISERROR`, `ISNA`, `ISNUMBER`, `ISSTRING`, `ISTEXT`, `ISBLANK`, `ISLOGICAL`, `ISEVEN`, `ISODD`, `NA`, `ERR`, `IFERROR`, `IFNA`, `SWITCH`, `CHOOSE`
+
+### Lookup (14 functions)
+`VLOOKUP`, `HLOOKUP`, `INDEX`, `LOOKUP`, `MATCH`, `ADDRESS`, `INDIRECT`, `COLUMNS`, `COLS`, `COLUMN`, `ROWS`, `ROW`, `OFFSET`, `TRANSPOSE`
+
+### Date/Time (17 functions)
+`DATE`, `DATEVALUE`, `DAY`, `MONTH`, `YEAR`, `TIME`, `TIMEVALUE`, `HOUR`, `MINUTE`, `SECOND`, `NOW`, `TODAY`, `WEEKDAY`, `DAYS`, `EDATE`, `EOMONTH`, `YEARFRAC`
+
+### Financial (14 functions)
+`PMT`, `PV`, `FV`, `NPV`, `IRR`, `RATE`, `NPER`, `CTERM`, `SLN`, `SYD`, `DDB`, `IPMT`, `PPMT`, `TERM`
+
+### Database (13 functions)
+`DSUM`, `DAVG`, `DCOUNT`, `DCOUNTA`, `DGET`, `DMAX`, `DMIN`, `DSTD`, `DSTDEV`, `DVAR`
+
+### Info (10 functions)
+`TYPE`, `CELL`, `ISNUMBER`, `ISSTRING`, `ISERR`, `ISNA`, `INFO`, `ISFORMULA`
 
 ## Examples
 
