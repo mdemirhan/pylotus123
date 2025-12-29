@@ -669,11 +669,16 @@ class LotusApp(App[None]):
         if result:
             try:
                 width = int(result)
+                if width < 3 or width > 50:
+                    self.notify("Width must be between 3 and 50", severity="error")
+                    return
                 grid = self.query_one("#grid", SpreadsheetGrid)
                 self.spreadsheet.set_col_width(grid.cursor_col, width)
+                self._dirty = True
+                grid.recalculate_visible_area()
                 grid.refresh_grid()
             except ValueError:
-                pass
+                self.notify("Invalid width value", severity="error")
 
     def action_new_file(self) -> None:
         self.spreadsheet.clear()
@@ -727,7 +732,7 @@ class LotusApp(App[None]):
                 grid.scroll_col = 0
                 grid.cursor_row = 0
                 grid.cursor_col = 0
-                grid._calculate_visible_area()
+                grid.recalculate_visible_area()
                 grid.refresh_grid()
                 self._update_status()
                 self._update_title()
@@ -1675,6 +1680,7 @@ class LotusApp(App[None]):
             self._global_col_width = width
             grid = self.query_one("#grid", SpreadsheetGrid)
             grid.default_col_width = width
+            grid.recalculate_visible_area()
             grid.refresh_grid()
             self.notify(f"Default column width set to {width}")
         except ValueError:

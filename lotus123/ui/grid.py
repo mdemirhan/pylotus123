@@ -139,6 +139,10 @@ class SpreadsheetGrid(Static, can_focus=True):
                 visible_cols += 1
             self._visible_cols = max(1, visible_cols)
 
+    def recalculate_visible_area(self) -> None:
+        """Public method to recalculate visible area after column width changes."""
+        self._calculate_visible_area()
+
     def watch_cursor_row(self, value: int) -> None:
         self._ensure_visible()
         self.refresh_grid()

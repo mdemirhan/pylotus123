@@ -1,0 +1,835 @@
+{
+  "version": 2,
+  "rows": 65536,
+  "cols": 256,
+  "col_widths": {
+    "0": 14,
+    "1": 12,
+    "2": 12,
+    "3": 12,
+    "4": 12,
+    "5": 10,
+    "6": 10,
+    "7": 14,
+    "8": 30,
+    "9": 12,
+    "10": 12
+  },
+  "row_heights": {},
+  "cells": {
+    "0,0": {
+      "raw_value": "'=== EMPLOYEE DATABASE (for Query testing) ==="
+    },
+    "1,0": {
+      "raw_value": "'EmpID"
+    },
+    "1,1": {
+      "raw_value": "'Name"
+    },
+    "1,2": {
+      "raw_value": "'Department"
+    },
+    "1,3": {
+      "raw_value": "'Salary"
+    },
+    "1,4": {
+      "raw_value": "'HireYear"
+    },
+    "1,5": {
+      "raw_value": "'Rating"
+    },
+    "1,6": {
+      "raw_value": "'Status"
+    },
+    "2,0": {
+      "raw_value": "1001"
+    },
+    "2,1": {
+      "raw_value": "'Alice Johnson"
+    },
+    "2,2": {
+      "raw_value": "'Sales"
+    },
+    "2,3": {
+      "raw_value": "75000"
+    },
+    "2,4": {
+      "raw_value": "2019"
+    },
+    "2,5": {
+      "raw_value": "4.5"
+    },
+    "2,6": {
+      "raw_value": "'Active"
+    },
+    "3,0": {
+      "raw_value": "1002"
+    },
+    "3,1": {
+      "raw_value": "'Bob Smith"
+    },
+    "3,2": {
+      "raw_value": "'Engineering"
+    },
+    "3,3": {
+      "raw_value": "92000"
+    },
+    "3,4": {
+      "raw_value": "2018"
+    },
+    "3,5": {
+      "raw_value": "4.8"
+    },
+    "3,6": {
+      "raw_value": "'Active"
+    },
+    "4,0": {
+      "raw_value": "1003"
+    },
+    "4,1": {
+      "raw_value": "'Carol Davis"
+    },
+    "4,2": {
+      "raw_value": "'Marketing"
+    },
+    "4,3": {
+      "raw_value": "68000"
+    },
+    "4,4": {
+      "raw_value": "2020"
+    },
+    "4,5": {
+      "raw_value": "3.9"
+    },
+    "4,6": {
+      "raw_value": "'Active"
+    },
+    "5,0": {
+      "raw_value": "1004"
+    },
+    "5,1": {
+      "raw_value": "'David Wilson"
+    },
+    "5,2": {
+      "raw_value": "'Engineering"
+    },
+    "5,3": {
+      "raw_value": "105000"
+    },
+    "5,4": {
+      "raw_value": "2015"
+    },
+    "5,5": {
+      "raw_value": "4.9"
+    },
+    "5,6": {
+      "raw_value": "'Active"
+    },
+    "6,0": {
+      "raw_value": "1005"
+    },
+    "6,1": {
+      "raw_value": "'Eve Martinez"
+    },
+    "6,2": {
+      "raw_value": "'Sales"
+    },
+    "6,3": {
+      "raw_value": "71000"
+    },
+    "6,4": {
+      "raw_value": "2021"
+    },
+    "6,5": {
+      "raw_value": "4.2"
+    },
+    "6,6": {
+      "raw_value": "'OnLeave"
+    },
+    "7,0": {
+      "raw_value": "1006"
+    },
+    "7,1": {
+      "raw_value": "'Frank Brown"
+    },
+    "7,2": {
+      "raw_value": "'HR"
+    },
+    "7,3": {
+      "raw_value": "62000"
+    },
+    "7,4": {
+      "raw_value": "2017"
+    },
+    "7,5": {
+      "raw_value": "3.7"
+    },
+    "7,6": {
+      "raw_value": "'Active"
+    },
+    "8,0": {
+      "raw_value": "1007"
+    },
+    "8,1": {
+      "raw_value": "'Grace Lee"
+    },
+    "8,2": {
+      "raw_value": "'Engineering"
+    },
+    "8,3": {
+      "raw_value": "88000"
+    },
+    "8,4": {
+      "raw_value": "2019"
+    },
+    "8,5": {
+      "raw_value": "4.6"
+    },
+    "8,6": {
+      "raw_value": "'Active"
+    },
+    "9,0": {
+      "raw_value": "1008"
+    },
+    "9,1": {
+      "raw_value": "'Henry Taylor"
+    },
+    "9,2": {
+      "raw_value": "'Marketing"
+    },
+    "9,3": {
+      "raw_value": "73000"
+    },
+    "9,4": {
+      "raw_value": "2020"
+    },
+    "9,5": {
+      "raw_value": "4.0"
+    },
+    "9,6": {
+      "raw_value": "'Active"
+    },
+    "10,0": {
+      "raw_value": "1009"
+    },
+    "10,1": {
+      "raw_value": "'Ivy Chen"
+    },
+    "10,2": {
+      "raw_value": "'Sales"
+    },
+    "10,3": {
+      "raw_value": "82000"
+    },
+    "10,4": {
+      "raw_value": "2016"
+    },
+    "10,5": {
+      "raw_value": "4.7"
+    },
+    "10,6": {
+      "raw_value": "'Active"
+    },
+    "11,0": {
+      "raw_value": "1010"
+    },
+    "11,1": {
+      "raw_value": "'Jack Miller"
+    },
+    "11,2": {
+      "raw_value": "'Engineering"
+    },
+    "11,3": {
+      "raw_value": "95000"
+    },
+    "11,4": {
+      "raw_value": "2018"
+    },
+    "11,5": {
+      "raw_value": "4.4"
+    },
+    "11,6": {
+      "raw_value": "'Terminated"
+    },
+    "0,8": {
+      "raw_value": "'=== QUERY CRITERIA EXAMPLES ==="
+    },
+    "1,8": {
+      "raw_value": "'--- Criteria 1: Engineering ---"
+    },
+    "2,8": {
+      "raw_value": "'Department"
+    },
+    "3,8": {
+      "raw_value": "'Engineering"
+    },
+    "5,8": {
+      "raw_value": "'--- Criteria 2: Salary>80000 ---"
+    },
+    "6,8": {
+      "raw_value": "'Salary"
+    },
+    "7,8": {
+      "raw_value": ">80000"
+    },
+    "9,8": {
+      "raw_value": "'--- Criteria 3: Active Sales ---"
+    },
+    "10,8": {
+      "raw_value": "'Department"
+    },
+    "10,9": {
+      "raw_value": "'Status"
+    },
+    "11,8": {
+      "raw_value": "'Sales"
+    },
+    "11,9": {
+      "raw_value": "'Active"
+    },
+    "13,8": {
+      "raw_value": "'--- Criteria 4: Name contains 'a' ---"
+    },
+    "14,8": {
+      "raw_value": "'Name"
+    },
+    "15,8": {
+      "raw_value": "'*a*"
+    },
+    "17,8": {
+      "raw_value": "'--- Output Area ---"
+    },
+    "18,8": {
+      "raw_value": "'(Set Output to I19 for Extract)"
+    },
+    "14,0": {
+      "raw_value": "'=== MONTHLY REVENUE (Line/Bar charts) ==="
+    },
+    "15,0": {
+      "raw_value": "'Month"
+    },
+    "15,1": {
+      "raw_value": "'2023"
+    },
+    "15,2": {
+      "raw_value": "'2024"
+    },
+    "15,3": {
+      "raw_value": "'Growth%"
+    },
+    "16,0": {
+      "raw_value": "'Jan"
+    },
+    "16,1": {
+      "raw_value": "45000"
+    },
+    "16,2": {
+      "raw_value": "52000"
+    },
+    "16,3": {
+      "raw_value": "=((C17-B17)/B17)*100"
+    },
+    "17,0": {
+      "raw_value": "'Feb"
+    },
+    "17,1": {
+      "raw_value": "48000"
+    },
+    "17,2": {
+      "raw_value": "55000"
+    },
+    "17,3": {
+      "raw_value": "=((C18-B18)/B18)*100"
+    },
+    "18,0": {
+      "raw_value": "'Mar"
+    },
+    "18,1": {
+      "raw_value": "52000"
+    },
+    "18,2": {
+      "raw_value": "61000"
+    },
+    "18,3": {
+      "raw_value": "=((C19-B19)/B19)*100"
+    },
+    "19,0": {
+      "raw_value": "'Apr"
+    },
+    "19,1": {
+      "raw_value": "49000"
+    },
+    "19,2": {
+      "raw_value": "58000"
+    },
+    "19,3": {
+      "raw_value": "=((C20-B20)/B20)*100"
+    },
+    "20,0": {
+      "raw_value": "'May"
+    },
+    "20,1": {
+      "raw_value": "54000"
+    },
+    "20,2": {
+      "raw_value": "63000"
+    },
+    "20,3": {
+      "raw_value": "=((C21-B21)/B21)*100"
+    },
+    "21,0": {
+      "raw_value": "'Jun"
+    },
+    "21,1": {
+      "raw_value": "58000"
+    },
+    "21,2": {
+      "raw_value": "68000"
+    },
+    "21,3": {
+      "raw_value": "=((C22-B22)/B22)*100"
+    },
+    "22,0": {
+      "raw_value": "'Total"
+    },
+    "22,1": {
+      "raw_value": "=SUM(B17:B22)"
+    },
+    "22,2": {
+      "raw_value": "=SUM(C17:C22)"
+    },
+    "22,3": {
+      "raw_value": "=AVG(D17:D22)"
+    },
+    "25,0": {
+      "raw_value": "'=== PRODUCT MIX (Pie chart) ==="
+    },
+    "26,0": {
+      "raw_value": "'Product"
+    },
+    "26,1": {
+      "raw_value": "'Revenue"
+    },
+    "26,2": {
+      "raw_value": "'Share%"
+    },
+    "27,0": {
+      "raw_value": "'Software"
+    },
+    "27,1": {
+      "raw_value": "125000"
+    },
+    "27,2": {
+      "raw_value": "=B28/B32*100"
+    },
+    "28,0": {
+      "raw_value": "'Hardware"
+    },
+    "28,1": {
+      "raw_value": "85000"
+    },
+    "28,2": {
+      "raw_value": "=B29/B32*100"
+    },
+    "29,0": {
+      "raw_value": "'Services"
+    },
+    "29,1": {
+      "raw_value": "65000"
+    },
+    "29,2": {
+      "raw_value": "=B30/B32*100"
+    },
+    "30,0": {
+      "raw_value": "'Training"
+    },
+    "30,1": {
+      "raw_value": "25000"
+    },
+    "30,2": {
+      "raw_value": "=B31/B32*100"
+    },
+    "31,0": {
+      "raw_value": "'Total"
+    },
+    "31,1": {
+      "raw_value": "=SUM(B28:B31)"
+    },
+    "31,2": {
+      "raw_value": "=SUM(C28:C31)"
+    },
+    "34,0": {
+      "raw_value": "'=== XY SCATTER (Correlation) ==="
+    },
+    "35,0": {
+      "raw_value": "'AdSpend"
+    },
+    "35,1": {
+      "raw_value": "'Sales"
+    },
+    "36,0": {
+      "raw_value": "1000"
+    },
+    "36,1": {
+      "raw_value": "15000"
+    },
+    "37,0": {
+      "raw_value": "2000"
+    },
+    "37,1": {
+      "raw_value": "22000"
+    },
+    "38,0": {
+      "raw_value": "3000"
+    },
+    "38,1": {
+      "raw_value": "31000"
+    },
+    "39,0": {
+      "raw_value": "4000"
+    },
+    "39,1": {
+      "raw_value": "38000"
+    },
+    "40,0": {
+      "raw_value": "5000"
+    },
+    "40,1": {
+      "raw_value": "47000"
+    },
+    "41,0": {
+      "raw_value": "6000"
+    },
+    "41,1": {
+      "raw_value": "52000"
+    },
+    "42,0": {
+      "raw_value": "7000"
+    },
+    "42,1": {
+      "raw_value": "61000"
+    },
+    "43,0": {
+      "raw_value": "8000"
+    },
+    "43,1": {
+      "raw_value": "68000"
+    },
+    "34,3": {
+      "raw_value": "'=== STACKED BAR (Composition) ==="
+    },
+    "35,3": {
+      "raw_value": "'Region"
+    },
+    "35,4": {
+      "raw_value": "'Q1"
+    },
+    "35,5": {
+      "raw_value": "'Q2"
+    },
+    "35,6": {
+      "raw_value": "'Q3"
+    },
+    "35,7": {
+      "raw_value": "'Q4"
+    },
+    "36,3": {
+      "raw_value": "'North"
+    },
+    "36,4": {
+      "raw_value": "12000"
+    },
+    "36,5": {
+      "raw_value": "15000"
+    },
+    "36,6": {
+      "raw_value": "18000"
+    },
+    "36,7": {
+      "raw_value": "22000"
+    },
+    "37,3": {
+      "raw_value": "'South"
+    },
+    "37,4": {
+      "raw_value": "9000"
+    },
+    "37,5": {
+      "raw_value": "11000"
+    },
+    "37,6": {
+      "raw_value": "13000"
+    },
+    "37,7": {
+      "raw_value": "16000"
+    },
+    "38,3": {
+      "raw_value": "'East"
+    },
+    "38,4": {
+      "raw_value": "14000"
+    },
+    "38,5": {
+      "raw_value": "16000"
+    },
+    "38,6": {
+      "raw_value": "19000"
+    },
+    "38,7": {
+      "raw_value": "23000"
+    },
+    "39,3": {
+      "raw_value": "'West"
+    },
+    "39,4": {
+      "raw_value": "11000"
+    },
+    "39,5": {
+      "raw_value": "13000"
+    },
+    "39,6": {
+      "raw_value": "15000"
+    },
+    "39,7": {
+      "raw_value": "18000"
+    },
+    "40,3": {
+      "raw_value": "'Total"
+    },
+    "40,4": {
+      "raw_value": "=SUM(E37:E40)"
+    },
+    "40,5": {
+      "raw_value": "=SUM(F37:F40)"
+    },
+    "40,6": {
+      "raw_value": "=SUM(G37:G40)"
+    },
+    "40,7": {
+      "raw_value": "=SUM(H37:H40)"
+    },
+    "46,0": {
+      "raw_value": "'=== FORMULA SHOWCASE ==="
+    },
+    "47,0": {
+      "raw_value": "'Function"
+    },
+    "47,1": {
+      "raw_value": "'Formula"
+    },
+    "47,2": {
+      "raw_value": "'Result"
+    },
+    "47,3": {
+      "raw_value": "'Description"
+    },
+    "48,0": {
+      "raw_value": "'SUM"
+    },
+    "48,1": {
+      "raw_value": "'=SUM(B17:B22)"
+    },
+    "48,2": {
+      "raw_value": "=SUM(B17:B22)"
+    },
+    "48,3": {
+      "raw_value": "'Sum of 2023 revenue"
+    },
+    "49,0": {
+      "raw_value": "'AVG"
+    },
+    "49,1": {
+      "raw_value": "'=AVG(D4:D12)"
+    },
+    "49,2": {
+      "raw_value": "=AVG(D4:D12)"
+    },
+    "49,3": {
+      "raw_value": "'Avg employee salary"
+    },
+    "50,0": {
+      "raw_value": "'MAX"
+    },
+    "50,1": {
+      "raw_value": "'=MAX(D4:D12)"
+    },
+    "50,2": {
+      "raw_value": "=MAX(D4:D12)"
+    },
+    "50,3": {
+      "raw_value": "'Highest salary"
+    },
+    "51,0": {
+      "raw_value": "'MIN"
+    },
+    "51,1": {
+      "raw_value": "'=MIN(D4:D12)"
+    },
+    "51,2": {
+      "raw_value": "=MIN(D4:D12)"
+    },
+    "51,3": {
+      "raw_value": "'Lowest salary"
+    },
+    "52,0": {
+      "raw_value": "'COUNT"
+    },
+    "52,1": {
+      "raw_value": "'=COUNT(D4:D12)"
+    },
+    "52,2": {
+      "raw_value": "=COUNT(D4:D12)"
+    },
+    "52,3": {
+      "raw_value": "'Number of employees"
+    },
+    "53,0": {
+      "raw_value": "'IF"
+    },
+    "53,1": {
+      "raw_value": "'=IF(C23>300000,\"Good\",\"Low\")"
+    },
+    "53,2": {
+      "raw_value": "=IF(C23>300000,\"Good\",\"Low\")"
+    },
+    "53,3": {
+      "raw_value": "'Conditional logic"
+    },
+    "54,0": {
+      "raw_value": "'ROUND"
+    },
+    "54,1": {
+      "raw_value": "'=ROUND(D17,1)"
+    },
+    "54,2": {
+      "raw_value": "=ROUND(D17,1)"
+    },
+    "54,3": {
+      "raw_value": "'Round to 1 decimal"
+    },
+    "55,0": {
+      "raw_value": "'ABS"
+    },
+    "55,1": {
+      "raw_value": "'=ABS(-500)"
+    },
+    "55,2": {
+      "raw_value": "=ABS(-500)"
+    },
+    "55,3": {
+      "raw_value": "'Absolute value"
+    },
+    "56,0": {
+      "raw_value": "'SQRT"
+    },
+    "56,1": {
+      "raw_value": "'=SQRT(144)"
+    },
+    "56,2": {
+      "raw_value": "=SQRT(144)"
+    },
+    "56,3": {
+      "raw_value": "'Square root"
+    },
+    "57,0": {
+      "raw_value": "'POWER"
+    },
+    "57,1": {
+      "raw_value": "'=POWER(2,8)"
+    },
+    "57,2": {
+      "raw_value": "=POWER(2,8)"
+    },
+    "57,3": {
+      "raw_value": "'2 to the 8th"
+    },
+    "58,0": {
+      "raw_value": "'PI"
+    },
+    "58,1": {
+      "raw_value": "'=PI()"
+    },
+    "58,2": {
+      "raw_value": "=PI()"
+    },
+    "58,3": {
+      "raw_value": "'Pi constant"
+    },
+    "59,0": {
+      "raw_value": "'MOD"
+    },
+    "59,1": {
+      "raw_value": "'=MOD(17,5)"
+    },
+    "59,2": {
+      "raw_value": "=MOD(17,5)"
+    },
+    "59,3": {
+      "raw_value": "'Remainder of 17/5"
+    },
+    "60,0": {
+      "raw_value": "'INT"
+    },
+    "60,1": {
+      "raw_value": "'=INT(9.7)"
+    },
+    "60,2": {
+      "raw_value": "=INT(9.7)"
+    },
+    "60,3": {
+      "raw_value": "'Integer part"
+    },
+    "46,5": {
+      "raw_value": "'=== QUERY TESTING GUIDE ==="
+    },
+    "47,5": {
+      "raw_value": "'1. Input range: A2:G12 (employee DB)"
+    },
+    "48,5": {
+      "raw_value": "'2. Criteria examples in column I"
+    },
+    "49,5": {
+      "raw_value": "'3. Use wildcards: *text*, ?"
+    },
+    "50,5": {
+      "raw_value": "'4. Comparisons: >80000, <=2019"
+    },
+    "51,5": {
+      "raw_value": "'"
+    },
+    "52,5": {
+      "raw_value": "'=== GRAPH TESTING GUIDE ==="
+    },
+    "53,5": {
+      "raw_value": "'Line: X=A17:A22, A=B17:B22"
+    },
+    "54,5": {
+      "raw_value": "'Bar: X=A17:A22, A=C17:C22"
+    },
+    "55,5": {
+      "raw_value": "'Pie: A=A28:A31, B=B28:B31"
+    },
+    "56,5": {
+      "raw_value": "'XY: X=A37:A44, A=B37:B44"
+    },
+    "57,5": {
+      "raw_value": "'Stacked: X=D36:D40, A-D=E-H"
+    }
+  },
+  "named_ranges": {},
+  "protection": {
+    "settings": {
+      "enabled": false,
+      "password_hash": "",
+      "allow_formatting": false,
+      "allow_insert_rows": false,
+      "allow_insert_cols": false,
+      "allow_delete_rows": false,
+      "allow_delete_cols": false,
+      "allow_sort": false
+    },
+    "unprotected_cells": []
+  },
+  "frozen_rows": 0,
+  "frozen_cols": 0
+}
