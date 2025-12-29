@@ -651,6 +651,14 @@ class LotusApp(App[None]):
             self._set_chart_a_range()
         elif result == "Graph:B-Range":
             self._set_chart_b_range()
+        elif result == "Graph:C-Range":
+            self._set_chart_c_range()
+        elif result == "Graph:D-Range":
+            self._set_chart_d_range()
+        elif result == "Graph:E-Range":
+            self._set_chart_e_range()
+        elif result == "Graph:F-Range":
+            self._set_chart_f_range()
         elif result == "Graph:View":
             self._view_chart()
         elif result == "Graph:Reset":
@@ -1105,6 +1113,66 @@ class LotusApp(App[None]):
     def _do_set_b_range(self, result: str | None) -> None:
         if result:
             self._add_or_update_series(1, "B", result.upper())
+
+    def _set_chart_c_range(self) -> None:
+        grid = self.query_one("#grid", SpreadsheetGrid)
+        if grid.has_selection:
+            r1, c1, r2, c2 = grid.selection_range
+            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
+            self._add_or_update_series(2, "C", range_str)
+        else:
+            self.push_screen(
+                CommandInput("C-Range (e.g., D1:D10):"), self._do_set_c_range
+            )
+
+    def _do_set_c_range(self, result: str | None) -> None:
+        if result:
+            self._add_or_update_series(2, "C", result.upper())
+
+    def _set_chart_d_range(self) -> None:
+        grid = self.query_one("#grid", SpreadsheetGrid)
+        if grid.has_selection:
+            r1, c1, r2, c2 = grid.selection_range
+            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
+            self._add_or_update_series(3, "D", range_str)
+        else:
+            self.push_screen(
+                CommandInput("D-Range (e.g., E1:E10):"), self._do_set_d_range
+            )
+
+    def _do_set_d_range(self, result: str | None) -> None:
+        if result:
+            self._add_or_update_series(3, "D", result.upper())
+
+    def _set_chart_e_range(self) -> None:
+        grid = self.query_one("#grid", SpreadsheetGrid)
+        if grid.has_selection:
+            r1, c1, r2, c2 = grid.selection_range
+            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
+            self._add_or_update_series(4, "E", range_str)
+        else:
+            self.push_screen(
+                CommandInput("E-Range (e.g., F1:F10):"), self._do_set_e_range
+            )
+
+    def _do_set_e_range(self, result: str | None) -> None:
+        if result:
+            self._add_or_update_series(4, "E", result.upper())
+
+    def _set_chart_f_range(self) -> None:
+        grid = self.query_one("#grid", SpreadsheetGrid)
+        if grid.has_selection:
+            r1, c1, r2, c2 = grid.selection_range
+            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
+            self._add_or_update_series(5, "F", range_str)
+        else:
+            self.push_screen(
+                CommandInput("F-Range (e.g., G1:G10):"), self._do_set_f_range
+            )
+
+    def _do_set_f_range(self, result: str | None) -> None:
+        if result:
+            self._add_or_update_series(5, "F", result.upper())
 
     def _add_or_update_series(self, index: int, name: str, range_str: str) -> None:
         while len(self.chart.series) <= index:

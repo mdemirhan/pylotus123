@@ -5,7 +5,7 @@ Renders pie charts using ASCII representation with percentage bars.
 
 from __future__ import annotations
 
-from .base import ChartTypeRenderer, RenderContext, get_series_values
+from .base import ChartTypeRenderer, RenderContext, get_series_values, get_x_labels
 
 
 class PieChartRenderer(ChartTypeRenderer):
@@ -42,13 +42,17 @@ class PieChartRenderer(ChartTypeRenderer):
             lines.append("All values are zero".center(ctx.width))
             return lines
 
+        # Get labels from x_range
+        labels = get_x_labels(ctx.chart, ctx.spreadsheet)
+
         # Calculate percentages
         percentages = [v / total * 100 for v in values]
 
         # Render each slice as a horizontal bar
         lines.append("")
         for i, (val, pct) in enumerate(zip(values, percentages)):
-            line = self._render_slice(i, val, pct, ctx)
+            label = labels[i] if i < len(labels) else f"Slice {i + 1}"
+            line = self._render_slice(i, label, pct, ctx)
             lines.append(line)
 
         lines.append("")
@@ -56,12 +60,14 @@ class PieChartRenderer(ChartTypeRenderer):
 
         return lines
 
-    def _render_slice(self, index: int, value: float, percentage: float, ctx: RenderContext) -> str:
+    def _render_slice(
+        self, index: int, label: str, percentage: float, ctx: RenderContext
+    ) -> str:
         """Render a single pie slice as a horizontal bar.
 
         Args:
             index: Slice index (for symbol selection)
-            value: The slice value
+            label: The slice label
             percentage: Percentage of total
             ctx: Render context
 
@@ -69,5 +75,7 @@ class PieChartRenderer(ChartTypeRenderer):
             Formatted line for this slice
         """
         symbol = self.SYMBOLS[index % len(self.SYMBOLS)]
-        bar_len = int(percentage / 100 * (ctx.width - 30))
-        return f"  {symbol} {percentage:5.1f}% {symbol * bar_len}"
+        # Truncate label to max 10 chars for alignment
+        label_display = label[:10].ljust(10)
+        bar_len = int(percentage / 100 * (ctx.width - 35))
+        return f"  {symbol} {label_display} {percentage:5.1f}% {symbol * bar_len}"

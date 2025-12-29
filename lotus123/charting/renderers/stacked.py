@@ -1,6 +1,6 @@
-"""Bar chart renderer.
+"""Stacked bar chart renderer.
 
-Renders vertical bar charts with solid bars.
+Renders vertical bar charts with series values stacked on top of each other.
 """
 
 from __future__ import annotations
@@ -16,14 +16,14 @@ from .base import (
 )
 
 
-class BarChartRenderer(ChartTypeRenderer):
-    """Renders vertical bar charts with clean, solid bars."""
+class StackedBarChartRenderer(ChartTypeRenderer):
+    """Renders stacked bar charts with values stacked vertically."""
 
     # Fill characters for different series
     FILL_CHARS = ["#", "@", "*", "+", "=", "%"]
 
     def render(self, ctx: RenderContext) -> list[str]:
-        """Render a bar chart.
+        """Render a stacked bar chart.
 
         Args:
             ctx: Render context with chart data and dimensions
@@ -39,9 +39,29 @@ class BarChartRenderer(ChartTypeRenderer):
         if not ctx.all_values:
             return self.render_no_data(ctx)
 
-        # Override min to 0 for bar charts (typical behavior)
-        if ctx.chart.y_axis.min_value is None:
-            ctx.min_val = 0
+        # Get values per series
+        series_values: list[list[float]] = []
+        for series in ctx.chart.series:
+            vals = get_series_values(series, ctx.spreadsheet)
+            if vals:
+                series_values.append(vals)
+
+        if not series_values:
+            return self.render_no_data(ctx)
+
+        # Calculate stacked totals per group for proper scaling
+        num_groups = max(len(vals) for vals in series_values)
+        stacked_totals = []
+        for group_idx in range(num_groups):
+            total = 0.0
+            for vals in series_values:
+                if group_idx < len(vals):
+                    total += vals[group_idx]
+            stacked_totals.append(total)
+
+        # Override min to 0 for stacked bar charts
+        ctx.min_val = 0
+        ctx.max_val = max(stacked_totals) if stacked_totals else 1
 
         if ctx.max_val == ctx.min_val:
             ctx.max_val = ctx.min_val + 1
@@ -52,26 +72,14 @@ class BarChartRenderer(ChartTypeRenderer):
             len(f"{ctx.min_val:.1f}"),
             len(f"{(ctx.max_val + ctx.min_val) / 2:.1f}"),
         )
-        y_axis_width = y_label_width + 1  # +1 for vertical line
-
-        # Get values per series for grouped bars
-        series_values = []
-        for series in ctx.chart.series:
-            vals = get_series_values(series, ctx.spreadsheet)
-            if vals:
-                series_values.append(vals)
-
-        if not series_values:
-            return self.render_no_data(ctx)
+        y_axis_width = y_label_width + 1
 
         # Calculate bar dimensions
-        num_groups = max(len(vals) for vals in series_values)
         num_series = len(series_values)
-        available_width = ctx.width - y_axis_width - 4  # Reserve for Y-axis + padding
+        available_width = ctx.width - y_axis_width - 4
 
-        # Each group has num_series bars + spacing
-        group_width = max(num_series * 2, (available_width - num_groups * 2) // max(1, num_groups))
-        bar_width = max(1, (group_width - 1) // max(1, num_series))
+        # Each group has ONE stacked bar + spacing
+        bar_width = max(2, (available_width - num_groups * 2) // max(1, num_groups))
 
         if ctx.plot_height < 3:
             return self.render_too_small(ctx)
@@ -82,18 +90,16 @@ class BarChartRenderer(ChartTypeRenderer):
             lines.append(line)
 
         # X-axis line
-        axis_width = num_groups * (num_series * (bar_width + 1) + 2)
+        axis_width = num_groups * (bar_width + 2)
         lines.append(" " * y_label_width + BOX_CORNER_BL + BOX_HORIZONTAL * axis_width)
 
-        # X-axis labels (from x_range)
+        # X-axis labels
         x_labels = get_x_labels(ctx.chart, ctx.spreadsheet)
         if x_labels:
-            label_line = " " * (y_label_width + 1)  # Offset for Y-axis
-            group_width = num_series * (bar_width + 1) + 2
+            label_line = " " * (y_label_width + 1)
+            group_width = bar_width + 2
             for i, label in enumerate(x_labels[:num_groups]):
-                # Truncate label to fit group width
                 truncated = label[:group_width - 1] if len(label) >= group_width else label
-                # Center the label under each group
                 label_line += truncated.center(group_width)
             lines.append(label_line)
 
@@ -102,7 +108,7 @@ class BarChartRenderer(ChartTypeRenderer):
             lines.append("")
             lines.append(ctx.chart.x_axis.title.center(ctx.width))
 
-        # Y-axis title (shown at left of chart)
+        # Y-axis title
         if ctx.chart.y_axis.title:
             lines.append("")
             lines.append(f"Y: {ctx.chart.y_axis.title}".center(ctx.width))
@@ -110,7 +116,7 @@ class BarChartRenderer(ChartTypeRenderer):
         # Legend
         if ctx.chart.options.show_legend and ctx.chart.series:
             lines.append("")
-            legend = self._build_legend(ctx)
+            legend = self._build_legend(ctx, series_values)
             lines.append(legend.center(ctx.width))
 
         return lines
@@ -123,7 +129,7 @@ class BarChartRenderer(ChartTypeRenderer):
         ctx: RenderContext,
         y_label_width: int,
     ) -> str:
-        """Build a single row of the bar chart.
+        """Build a single row of the stacked bar chart.
 
         Args:
             row: Row index (0 = top)
@@ -152,40 +158,55 @@ class BarChartRenderer(ChartTypeRenderer):
         num_groups = max(len(vals) for vals in series_values)
 
         for group_idx in range(num_groups):
-            line += " "  # Space before group
+            line += " "  # Space before bar
+
+            # Calculate cumulative heights for stacked bars
+            cumulative = 0.0
+            fill_char = " "
+
+            # Find which series this row belongs to (from bottom to top)
             for series_idx, vals in enumerate(series_values):
-                fill_char = self.FILL_CHARS[series_idx % len(self.FILL_CHARS)]
                 if group_idx < len(vals):
                     val = vals[group_idx]
-                    ratio = (val - ctx.min_val) / (ctx.max_val - ctx.min_val)
-                    bar_height = round(ratio * ctx.plot_height)
-                    if row_from_bottom < bar_height:
-                        line += fill_char * bar_width
-                    else:
-                        line += " " * bar_width
-                else:
-                    line += " " * bar_width
-                line += " "  # Space between bars in group
-            line += " "  # Extra space between groups
+                    prev_cumulative = cumulative
+                    cumulative += val
+
+                    # Calculate height ranges
+                    prev_ratio = prev_cumulative / (ctx.max_val - ctx.min_val)
+                    curr_ratio = cumulative / (ctx.max_val - ctx.min_val)
+                    prev_height = round(prev_ratio * ctx.plot_height)
+                    curr_height = round(curr_ratio * ctx.plot_height)
+
+                    # Check if this row falls within this series' portion
+                    if prev_height <= row_from_bottom < curr_height:
+                        fill_char = self.FILL_CHARS[series_idx % len(self.FILL_CHARS)]
+                        break
+
+            line += fill_char * bar_width
+            line += " "  # Space after bar
 
         return line
 
-    def _build_legend(self, ctx: RenderContext) -> str:
+    def _build_legend(
+        self, ctx: RenderContext, series_values: list[list[float]]
+    ) -> str:
         """Build legend string showing series names with their symbols.
 
         Args:
             ctx: Render context
+            series_values: List of values for each series (to track which have data)
 
         Returns:
             Formatted legend string
         """
         legend_parts = []
+        series_with_data_idx = 0
         for i, series in enumerate(ctx.chart.series):
-            # Only include series that have actual data
             values = get_series_values(series, ctx.spreadsheet)
             if not values:
                 continue
-            fill_char = self.FILL_CHARS[i % len(self.FILL_CHARS)]
+            fill_char = self.FILL_CHARS[series_with_data_idx % len(self.FILL_CHARS)]
             name = series.name or f"Series {i + 1}"
             legend_parts.append(f"[{fill_char}] {name}")
+            series_with_data_idx += 1
         return "  ".join(legend_parts)

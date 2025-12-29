@@ -12,6 +12,7 @@ from .base import (
     ChartTypeRenderer,
     RenderContext,
     get_series_values,
+    get_x_labels,
 )
 
 
@@ -69,6 +70,39 @@ class LineChartRenderer(ChartTypeRenderer):
         # X-axis
         lines.append(" " * y_label_width + BOX_CORNER_BL + BOX_HORIZONTAL * ctx.plot_width)
 
+        # X-axis labels (from x_range) - aligned with data points
+        x_labels = get_x_labels(ctx.chart, ctx.spreadsheet)
+        if x_labels:
+            num_labels = len(x_labels)
+            # Build label line character by character
+            label_chars = [" "] * ctx.plot_width
+
+            # Calculate x positions using same formula as _plot_series
+            for i, label in enumerate(x_labels):
+                if num_labels > 1:
+                    x = int((i / (num_labels - 1)) * (ctx.plot_width - 1))
+                else:
+                    x = ctx.plot_width // 2
+
+                # Position label: left-align first, right-align last, center middle
+                if i == 0:
+                    # First label: left-align at x position
+                    label_start = x
+                elif i == num_labels - 1:
+                    # Last label: right-align to ensure it fits
+                    label_start = max(0, x - len(label) + 1)
+                else:
+                    # Middle labels: center around x position
+                    label_start = max(0, x - len(label) // 2)
+
+                for j, char in enumerate(label):
+                    pos = label_start + j
+                    if 0 <= pos < ctx.plot_width:
+                        label_chars[pos] = char
+
+            label_line = " " * (y_label_width + 1) + "".join(label_chars)
+            lines.append(label_line[:ctx.width])
+
         # X-axis title
         if ctx.chart.x_axis.title:
             lines.append("")
@@ -90,7 +124,7 @@ class LineChartRenderer(ChartTypeRenderer):
     def _plot_series(
         self, plot: list[list[str]], values: list[float], symbol: str, ctx: RenderContext
     ) -> None:
-        """Plot a single data series onto the plot grid.
+        """Plot a single data series onto the plot grid with connecting lines.
 
         Args:
             plot: 2D grid to plot onto
@@ -98,6 +132,8 @@ class LineChartRenderer(ChartTypeRenderer):
             symbol: Symbol to use for data points
             ctx: Render context
         """
+        points = []  # Store (x, y) positions for drawing lines
+
         for i, val in enumerate(values):
             # Calculate X position
             if len(values) > 1:
@@ -109,9 +145,72 @@ class LineChartRenderer(ChartTypeRenderer):
             y_ratio = (val - ctx.min_val) / (ctx.max_val - ctx.min_val)
             y = ctx.plot_height - 1 - round(y_ratio * (ctx.plot_height - 1))
 
-            # Plot if within bounds
+            points.append((x, y))
+
+        # Draw connecting lines between consecutive points
+        for i in range(len(points) - 1):
+            x1, y1 = points[i]
+            x2, y2 = points[i + 1]
+            self._draw_line(plot, x1, y1, x2, y2, ctx)
+
+        # Plot data point symbols on top of lines
+        for x, y in points:
             if 0 <= x < ctx.plot_width and 0 <= y < ctx.plot_height:
                 plot[y][x] = symbol
+
+    def _draw_line(
+        self,
+        plot: list[list[str]],
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        ctx: RenderContext,
+    ) -> None:
+        """Draw a line between two points using ASCII characters.
+
+        Args:
+            plot: 2D grid to draw onto
+            x1, y1: Start point
+            x2, y2: End point
+            ctx: Render context
+        """
+        dx = x2 - x1
+        dy = y2 - y1
+
+        if dx == 0:
+            # Vertical line
+            for y in range(min(y1, y2), max(y1, y2) + 1):
+                if 0 <= y < ctx.plot_height and 0 <= x1 < ctx.plot_width:
+                    if plot[y][x1] == " ":
+                        plot[y][x1] = "|"
+            return
+
+        # Use Bresenham-like approach for diagonal lines
+        steps = max(abs(dx), abs(dy))
+        if steps == 0:
+            return
+
+        x_inc = dx / steps
+        y_inc = dy / steps
+
+        x, y = float(x1), float(y1)
+        for _ in range(steps + 1):
+            ix, iy = int(round(x)), int(round(y))
+            if 0 <= ix < ctx.plot_width and 0 <= iy < ctx.plot_height:
+                if plot[iy][ix] == " ":
+                    # Choose character based on line direction
+                    if abs(dy) < abs(dx) * 0.3:
+                        # Mostly horizontal
+                        plot[iy][ix] = "-"
+                    elif dy < 0:
+                        # Going up (remember y is inverted)
+                        plot[iy][ix] = "/"
+                    else:
+                        # Going down
+                        plot[iy][ix] = "\\"
+            x += x_inc
+            y += y_inc
 
     def _build_plot_output(
         self, plot: list[list[str]], ctx: RenderContext, y_label_width: int
@@ -144,7 +243,7 @@ class LineChartRenderer(ChartTypeRenderer):
         return lines
 
     def _build_legend(self, ctx: RenderContext) -> str:
-        """Build legend string.
+        """Build legend string for series that have data.
 
         Args:
             ctx: Render context
@@ -154,6 +253,10 @@ class LineChartRenderer(ChartTypeRenderer):
         """
         legend_parts = []
         for i, series in enumerate(ctx.chart.series):
+            # Only include series that have actual data
+            values = get_series_values(series, ctx.spreadsheet)
+            if not values:
+                continue
             symbol = self.SYMBOLS[i % len(self.SYMBOLS)]
             name = series.name or f"Series {i + 1}"
             legend_parts.append(f"{symbol} {name}")

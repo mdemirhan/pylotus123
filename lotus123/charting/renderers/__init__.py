@@ -10,11 +10,12 @@ from .base import ChartTypeRenderer, RenderContext
 from .line import LineChartRenderer
 from .pie import PieChartRenderer
 from .scatter import ScatterChartRenderer
+from .stacked import StackedBarChartRenderer
 
 RENDERER_REGISTRY: dict[ChartType, type[ChartTypeRenderer]] = {
     ChartType.LINE: LineChartRenderer,
     ChartType.BAR: BarChartRenderer,
-    ChartType.STACKED_BAR: BarChartRenderer,  # Falls back to bar
+    ChartType.STACKED_BAR: StackedBarChartRenderer,
     ChartType.AREA: BarChartRenderer,  # Falls back to bar
     ChartType.HLBAR: BarChartRenderer,  # Falls back to bar
     ChartType.PIE: PieChartRenderer,
@@ -40,6 +41,7 @@ __all__ = [
     "RenderContext",
     "LineChartRenderer",
     "BarChartRenderer",
+    "StackedBarChartRenderer",
     "PieChartRenderer",
     "ScatterChartRenderer",
     "RENDERER_REGISTRY",

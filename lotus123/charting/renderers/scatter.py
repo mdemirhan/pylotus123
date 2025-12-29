@@ -94,6 +94,15 @@ class ScatterChartRenderer(ChartTypeRenderer):
         # X-axis
         lines.append(" " * y_label_width + BOX_CORNER_BL + BOX_HORIZONTAL * plot_width)
 
+        # X-axis numeric labels
+        x_label_line = " " * (y_label_width + 1)
+        x_min_str = f"{x_min:.1f}"
+        x_max_str = f"{x_max:.1f}"
+        # Place min at left, max at right
+        remaining = plot_width - len(x_min_str) - len(x_max_str)
+        x_label_line += x_min_str + " " * max(0, remaining) + x_max_str
+        lines.append(x_label_line[:ctx.width])
+
         # X-axis title
         if ctx.chart.x_axis.title:
             lines.append("")
@@ -104,11 +113,17 @@ class ScatterChartRenderer(ChartTypeRenderer):
             lines.append("")
             lines.append(f"Y: {ctx.chart.y_axis.title}".center(ctx.width))
 
-        # Legend for scatter
+        # Legend for scatter - only show series with data
         if ctx.chart.options.show_legend and ctx.chart.series:
             lines.append("")
-            series_name = ctx.chart.series[0].name or "Data"
-            lines.append(f"[*] {series_name}".center(ctx.width))
+            legend_parts = []
+            for i, series in enumerate(ctx.chart.series):
+                vals = get_series_values(series, ctx.spreadsheet)
+                if vals:
+                    name = series.name or f"Series {i + 1}"
+                    legend_parts.append(f"[*] {name}")
+            if legend_parts:
+                lines.append("  ".join(legend_parts).center(ctx.width))
 
         return lines
 
@@ -132,6 +147,12 @@ class ScatterChartRenderer(ChartTypeRenderer):
             for v in flat:
                 if isinstance(v, (int, float)):
                     parsed_values.append(float(v))
+                elif isinstance(v, str):
+                    # Try to parse string as number
+                    try:
+                        parsed_values.append(float(v))
+                    except ValueError:
+                        pass
             if parsed_values:
                 x_values = parsed_values
 

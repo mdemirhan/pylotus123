@@ -127,6 +127,31 @@ def get_series_values(series: ChartSeries, spreadsheet: Spreadsheet | None) -> l
     return []
 
 
+def get_x_labels(chart: Chart, spreadsheet: Spreadsheet | None) -> list[str]:
+    """Get X-axis labels from the chart's x_range.
+
+    Args:
+        chart: The chart with x_range set
+        spreadsheet: Spreadsheet instance for range lookups
+
+    Returns:
+        List of string labels for the X-axis
+    """
+    if not chart.x_range or not spreadsheet:
+        return []
+
+    labels = []
+    if ":" in chart.x_range:
+        parts = chart.x_range.split(":")
+        flat_values = spreadsheet.get_range_flat(parts[0], parts[1])
+        for v in flat_values:
+            if v is not None and v != "":
+                labels.append(str(v))
+            else:
+                labels.append("")
+    return labels
+
+
 class ChartTypeRenderer(ABC):
     """Abstract base class for chart type-specific renderers.
 
