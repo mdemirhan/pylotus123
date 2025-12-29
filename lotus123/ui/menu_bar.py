@@ -85,7 +85,13 @@ class LotusMenu(Static, can_focus=True):
                 (
                     "T",
                     "Type",
-                    [("L", "Line"), ("B", "Bar"), ("X", "XY"), ("S", "Stacked"), ("P", "Pie")],
+                    [
+                        ("L", "Line"),
+                        ("B", "Bar"),
+                        ("X", "XY"),
+                        ("S", "Stacked"),
+                        ("P", "Pie"),
+                    ],
                 ),
                 ("X", "X-Range"),
                 ("A", "A-Range"),
@@ -96,7 +102,27 @@ class LotusMenu(Static, can_focus=True):
                 ("S", "Save"),
             ],
         },
-        "Data": {"key": "D", "items": [("F", "Fill"), ("S", "Sort"), ("Q", "Query")]},
+        "Data": {
+            "key": "D",
+            "items": [
+                ("F", "Fill"),
+                ("S", "Sort"),
+                (
+                    "Q",
+                    "Query",
+                    [
+                        ("I", "Input"),
+                        ("C", "Criteria"),
+                        ("O", "Output"),
+                        ("F", "Find"),
+                        ("E", "Extract"),
+                        ("U", "Unique"),
+                        ("D", "Delete"),
+                        ("R", "Reset"),
+                    ],
+                ),
+            ],
+        },
         "Quit": {"key": "Q", "items": [("Y", "Yes"), ("N", "No")]},
     }
 

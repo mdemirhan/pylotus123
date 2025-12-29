@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Callable
 
 from textual import events, on
 from textual.app import App, ComposeResult
@@ -157,6 +158,12 @@ class LotusApp(App[None]):
         self._global_protection = False
         self._global_zero_display = True
         self._dirty = False
+        # Query settings (Data Query)
+        self._query_input_range: tuple[int, int, int, int] | None = None
+        self._query_criteria_range: tuple[int, int, int, int] | None = None
+        self._query_output_range: tuple[int, int] | None = None  # Just start position
+        self._query_find_results: list[int] | None = None  # Matching row indices
+        self._query_find_index: int = 0  # Current position in find results
 
     @property
     def _has_modal(self) -> bool:
@@ -389,7 +396,9 @@ class LotusApp(App[None]):
                         if cell.raw_value:
                             changes.append((r, c, "", cell.raw_value))
                 if changes:
-                    cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
+                    cmd = RangeChangeCommand(
+                        spreadsheet=self.spreadsheet, changes=changes
+                    )
                     self.undo_manager.execute(cmd)
                 grid.clear_selection()
             else:
@@ -588,8 +597,22 @@ class LotusApp(App[None]):
             self._data_fill()
         elif result == "Data:Sort":
             self._data_sort()
-        elif result == "Data:Query":
-            self._data_query()
+        elif result == "Data:Query:Input":
+            self._query_set_input()
+        elif result == "Data:Query:Criteria":
+            self._query_set_criteria()
+        elif result == "Data:Query:Output":
+            self._query_set_output()
+        elif result == "Data:Query:Find":
+            self._query_find()
+        elif result == "Data:Query:Extract":
+            self._query_extract()
+        elif result == "Data:Query:Unique":
+            self._query_unique()
+        elif result == "Data:Query:Delete":
+            self._query_delete()
+        elif result == "Data:Query:Reset":
+            self._query_reset()
         elif result == "Worksheet:Insert":
             self._insert_row()
         elif result == "Worksheet:Delete":
@@ -754,7 +777,8 @@ class LotusApp(App[None]):
     def action_quit_app(self) -> None:
         if self._dirty:
             self.push_screen(
-                CommandInput("Save changes before quitting? (Y/N/C=Cancel):"), self._do_quit_confirm
+                CommandInput("Save changes before quitting? (Y/N/C=Cancel):"),
+                self._do_quit_confirm,
             )
         else:
             self.config.save()
@@ -786,7 +810,9 @@ class LotusApp(App[None]):
         r1, c1, r2, c2 = grid.selection_range
         source_range = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
         self._pending_source_range = (r1, c1, r2, c2)
-        self.push_screen(CommandInput(f"Copy {source_range} TO (e.g., D1):"), self._do_menu_copy)
+        self.push_screen(
+            CommandInput(f"Copy {source_range} TO (e.g., D1):"), self._do_menu_copy
+        )
 
     def _do_menu_copy(self, result: str | None) -> None:
         if not result:
@@ -799,13 +825,18 @@ class LotusApp(App[None]):
                 for c_offset in range(c2 - c1 + 1):
                     src_row, src_col = r1 + r_offset, c1 + c_offset
                     target_row, target_col = dest_row + r_offset, dest_col + c_offset
-                    if target_row >= self.spreadsheet.rows or target_col >= self.spreadsheet.cols:
+                    if (
+                        target_row >= self.spreadsheet.rows
+                        or target_col >= self.spreadsheet.cols
+                    ):
                         continue
                     src_cell = self.spreadsheet.get_cell(src_row, src_col)
                     target_cell = self.spreadsheet.get_cell(target_row, target_col)
                     old_value = target_cell.raw_value
                     new_value = src_cell.raw_value
-                    if new_value and (new_value.startswith("=") or new_value.startswith("@")):
+                    if new_value and (
+                        new_value.startswith("=") or new_value.startswith("@")
+                    ):
                         row_delta = target_row - src_row
                         col_delta = target_col - src_col
                         new_value = new_value[0] + adjust_formula_references(
@@ -828,7 +859,9 @@ class LotusApp(App[None]):
         r1, c1, r2, c2 = grid.selection_range
         source_range = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
         self._pending_source_range = (r1, c1, r2, c2)
-        self.push_screen(CommandInput(f"Move {source_range} TO (e.g., D1):"), self._do_menu_move)
+        self.push_screen(
+            CommandInput(f"Move {source_range} TO (e.g., D1):"), self._do_menu_move
+        )
 
     def _do_menu_move(self, result: str | None) -> None:
         if not result:
@@ -841,13 +874,18 @@ class LotusApp(App[None]):
                 for c_offset in range(c2 - c1 + 1):
                     src_row, src_col = r1 + r_offset, c1 + c_offset
                     target_row, target_col = dest_row + r_offset, dest_col + c_offset
-                    if target_row >= self.spreadsheet.rows or target_col >= self.spreadsheet.cols:
+                    if (
+                        target_row >= self.spreadsheet.rows
+                        or target_col >= self.spreadsheet.cols
+                    ):
                         continue
                     src_cell = self.spreadsheet.get_cell(src_row, src_col)
                     target_cell = self.spreadsheet.get_cell(target_row, target_col)
                     old_value = target_cell.raw_value
                     new_value = src_cell.raw_value
-                    if new_value and (new_value.startswith("=") or new_value.startswith("@")):
+                    if new_value and (
+                        new_value.startswith("=") or new_value.startswith("@")
+                    ):
                         row_delta = target_row - src_row
                         col_delta = target_col - src_col
                         new_value = new_value[0] + adjust_formula_references(
@@ -933,12 +971,17 @@ class LotusApp(App[None]):
             for c_offset, value in enumerate(row_data):
                 target_row = dest_row + r_offset
                 target_col = dest_col + c_offset
-                if target_row >= self.spreadsheet.rows or target_col >= self.spreadsheet.cols:
+                if (
+                    target_row >= self.spreadsheet.rows
+                    or target_col >= self.spreadsheet.cols
+                ):
                     continue
                 cell = self.spreadsheet.get_cell(target_row, target_col)
                 old_value = cell.raw_value
                 new_value = value
-                if new_value and (new_value.startswith("=") or new_value.startswith("@")):
+                if new_value and (
+                    new_value.startswith("=") or new_value.startswith("@")
+                ):
                     row_delta = target_row - (src_row + r_offset)
                     col_delta = target_col - (src_col + c_offset)
                     new_value = new_value[0] + adjust_formula_references(
@@ -947,16 +990,22 @@ class LotusApp(App[None]):
                 if new_value != old_value:
                     changes.append((target_row, target_col, new_value, old_value))
         if changes:
-            range_cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
+            range_cmd = RangeChangeCommand(
+                spreadsheet=self.spreadsheet, changes=changes
+            )
             self.undo_manager.execute(range_cmd)
         if self._clipboard_is_cut:
             clear_changes = []
             for r_offset, row_data in enumerate(self._range_clipboard):
                 for c_offset, value in enumerate(row_data):
                     if value:
-                        clear_changes.append((src_row + r_offset, src_col + c_offset, "", value))
+                        clear_changes.append(
+                            (src_row + r_offset, src_col + c_offset, "", value)
+                        )
             if clear_changes:
-                clear_cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=clear_changes)
+                clear_cmd = RangeChangeCommand(
+                    spreadsheet=self.spreadsheet, changes=clear_changes
+                )
                 self.undo_manager.execute(clear_cmd)
             self._clipboard_is_cut = False
         grid.refresh_grid()
@@ -1003,7 +1052,9 @@ class LotusApp(App[None]):
             self.chart.set_x_range(range_str)
             self.notify(f"X-Range set to {range_str}")
         else:
-            self.push_screen(CommandInput("X-Range (e.g., A1:A10):"), self._do_set_x_range)
+            self.push_screen(
+                CommandInput("X-Range (e.g., A1:A10):"), self._do_set_x_range
+            )
 
     def _do_set_x_range(self, result: str | None) -> None:
         if result:
@@ -1017,7 +1068,9 @@ class LotusApp(App[None]):
             range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
             self._add_or_update_series(0, "A", range_str)
         else:
-            self.push_screen(CommandInput("A-Range (e.g., B1:B10):"), self._do_set_a_range)
+            self.push_screen(
+                CommandInput("A-Range (e.g., B1:B10):"), self._do_set_a_range
+            )
 
     def _do_set_a_range(self, result: str | None) -> None:
         if result:
@@ -1030,7 +1083,9 @@ class LotusApp(App[None]):
             range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
             self._add_or_update_series(1, "B", range_str)
         else:
-            self.push_screen(CommandInput("B-Range (e.g., C1:C10):"), self._do_set_b_range)
+            self.push_screen(
+                CommandInput("B-Range (e.g., C1:C10):"), self._do_set_b_range
+            )
 
     def _do_set_b_range(self, result: str | None) -> None:
         if result:
@@ -1063,7 +1118,9 @@ class LotusApp(App[None]):
     # Range menu methods
     def _range_format(self) -> None:
         self.push_screen(
-            CommandInput("Format (F=Fixed, S=Scientific, C=Currency, P=Percent, G=General):"),
+            CommandInput(
+                "Format (F=Fixed, S=Scientific, C=Currency, P=Percent, G=General):"
+            ),
             self._do_range_format,
         )
 
@@ -1085,7 +1142,8 @@ class LotusApp(App[None]):
 
     def _range_label(self) -> None:
         self.push_screen(
-            CommandInput("Label alignment (L=Left, R=Right, C=Center):"), self._do_range_label
+            CommandInput("Label alignment (L=Left, R=Right, C=Center):"),
+            self._do_range_label,
         )
 
     def _do_range_label(self, result: str | None) -> None:
@@ -1119,7 +1177,9 @@ class LotusApp(App[None]):
         r1, c1, r2, c2 = grid.selection_range
         range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
         self._pending_range = range_str
-        self.push_screen(CommandInput(f"Name for range {range_str}:"), self._do_range_name)
+        self.push_screen(
+            CommandInput(f"Name for range {range_str}:"), self._do_range_name
+        )
 
     def _do_range_name(self, result: str | None) -> None:
         if not result:
@@ -1152,7 +1212,9 @@ class LotusApp(App[None]):
         if not grid.has_selection:
             self.notify("Select a range first")
             return
-        self.push_screen(CommandInput("Fill with (start,step,stop) or value:"), self._do_data_fill)
+        self.push_screen(
+            CommandInput("Fill with (start,step,stop) or value:"), self._do_data_fill
+        )
 
     def _do_data_fill(self, result: str | None) -> None:
         if not result:
@@ -1196,7 +1258,9 @@ class LotusApp(App[None]):
         last_col = index_to_col(c2)
         col_range = first_col if c1 == c2 else f"{first_col}-{last_col}"
         self.push_screen(
-            CommandInput(f"Sort column [{col_range}] (add D for descending, e.g., 'A' or 'AD'):"),
+            CommandInput(
+                f"Sort column [{col_range}] (add D for descending, e.g., 'A' or 'AD'):"
+            ),
             self._do_data_sort,
         )
 
@@ -1258,10 +1322,309 @@ class LotusApp(App[None]):
         except Exception as e:
             self.notify(f"Sort error: {e}", severity="error")
 
-    def _data_query(self) -> None:
+    # Data Query methods
+    def _query_set_input(self) -> None:
+        """Set the input (database) range for queries."""
+        grid = self.query_one("#grid", SpreadsheetGrid)
+        if grid.has_selection:
+            r1, c1, r2, c2 = grid.selection_range
+            self._query_input_range = (r1, c1, r2, c2)
+            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
+            self.notify(f"Query Input range set to {range_str}")
+        else:
+            self.push_screen(
+                CommandInput("Input range (e.g., A1:D100):"), self._do_query_set_input
+            )
+
+    def _do_query_set_input(self, result: str | None) -> None:
+        if not result:
+            return
+        try:
+            parts = result.upper().split(":")
+            if len(parts) == 2:
+                r1, c1 = parse_cell_ref(parts[0])
+                r2, c2 = parse_cell_ref(parts[1])
+                self._query_input_range = (r1, c1, r2, c2)
+                self.notify(f"Query Input range set to {result.upper()}")
+            else:
+                self.notify("Invalid range format", severity="error")
+        except ValueError as e:
+            self.notify(f"Invalid range: {e}", severity="error")
+
+    def _query_set_criteria(self) -> None:
+        """Set the criteria range for queries."""
+        grid = self.query_one("#grid", SpreadsheetGrid)
+        if grid.has_selection:
+            r1, c1, r2, c2 = grid.selection_range
+            self._query_criteria_range = (r1, c1, r2, c2)
+            self._query_find_results = None  # Clear previous results to force new search
+            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
+            self.notify(f"Query Criteria range set to {range_str}")
+        else:
+            self.push_screen(
+                CommandInput("Criteria range (e.g., F1:G2):"),
+                self._do_query_set_criteria,
+            )
+
+    def _do_query_set_criteria(self, result: str | None) -> None:
+        if not result:
+            return
+        try:
+            parts = result.upper().split(":")
+            if len(parts) == 2:
+                r1, c1 = parse_cell_ref(parts[0])
+                r2, c2 = parse_cell_ref(parts[1])
+                self._query_criteria_range = (r1, c1, r2, c2)
+                self._query_find_results = None  # Clear previous results to force new search
+                self.notify(f"Query Criteria range set to {result.upper()}")
+            else:
+                self.notify("Invalid range format", severity="error")
+        except ValueError as e:
+            self.notify(f"Invalid range: {e}", severity="error")
+
+    def _query_set_output(self) -> None:
+        """Set the output range for query extraction."""
+        grid = self.query_one("#grid", SpreadsheetGrid)
+        if grid.has_selection:
+            r1, c1, _, _ = grid.selection_range
+            self._query_output_range = (r1, c1)
+            self.notify(f"Query Output range set to {make_cell_ref(r1, c1)}")
+        else:
+            self.push_screen(
+                CommandInput("Output start cell (e.g., H1):"), self._do_query_set_output
+            )
+
+    def _do_query_set_output(self, result: str | None) -> None:
+        if not result:
+            return
+        try:
+            row, col = parse_cell_ref(result.upper())
+            self._query_output_range = (row, col)
+            self.notify(f"Query Output range set to {result.upper()}")
+        except ValueError as e:
+            self.notify(f"Invalid cell reference: {e}", severity="error")
+
+    def _build_criteria_filter(self) -> Callable[[list], bool] | None:
+        """Build a filter function from the criteria range."""
+        if not self._query_criteria_range or not self._query_input_range:
+            return None
+
+        from .data.criteria import CriteriaParser
+
+        cr1, cc1, cr2, cc2 = self._query_criteria_range
+        ir1, ic1, ir2, ic2 = self._query_input_range
+
+        # Get input headers
+        input_headers = []
+        for c in range(ic1, ic2 + 1):
+            val = self.spreadsheet.get_value(ir1, c)
+            input_headers.append(str(val).strip().upper() if val else "")
+
+        # Get criteria headers and map to input column indices
+        criteria_headers = []
+        for c in range(cc1, cc2 + 1):
+            val = self.spreadsheet.get_value(cr1, c)
+            criteria_headers.append(str(val).strip().upper() if val else "")
+
+        # Build column mapping: criteria col index -> input col index
+        col_mapping: dict[int, int] = {}
+        for ci, ch in enumerate(criteria_headers):
+            if ch:
+                for ii, ih in enumerate(input_headers):
+                    if ch == ih:
+                        col_mapping[ci] = ii
+                        break
+
+        # Get criteria values (rows after header)
+        criteria_rows = []
+        for r in range(cr1 + 1, cr2 + 1):
+            row_vals = []
+            for c in range(cc1, cc2 + 1):
+                row_vals.append(self.spreadsheet.get_value(r, c))
+            criteria_rows.append(row_vals)
+
+        # Parse criteria with remapped columns
+        parser = CriteriaParser()
+        parser.parse_range(criteria_headers, criteria_rows)
+
+        # Create filter that maps input row values to criteria columns
+        def criteria_filter(row_values: list) -> bool:
+            # Remap row values to match criteria column order
+            mapped_values = [""] * len(criteria_headers)
+            for ci, ii in col_mapping.items():
+                if ii < len(row_values):
+                    mapped_values[ci] = row_values[ii]
+            return parser.matches(mapped_values)
+
+        return criteria_filter
+
+    def _query_find(self) -> None:
+        """Find records matching the criteria."""
+        if not self._query_input_range:
+            self.notify("Set Input range first (Data:Query:Input)", severity="warning")
+            return
+
+        grid = self.query_one("#grid", SpreadsheetGrid)
+
+        # If we already have results, cycle to the next one
+        if self._query_find_results:
+            self._query_find_index = (self._query_find_index + 1) % len(self._query_find_results)
+            target_row = self._query_find_results[self._query_find_index]
+            grid.cursor_row = target_row
+            # Navigate to the first criteria column in the input range
+            grid.cursor_col = self._get_first_criteria_col()
+            pos = self._query_find_index + 1
+            total = len(self._query_find_results)
+            self.notify(f"Record {pos} of {total}")
+            return
+
+        # Run a new query
+        from .data.database import DatabaseOperations
+
+        db = DatabaseOperations(self.spreadsheet)
+        criteria_filter = self._build_criteria_filter()
+
+        matching_rows = db.query(self._query_input_range, criteria_func=criteria_filter)
+
+        if not matching_rows:
+            self.notify("No matching records found")
+            self._query_find_results = None
+            return
+
+        self._query_find_results = matching_rows
+        self._query_find_index = 0
+
+        # Navigate to first match
+        first_row = matching_rows[0]
+        grid.cursor_row = first_row
+        # Navigate to the first criteria column in the input range
+        grid.cursor_col = self._get_first_criteria_col()
+        # Scrolling happens automatically via watch_cursor_row/watch_cursor_col
+
         self.notify(
-            "Data Query: Select criteria range, then input range. Use @D functions for queries."
+            f"Found {len(matching_rows)} matching record(s). Press Find again for next."
         )
+
+    def _get_first_criteria_col(self) -> int:
+        """Get the column index in the input range that matches the first criteria header."""
+        if not self._query_criteria_range or not self._query_input_range:
+            return self._query_input_range[1] if self._query_input_range else 0
+
+        crit_start_row, crit_start_col, _, crit_end_col = self._query_criteria_range
+        input_start_row, input_start_col, _, input_end_col = self._query_input_range
+
+        # Get input headers
+        input_headers: dict[str, int] = {}
+        for col in range(input_start_col, input_end_col + 1):
+            header = str(self.spreadsheet.get_value(input_start_row, col)).strip().upper()
+            input_headers[header] = col
+
+        # Find the first criteria header that matches an input header
+        for col in range(crit_start_col, crit_end_col + 1):
+            crit_header = str(self.spreadsheet.get_value(crit_start_row, col)).strip().upper()
+            if crit_header in input_headers:
+                return input_headers[crit_header]
+
+        # Default to start of input range
+        return input_start_col
+
+    def _query_extract(self) -> None:
+        """Extract matching records to the output range."""
+        if not self._query_input_range:
+            self.notify("Set Input range first (Data:Query:Input)", severity="warning")
+            return
+        if not self._query_output_range:
+            self.notify(
+                "Set Output range first (Data:Query:Output)", severity="warning"
+            )
+            return
+
+        from .data.database import DatabaseOperations
+
+        db = DatabaseOperations(self.spreadsheet)
+        criteria_filter = self._build_criteria_filter()
+
+        matching_rows = db.query(self._query_input_range, criteria_func=criteria_filter)
+
+        if not matching_rows:
+            self.notify("No matching records to extract")
+            return
+
+        count = db.extract(
+            self._query_input_range, self._query_output_range, matching_rows
+        )
+        grid = self.query_one("#grid", SpreadsheetGrid)
+        grid.refresh_grid()
+        self.notify(f"Extracted {count} record(s)")
+
+    def _query_unique(self) -> None:
+        """Extract unique matching records to the output range."""
+        if not self._query_input_range:
+            self.notify("Set Input range first (Data:Query:Input)", severity="warning")
+            return
+        if not self._query_output_range:
+            self.notify(
+                "Set Output range first (Data:Query:Output)", severity="warning"
+            )
+            return
+
+        from .data.database import DatabaseOperations
+
+        db = DatabaseOperations(self.spreadsheet)
+        criteria_filter = self._build_criteria_filter()
+
+        # First query matching rows
+        matching_rows = db.query(self._query_input_range, criteria_func=criteria_filter)
+
+        if not matching_rows:
+            self.notify("No matching records found")
+            return
+
+        # Then find unique among matching
+        ir1, ic1, ir2, ic2 = self._query_input_range
+        all_columns = list(range(ic2 - ic1 + 1))
+        unique_rows = db.unique(self._query_input_range, all_columns)
+
+        # Intersect with matching
+        unique_matching = [r for r in unique_rows if r in matching_rows]
+
+        count = db.extract(
+            self._query_input_range, self._query_output_range, unique_matching
+        )
+        grid = self.query_one("#grid", SpreadsheetGrid)
+        grid.refresh_grid()
+        self.notify(f"Extracted {count} unique record(s)")
+
+    def _query_delete(self) -> None:
+        """Delete records matching the criteria."""
+        if not self._query_input_range:
+            self.notify("Set Input range first (Data:Query:Input)", severity="warning")
+            return
+
+        from .data.database import DatabaseOperations
+
+        db = DatabaseOperations(self.spreadsheet)
+        criteria_filter = self._build_criteria_filter()
+
+        matching_rows = db.query(self._query_input_range, criteria_func=criteria_filter)
+
+        if not matching_rows:
+            self.notify("No matching records to delete")
+            return
+
+        count = db.delete_matching(self._query_input_range, matching_rows)
+        grid = self.query_one("#grid", SpreadsheetGrid)
+        grid.refresh_grid()
+        self.notify(f"Deleted {count} record(s)")
+
+    def _query_reset(self) -> None:
+        """Reset all query settings."""
+        self._query_input_range = None
+        self._query_criteria_range = None
+        self._query_output_range = None
+        self._query_find_results = None
+        self._query_find_index = 0
+        self.notify("Query settings reset")
 
     # Worksheet global methods
     def _global_format(self) -> None:
@@ -1331,7 +1694,9 @@ class LotusApp(App[None]):
     def _global_protection_action(self) -> None:
         self._global_protection = not self._global_protection
         if self._global_protection:
-            self.notify("Worksheet protection ENABLED - protected cells cannot be edited")
+            self.notify(
+                "Worksheet protection ENABLED - protected cells cannot be edited"
+            )
         else:
             self.notify("Worksheet protection DISABLED")
 
@@ -1346,7 +1711,9 @@ class LotusApp(App[None]):
             self.notify("Zero values: Hidden (blank)")
 
     def _worksheet_erase(self) -> None:
-        self.push_screen(CommandInput("Erase entire worksheet? (Y/N):"), self._do_worksheet_erase)
+        self.push_screen(
+            CommandInput("Erase entire worksheet? (Y/N):"), self._do_worksheet_erase
+        )
 
     def _do_worksheet_erase(self, result: str | None) -> None:
         if result and result.upper().startswith("Y"):
