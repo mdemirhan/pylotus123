@@ -29,7 +29,6 @@ class TestLotusMenu:
         assert "Copy" in menu.MENU_STRUCTURE
         assert "Move" in menu.MENU_STRUCTURE
         assert "File" in menu.MENU_STRUCTURE
-        assert "Print" in menu.MENU_STRUCTURE
         assert "Graph" in menu.MENU_STRUCTURE
         assert "Data" in menu.MENU_STRUCTURE
         assert "Quit" in menu.MENU_STRUCTURE

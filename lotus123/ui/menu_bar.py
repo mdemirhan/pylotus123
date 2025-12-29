@@ -96,16 +96,6 @@ class LotusMenu(Static, can_focus=True):
                 ("S", "Save"),
             ],
         },
-        "Print": {
-            "key": "P",
-            "items": [
-                ("P", "Printer"),
-                ("F", "File"),
-                ("R", "Range"),
-                ("L", "Line"),
-                ("O", "Options"),
-            ],
-        },
         "Data": {"key": "D", "items": [("F", "Fill"), ("S", "Sort"), ("Q", "Query")]},
         "Quit": {"key": "Q", "items": [("Y", "Yes"), ("N", "No")]},
     }

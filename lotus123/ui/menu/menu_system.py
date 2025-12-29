@@ -344,29 +344,6 @@ class MenuSystem:
             if item.submenu:
                 item.submenu.parent = file_menu
 
-        # Print menu
-        print_menu = Menu("Print")
-        print_menu.items = [
-            MenuItem(
-                "P",
-                "Printer",
-                MenuAction.SUBMENU,
-                submenu=self._build_printer_menu(),
-                help_text="Print to printer",
-            ),
-            MenuItem(
-                "F",
-                "File",
-                MenuAction.INPUT,
-                handler=self._cmd_print_file,
-                help_text="Print to file",
-            ),
-        ]
-        print_menu.parent = main
-        for item in print_menu.items:
-            if item.submenu:
-                item.submenu.parent = print_menu
-
         # Graph menu
         graph_menu = Menu("Graph")
         graph_menu.items = [
@@ -537,9 +514,6 @@ class MenuSystem:
             MenuItem("M", "Move", MenuAction.SUBMENU, submenu=move_menu, help_text="Move cells"),
             MenuItem(
                 "F", "File", MenuAction.SUBMENU, submenu=file_menu, help_text="File operations"
-            ),
-            MenuItem(
-                "P", "Print", MenuAction.SUBMENU, submenu=print_menu, help_text="Print operations"
             ),
             MenuItem(
                 "G",
@@ -1221,134 +1195,6 @@ class MenuSystem:
                 MenuAction.INPUT,
                 handler=self._cmd_import_numbers,
                 help_text="Import numeric data",
-            ),
-        ]
-        return menu
-
-    def _build_printer_menu(self) -> Menu:
-        """Build printer submenu."""
-        menu = Menu("Printer")
-        menu.items = [
-            MenuItem(
-                "R",
-                "Range",
-                MenuAction.RANGE,
-                handler=self._cmd_print_range,
-                help_text="Print range",
-            ),
-            MenuItem(
-                "L", "Line", MenuAction.COMMAND, handler=self._cmd_print_line, help_text="Line feed"
-            ),
-            MenuItem(
-                "P", "Page", MenuAction.COMMAND, handler=self._cmd_print_page, help_text="Page feed"
-            ),
-            MenuItem(
-                "O",
-                "Options",
-                MenuAction.SUBMENU,
-                submenu=self._build_print_options_menu(),
-                help_text="Print options",
-            ),
-            MenuItem(
-                "C",
-                "Clear",
-                MenuAction.SUBMENU,
-                submenu=self._build_print_clear_menu(),
-                help_text="Clear settings",
-            ),
-            MenuItem(
-                "A",
-                "Align",
-                MenuAction.COMMAND,
-                handler=self._cmd_print_align,
-                help_text="Align paper",
-            ),
-            MenuItem(
-                "G",
-                "Go",
-                MenuAction.COMMAND,
-                handler=self._cmd_print_go,
-                help_text="Start printing",
-            ),
-            MenuItem(
-                "Q",
-                "Quit",
-                MenuAction.COMMAND,
-                handler=self._cmd_print_quit,
-                help_text="Exit print menu",
-            ),
-        ]
-        return menu
-
-    def _build_print_options_menu(self) -> Menu:
-        """Build print options submenu."""
-        menu = Menu("Options")
-        menu.items = [
-            MenuItem(
-                "H",
-                "Header",
-                MenuAction.INPUT,
-                handler=self._cmd_print_header,
-                help_text="Page header",
-            ),
-            MenuItem(
-                "F",
-                "Footer",
-                MenuAction.INPUT,
-                handler=self._cmd_print_footer,
-                help_text="Page footer",
-            ),
-            MenuItem("M", "Margins", MenuAction.SUBMENU, help_text="Page margins"),
-            MenuItem("B", "Borders", MenuAction.SUBMENU, help_text="Print borders"),
-            MenuItem(
-                "S",
-                "Setup",
-                MenuAction.INPUT,
-                handler=self._cmd_print_setup,
-                help_text="Printer setup",
-            ),
-            MenuItem(
-                "P",
-                "Pg-Length",
-                MenuAction.INPUT,
-                handler=self._cmd_print_pagelength,
-                help_text="Page length",
-            ),
-            MenuItem("O", "Other", MenuAction.SUBMENU, help_text="Other options"),
-        ]
-        return menu
-
-    def _build_print_clear_menu(self) -> Menu:
-        """Build print clear submenu."""
-        menu = Menu("Clear")
-        menu.items = [
-            MenuItem(
-                "A",
-                "All",
-                MenuAction.COMMAND,
-                handler=self._cmd_print_clear_all,
-                help_text="Clear all",
-            ),
-            MenuItem(
-                "R",
-                "Range",
-                MenuAction.COMMAND,
-                handler=self._cmd_print_clear_range,
-                help_text="Clear range",
-            ),
-            MenuItem(
-                "B",
-                "Borders",
-                MenuAction.COMMAND,
-                handler=self._cmd_print_clear_borders,
-                help_text="Clear borders",
-            ),
-            MenuItem(
-                "F",
-                "Format",
-                MenuAction.COMMAND,
-                handler=self._cmd_print_clear_format,
-                help_text="Clear format",
             ),
         ]
         return menu
@@ -2037,51 +1883,6 @@ class MenuSystem:
 
     def _cmd_file_directory(self, path: str) -> str:
         return f"Directory changed to {path}"
-
-    def _cmd_print_range(self, range_ref: str) -> str:
-        return f"Print range: {range_ref}"
-
-    def _cmd_print_line(self) -> str:
-        return "Line feed"
-
-    def _cmd_print_page(self) -> str:
-        return "Page feed"
-
-    def _cmd_print_align(self) -> str:
-        return "Paper aligned"
-
-    def _cmd_print_go(self) -> str:
-        return "Printing..."
-
-    def _cmd_print_quit(self) -> str:
-        return "Print menu closed"
-
-    def _cmd_print_header(self, header: str) -> str:
-        return f"Header: {header}"
-
-    def _cmd_print_footer(self, footer: str) -> str:
-        return f"Footer: {footer}"
-
-    def _cmd_print_setup(self, setup: str) -> str:
-        return f"Printer setup: {setup}"
-
-    def _cmd_print_pagelength(self, length: str) -> str:
-        return f"Page length: {length}"
-
-    def _cmd_print_clear_all(self) -> str:
-        return "All print settings cleared"
-
-    def _cmd_print_clear_range(self) -> str:
-        return "Print range cleared"
-
-    def _cmd_print_clear_borders(self) -> str:
-        return "Print borders cleared"
-
-    def _cmd_print_clear_format(self) -> str:
-        return "Print format cleared"
-
-    def _cmd_print_file(self, filename: str) -> str:
-        return f"Printed to file {filename}"
 
     def _cmd_graph_type_line(self) -> str:
         return "Line chart selected"
