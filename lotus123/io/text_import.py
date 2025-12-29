@@ -6,6 +6,7 @@ Supports importing:
 - Fixed-width files
 - Other delimited files
 """
+
 from __future__ import annotations
 
 import csv
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
 
 class ImportFormat(Enum):
     """Import file format."""
+
     CSV = auto()
     TSV = auto()
     FIXED_WIDTH = auto()
@@ -42,6 +44,7 @@ class ImportOptions:
         field_widths: List of widths for FIXED_WIDTH format
         encoding: Text encoding
     """
+
     format: ImportFormat = ImportFormat.CSV
     delimiter: str = ","
     has_header: bool = False
@@ -105,15 +108,15 @@ class TextImporter:
         elif ext == ".txt":
             # Try to detect delimiter from content
             try:
-                with open(path, 'r', encoding='utf-8') as f:
+                with open(path, "r", encoding="utf-8") as f:
                     first_line = f.readline()
-                    if '\t' in first_line:
+                    if "\t" in first_line:
                         options.format = ImportFormat.TSV
                         options.delimiter = "\t"
-                    elif ',' in first_line:
+                    elif "," in first_line:
                         options.format = ImportFormat.CSV
                         options.delimiter = ","
-                    elif ';' in first_line:
+                    elif ";" in first_line:
                         options.format = ImportFormat.CUSTOM_DELIMITED
                         options.delimiter = ";"
             except Exception:
@@ -125,12 +128,8 @@ class TextImporter:
         """Import CSV/TSV file."""
         rows_imported = 0
 
-        with open(path, 'r', encoding=options.encoding, newline='') as f:
-            reader = csv.reader(
-                f,
-                delimiter=options.delimiter,
-                quotechar=options.text_qualifier,
-            )
+        with open(path, "r", encoding=options.encoding, newline="") as f:
+            reader = csv.reader(f, delimiter=options.delimiter, quotechar=options.text_qualifier)
 
             # Skip rows if needed
             for _ in range(options.start_row):
@@ -146,7 +145,7 @@ class TextImporter:
 
                 dest_row = options.dest_row + rows_imported
 
-                for col_idx, value in enumerate(row[options.start_col:]):
+                for col_idx, value in enumerate(row[options.start_col :]):
                     if options.trim_whitespace:
                         value = value.strip()
 
@@ -169,7 +168,7 @@ class TextImporter:
 
         rows_imported = 0
 
-        with open(path, 'r', encoding=options.encoding) as f:
+        with open(path, "r", encoding=options.encoding) as f:
             # Skip rows
             for _ in range(options.start_row):
                 if not f.readline():
@@ -188,7 +187,7 @@ class TextImporter:
                         pos += width
                         continue
 
-                    value = line[pos:pos + width]
+                    value = line[pos : pos + width]
                     if options.trim_whitespace:
                         value = value.strip()
 
@@ -204,7 +203,7 @@ class TextImporter:
     def _detect_field_widths(self, path: Path) -> list[int]:
         """Try to detect field widths from file content."""
         # Simple heuristic: look for consistent spacing
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             lines = [f.readline() for _ in range(min(10, 1000))]
 
         if not lines:
@@ -216,7 +215,7 @@ class TextImporter:
 
         for line in lines:
             for i, char in enumerate(line):
-                if char == ' ':
+                if char == " ":
                     space_counts[i] += 1
 
         # Find field boundaries (positions with high space counts)
@@ -256,9 +255,9 @@ class TextImporter:
             options = ImportOptions()
 
         rows_imported = 0
-        lines = text.split('\n')
+        lines = text.split("\n")
 
-        for line_idx, line in enumerate(lines[options.start_row:]):
+        for line_idx, line in enumerate(lines[options.start_row :]):
             if options.skip_blank_lines and not line.strip():
                 continue
 
@@ -269,7 +268,7 @@ class TextImporter:
                 pos = 0
                 for col_idx, width in enumerate(options.field_widths):
                     if col_idx >= options.start_col:
-                        value = line[pos:pos + width]
+                        value = line[pos : pos + width]
                         if options.trim_whitespace:
                             value = value.strip()
                         dest_col = options.dest_col + (col_idx - options.start_col)
@@ -278,11 +277,13 @@ class TextImporter:
             else:
                 # Delimited parsing
                 values = line.split(options.delimiter)
-                for col_idx, value in enumerate(values[options.start_col:]):
+                for col_idx, value in enumerate(values[options.start_col :]):
                     if options.trim_whitespace:
                         value = value.strip()
                         # Remove quotes if present
-                        if value.startswith(options.text_qualifier) and value.endswith(options.text_qualifier):
+                        if value.startswith(options.text_qualifier) and value.endswith(
+                            options.text_qualifier
+                        ):
                             value = value[1:-1]
                     dest_col = options.dest_col + col_idx
                     self.spreadsheet.set_cell(dest_row, dest_col, value)

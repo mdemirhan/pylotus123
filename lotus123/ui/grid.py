@@ -3,23 +3,20 @@
 Provides the main grid display with mouse support, keyboard navigation,
 and range selection capabilities.
 """
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from rich.style import Style
+from rich.text import Text
 from textual import events
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Static
-from rich.text import Text
-from rich.style import Style
 
+from ..core import Spreadsheet, index_to_col, parse_cell_ref
 from .themes import Theme
-from ..core.spreadsheet import Spreadsheet
-from ..core.reference import index_to_col, parse_cell_ref
-
-if TYPE_CHECKING:
-    pass
 
 
 class SpreadsheetGrid(Static, can_focus=True):
@@ -38,6 +35,7 @@ class SpreadsheetGrid(Static, can_focus=True):
 
     class CellSelected(Message):
         """Sent when a cell is selected via keyboard."""
+
         def __init__(self, row: int, col: int) -> None:
             self.row = row
             self.col = col
@@ -45,6 +43,7 @@ class SpreadsheetGrid(Static, can_focus=True):
 
     class CellClicked(Message):
         """Sent when a cell is clicked with mouse."""
+
         def __init__(self, row: int, col: int) -> None:
             self.row = row
             self.col = col
@@ -52,6 +51,7 @@ class SpreadsheetGrid(Static, can_focus=True):
 
     class RangeSelected(Message):
         """Sent when a range of cells is selected."""
+
         def __init__(self, start_row: int, start_col: int, end_row: int, end_col: int) -> None:
             self.start_row = start_row
             self.start_col = start_col
@@ -80,8 +80,14 @@ class SpreadsheetGrid(Static, can_focus=True):
         """Get the normalized selection range (top-left to bottom-right)."""
         if not self.has_selection:
             return (self.cursor_row, self.cursor_col, self.cursor_row, self.cursor_col)
-        r1, c1 = min(self.select_anchor_row, self.cursor_row), min(self.select_anchor_col, self.cursor_col)
-        r2, c2 = max(self.select_anchor_row, self.cursor_row), max(self.select_anchor_col, self.cursor_col)
+        r1, c1 = (
+            min(self.select_anchor_row, self.cursor_row),
+            min(self.select_anchor_col, self.cursor_col),
+        )
+        r2, c2 = (
+            max(self.select_anchor_row, self.cursor_row),
+            max(self.select_anchor_col, self.cursor_col),
+        )
         return (r1, c1, r2, c2)
 
     def start_selection(self) -> None:

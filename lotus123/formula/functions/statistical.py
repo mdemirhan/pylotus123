@@ -3,6 +3,7 @@
 Implements Lotus 1-2-3 compatible statistical functions:
 @AVG, @COUNT, @MIN, @MAX, @STD, @VAR
 """
+
 from __future__ import annotations
 
 import math
@@ -178,6 +179,7 @@ def fn_mode(*args: Any) -> float:
         return 0.0
 
     from collections import Counter
+
     counts = Counter(numbers)
     max_count = max(counts.values())
     if max_count == 1:
@@ -192,14 +194,14 @@ def fn_large(*args: Any) -> float:
     Usage: @LARGE(range, k)
     """
     if len(args) < 2:
-        return float('nan')
+        return float("nan")
 
     *range_args, k = args
     numbers = sorted(_get_numbers(tuple(range_args)), reverse=True)
     k_val = int(_to_number(k) or 1)
 
     if k_val < 1 or k_val > len(numbers):
-        return float('nan')
+        return float("nan")
     return numbers[k_val - 1]
 
 
@@ -209,14 +211,14 @@ def fn_small(*args: Any) -> float:
     Usage: @SMALL(range, k)
     """
     if len(args) < 2:
-        return float('nan')
+        return float("nan")
 
     *range_args, k = args
     numbers = sorted(_get_numbers(tuple(range_args)))
     k_val = int(_to_number(k) or 1)
 
     if k_val < 1 or k_val > len(numbers):
-        return float('nan')
+        return float("nan")
     return numbers[k_val - 1]
 
 
@@ -256,14 +258,14 @@ def fn_percentile(*args: Any) -> float:
     Usage: @PERCENTILE(range, k) where k is 0-1
     """
     if len(args) < 2:
-        return float('nan')
+        return float("nan")
 
     *range_args, k = args
     numbers = sorted(_get_numbers(tuple(range_args)))
     k_val = _to_number(k) or 0
 
     if not numbers or k_val < 0 or k_val > 1:
-        return float('nan')
+        return float("nan")
 
     n = len(numbers)
     idx = k_val * (n - 1)
@@ -283,14 +285,14 @@ def fn_quartile(*args: Any) -> float:
     Usage: @QUARTILE(range, quart) where quart is 0-4
     """
     if len(args) < 2:
-        return float('nan')
+        return float("nan")
 
     *range_args, quart = args
     q_val = _to_number(quart)
     q = int(q_val) if q_val is not None else 0
 
     if q < 0 or q > 4:
-        return float('nan')
+        return float("nan")
 
     # Convert quartile to percentile
     percentiles = {0: 0.0, 1: 0.25, 2: 0.5, 3: 0.75, 4: 1.0}
@@ -300,12 +302,14 @@ def fn_quartile(*args: Any) -> float:
 def fn_rand() -> float:
     """@RAND - Random number between 0 and 1."""
     import random
+
     return random.random()
 
 
 def fn_randbetween(bottom: Any, top: Any) -> int:
     """@RANDBETWEEN - Random integer between two values."""
     import random
+
     b_val = _to_number(bottom) if bottom is not None else 0.0
     t_val = _to_number(top) if top is not None else 1.0
     b = int(b_val) if b_val is not None else 0
@@ -460,7 +464,6 @@ STATISTICAL_FUNCTIONS = {
     "MIN": fn_min,
     "MAX": fn_max,
     "PRODUCT": fn_product,
-
     # Dispersion
     "STD": fn_std,
     "STDS": fn_stds,
@@ -470,7 +473,6 @@ STATISTICAL_FUNCTIONS = {
     "VARS": fn_vars,
     "VARP": fn_varp,
     "SUMSQ": fn_sumsq,
-
     # Position
     "MEDIAN": fn_median,
     "MODE": fn_mode,
@@ -479,17 +481,14 @@ STATISTICAL_FUNCTIONS = {
     "RANK": fn_rank,
     "PERCENTILE": fn_percentile,
     "QUARTILE": fn_quartile,
-
     # Random
     "RAND": fn_rand,
     "RANDBETWEEN": fn_randbetween,
-
     # Combinatorics
     "SUMPRODUCT": fn_sumproduct,
     "PERMUT": fn_permut,
     "COMBIN": fn_combin,
     "FACT": fn_fact,
-
     # Means
     "GEOMEAN": fn_geomean,
     "HARMEAN": fn_harmean,

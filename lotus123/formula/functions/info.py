@@ -4,6 +4,7 @@ Implements Lotus 1-2-3 compatible information functions:
 @CELL, @CELLPOINTER, @ROWS, @COLS
 @ISNUMBER, @ISSTRING, @ISERR, @ISNA, @TYPE
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -219,26 +220,20 @@ def fn_version() -> str:
 INFO_FUNCTIONS = {
     # Type checking (also in logical.py, but included here for completeness)
     "TYPE": fn_type,
-
     # Cell information
     "CELL": fn_cell,
     "CELLPOINTER": fn_cellpointer,
-
     # System information
     "INFO": fn_info,
     "VERSION": fn_version,
-
     # Error handling
     "ERROR.TYPE": fn_error_type,
-
     # Sheet information
     "SHEET": fn_sheet,
     "SHEETS": fn_sheets,
     "AREAS": fn_areas,
-
     # Formula checking
     "ISFORMULA": fn_isformula,
-
     # Conversion
     "N": fn_n,
 }

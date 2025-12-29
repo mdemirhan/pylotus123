@@ -3,6 +3,7 @@
 Provides theme definitions including the classic Lotus blue theme,
 Tomorrow Night, and Mocha color schemes.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from enum import Enum, auto
 
 class ThemeType(Enum):
     """Available color themes."""
+
     LOTUS = auto()
     TOMORROW = auto()
     MOCHA = auto()
@@ -19,6 +21,7 @@ class ThemeType(Enum):
 @dataclass
 class Theme:
     """Color theme definition."""
+
     name: str
     background: str
     foreground: str

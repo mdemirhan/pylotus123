@@ -2,20 +2,17 @@
 
 Renders pie charts using ASCII representation with percentage bars.
 """
+
 from __future__ import annotations
 
-from .base import (
-    ChartTypeRenderer,
-    RenderContext,
-    get_series_values,
-)
+from .base import ChartTypeRenderer, RenderContext, get_series_values
 
 
 class PieChartRenderer(ChartTypeRenderer):
     """Renders pie charts as ASCII percentage bars."""
 
     # Symbols for different slices
-    SYMBOLS = ['#', '@', '*', '+', '=', '-']
+    SYMBOLS = ["#", "@", "*", "+", "=", "-"]
 
     def render(self, ctx: RenderContext) -> list[str]:
         """Render a pie chart.
@@ -59,13 +56,7 @@ class PieChartRenderer(ChartTypeRenderer):
 
         return lines
 
-    def _render_slice(
-        self,
-        index: int,
-        value: float,
-        percentage: float,
-        ctx: RenderContext
-    ) -> str:
+    def _render_slice(self, index: int, value: float, percentage: float, ctx: RenderContext) -> str:
         """Render a single pie slice as a horizontal bar.
 
         Args:

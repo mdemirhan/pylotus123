@@ -3,16 +3,17 @@
 Provides a modal dialog for browsing and selecting files,
 with directory tree navigation and filename input.
 """
+
 from __future__ import annotations
 
 from typing import Any
 
 from textual import on
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import Button, DirectoryTree, Input, Label
-from textual.app import ComposeResult
 
 
 class FileDialog(ModalScreen[str | None]):

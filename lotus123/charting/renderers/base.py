@@ -2,6 +2,7 @@
 
 This module defines the interface that all chart type renderers must implement.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -9,33 +10,33 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..chart import Chart, ChartSeries
     from ...core.spreadsheet import Spreadsheet
+    from ..chart import Chart, ChartSeries
 
 
 # Box drawing characters shared across renderers
-BOX_HORIZONTAL = '\u2500'
-BOX_VERTICAL = '\u2502'
-BOX_CORNER_TL = '\u250c'
-BOX_CORNER_TR = '\u2510'
-BOX_CORNER_BL = '\u2514'
-BOX_CORNER_BR = '\u2518'
-BOX_CROSS = '\u253c'
-BOX_T_DOWN = '\u252c'
-BOX_T_UP = '\u2534'
-BOX_T_RIGHT = '\u251c'
-BOX_T_LEFT = '\u2524'
+BOX_HORIZONTAL = "\u2500"
+BOX_VERTICAL = "\u2502"
+BOX_CORNER_TL = "\u250c"
+BOX_CORNER_TR = "\u2510"
+BOX_CORNER_BL = "\u2514"
+BOX_CORNER_BR = "\u2518"
+BOX_CROSS = "\u253c"
+BOX_T_DOWN = "\u252c"
+BOX_T_UP = "\u2534"
+BOX_T_RIGHT = "\u251c"
+BOX_T_LEFT = "\u2524"
 
 # Bar characters
-BAR_FULL = '\u2588'
-BAR_LIGHT = '\u2591'
-BAR_MEDIUM = '\u2592'
-BAR_DARK = '\u2593'
+BAR_FULL = "\u2588"
+BAR_LIGHT = "\u2591"
+BAR_MEDIUM = "\u2592"
+BAR_DARK = "\u2593"
 
 # Plot characters
-POINT = '*'
-LINE_H = '-'
-LINE_V = '|'
+POINT = "*"
+LINE_H = "-"
+LINE_V = "|"
 
 
 @dataclass
@@ -44,6 +45,7 @@ class RenderContext:
 
     Contains all the information a renderer needs to produce output.
     """
+
     chart: Chart
     width: int
     height: int
@@ -109,8 +111,8 @@ def get_series_values(series: ChartSeries, spreadsheet: Spreadsheet | None) -> l
 
     if series.data_range and spreadsheet:
         values = []
-        if ':' in series.data_range:
-            parts = series.data_range.split(':')
+        if ":" in series.data_range:
+            parts = series.data_range.split(":")
             flat_values = spreadsheet.get_range_flat(parts[0], parts[1])
             for v in flat_values:
                 if isinstance(v, (int, float)):

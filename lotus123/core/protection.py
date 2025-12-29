@@ -1,7 +1,8 @@
 """Cell and worksheet protection management."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -22,6 +23,7 @@ class ProtectionSettings:
         allow_delete_cols: Allow deleting columns
         allow_sort: Allow sorting ranges
     """
+
     enabled: bool = False
     password_hash: str = ""
     allow_formatting: bool = False
@@ -116,15 +118,13 @@ class ProtectionManager:
         """Mark a cell as unprotected (allow editing when protection enabled)."""
         self._unprotected_cells.add((row, col))
 
-    def protect_range(self, start_row: int, start_col: int,
-                      end_row: int, end_col: int) -> None:
+    def protect_range(self, start_row: int, start_col: int, end_row: int, end_col: int) -> None:
         """Mark a range of cells as protected."""
         for r in range(start_row, end_row + 1):
             for c in range(start_col, end_col + 1):
                 self.protect_cell(r, c)
 
-    def unprotect_range(self, start_row: int, start_col: int,
-                        end_row: int, end_col: int) -> None:
+    def unprotect_range(self, start_row: int, start_col: int, end_row: int, end_col: int) -> None:
         """Mark a range of cells as unprotected."""
         for r in range(start_row, end_row + 1):
             for c in range(start_col, end_col + 1):
@@ -268,6 +268,7 @@ class ProtectionManager:
         In production, use proper password hashing.
         """
         import hashlib
+
         return hashlib.sha256(password.encode()).hexdigest()
 
     def to_dict(self) -> dict:
@@ -280,6 +281,4 @@ class ProtectionManager:
     def from_dict(self, data: dict) -> None:
         """Load from dictionary."""
         self._settings = ProtectionSettings.from_dict(data.get("settings", {}))
-        self._unprotected_cells = set(
-            tuple(cell) for cell in data.get("unprotected_cells", [])
-        )
+        self._unprotected_cells = set(tuple(cell) for cell in data.get("unprotected_cells", []))

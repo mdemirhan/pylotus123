@@ -1,15 +1,15 @@
 """Named range management for the spreadsheet."""
+
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Iterator
 
-from .reference import RangeReference, CellReference
-
+from .reference import CellReference, RangeReference
 
 # Valid name pattern: starts with letter, can contain letters, numbers, underscores
-NAME_PATTERN = re.compile(r'^[A-Za-z][A-Za-z0-9_]*$')
+NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 
 
 @dataclass
@@ -21,6 +21,7 @@ class NamedRange:
         reference: The range or cell reference
         description: Optional description/comment
     """
+
     name: str
     reference: RangeReference | CellReference
     description: str = ""
@@ -54,11 +55,7 @@ class NamedRange:
             reference = RangeReference.parse(ref_str)
         else:
             reference = CellReference.parse(ref_str)
-        return cls(
-            name=data["name"],
-            reference=reference,
-            description=data.get("description", ""),
-        )
+        return cls(name=data["name"], reference=reference, description=data.get("description", ""))
 
 
 class NamedRangeManager:
@@ -71,8 +68,9 @@ class NamedRangeManager:
     def __init__(self) -> None:
         self._names: dict[str, NamedRange] = {}
 
-    def add(self, name: str, reference: RangeReference | CellReference,
-            description: str = "") -> NamedRange:
+    def add(
+        self, name: str, reference: RangeReference | CellReference, description: str = ""
+    ) -> NamedRange:
         """Add or update a named range.
 
         Args:
@@ -200,9 +198,7 @@ class NamedRangeManager:
                         start.row + 1, start.col, start.col_absolute, start.row_absolute
                     )
                 if end.row >= at_row:
-                    end = CellReference(
-                        end.row + 1, end.col, end.col_absolute, end.row_absolute
-                    )
+                    end = CellReference(end.row + 1, end.col, end.col_absolute, end.row_absolute)
                 named.reference = RangeReference(start, end)
 
     def adjust_for_delete_row(self, at_row: int) -> list[str]:
@@ -232,9 +228,7 @@ class NamedRangeManager:
                         start.row - 1, start.col, start.col_absolute, start.row_absolute
                     )
                 if end.row > at_row:
-                    end = CellReference(
-                        end.row - 1, end.col, end.col_absolute, end.row_absolute
-                    )
+                    end = CellReference(end.row - 1, end.col, end.col_absolute, end.row_absolute)
                 named.reference = RangeReference(start, end)
         return invalidated
 
@@ -254,9 +248,7 @@ class NamedRangeManager:
                         start.row, start.col + 1, start.col_absolute, start.row_absolute
                     )
                 if end.col >= at_col:
-                    end = CellReference(
-                        end.row, end.col + 1, end.col_absolute, end.row_absolute
-                    )
+                    end = CellReference(end.row, end.col + 1, end.col_absolute, end.row_absolute)
                 named.reference = RangeReference(start, end)
 
     def adjust_for_delete_col(self, at_col: int) -> list[str]:
@@ -283,9 +275,7 @@ class NamedRangeManager:
                         start.row, start.col - 1, start.col_absolute, start.row_absolute
                     )
                 if end.col > at_col:
-                    end = CellReference(
-                        end.row, end.col - 1, end.col_absolute, end.row_absolute
-                    )
+                    end = CellReference(end.row, end.col - 1, end.col_absolute, end.row_absolute)
                 named.reference = RangeReference(start, end)
         return invalidated
 
@@ -317,7 +307,8 @@ class NamedRangeManager:
         # Check it's not a cell reference
         # Cell references are letters followed by numbers
         import re
-        if re.match(r'^[A-Za-z]+\d+$', name):
+
+        if re.match(r"^[A-Za-z]+\d+$", name):
             return False
 
         return True

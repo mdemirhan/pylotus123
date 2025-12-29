@@ -4,13 +4,14 @@ Renders charts using ASCII/Unicode characters for display in the TUI.
 This module provides the main ChartRenderer interface and TextChartRenderer
 implementation that delegates to type-specific renderers.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from .chart import Chart, ChartType
-from .renderers import get_renderer, RenderContext
+from .chart import Chart
+from .renderers import RenderContext, get_renderer
 
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
@@ -62,12 +63,7 @@ class TextChartRenderer(ChartRenderer):
             List of strings representing the rendered chart
         """
         # Create render context
-        ctx = RenderContext(
-            chart=chart,
-            width=width,
-            height=height,
-            spreadsheet=self.spreadsheet,
-        )
+        ctx = RenderContext(chart=chart, width=width, height=height, spreadsheet=self.spreadsheet)
 
         # Get the appropriate renderer for this chart type
         renderer = get_renderer(chart.chart_type)

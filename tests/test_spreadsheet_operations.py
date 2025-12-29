@@ -1,10 +1,10 @@
 """Tests for spreadsheet operations."""
-import pytest
+
 import json
-import tempfile
 import os
-from lotus123 import Spreadsheet, Cell
-from lotus123 import col_to_index, index_to_col, parse_cell_ref, make_cell_ref
+import tempfile
+
+from lotus123 import Cell, Spreadsheet, col_to_index, index_to_col, make_cell_ref, parse_cell_ref
 
 
 class TestCellReferenceUtils:
@@ -353,7 +353,7 @@ class TestSpreadsheetSaveLoad:
         ss.set_cell(2, 0, "=A1")
         ss.set_col_width(0, 15)
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             filename = f.name
 
         try:
@@ -373,7 +373,7 @@ class TestSpreadsheetSaveLoad:
         """Test that save sets filename."""
         ss = Spreadsheet()
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             filename = f.name
 
         try:
@@ -387,7 +387,7 @@ class TestSpreadsheetSaveLoad:
         ss = Spreadsheet()
         ss.set_cell(5, 5, "Existing")
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump({"rows": 100, "cols": 26, "col_widths": {}, "cells": {}}, f)
             filename = f.name
 

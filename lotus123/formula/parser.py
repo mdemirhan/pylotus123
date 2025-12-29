@@ -1,11 +1,12 @@
 """Formula parser with tokenization and expression building."""
+
 from __future__ import annotations
 
-import re
 import operator
-from typing import TYPE_CHECKING, Any
+import re
 from dataclasses import dataclass
 from enum import Enum, auto
+from typing import TYPE_CHECKING, Any
 
 from .functions import FunctionRegistry
 
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
 
 class TokenType(Enum):
     """Types of tokens in a formula."""
+
     NUMBER = auto()
     STRING = auto()
     CELL = auto()
@@ -32,6 +34,7 @@ class TokenType(Enum):
 @dataclass
 class Token:
     """A single token from the formula."""
+
     type: TokenType
     value: Any
     position: int = 0
@@ -50,28 +53,28 @@ class FormulaParser:
     """
 
     OPERATORS = {
-        '+': (1, operator.add),
-        '-': (1, operator.sub),
-        '*': (2, operator.mul),
-        '/': (2, operator.truediv),
-        '^': (3, operator.pow),
-        '%': (2, operator.mod),
+        "+": (1, operator.add),
+        "-": (1, operator.sub),
+        "*": (2, operator.mul),
+        "/": (2, operator.truediv),
+        "^": (3, operator.pow),
+        "%": (2, operator.mod),
     }
 
     COMPARISONS = {
-        '=': operator.eq,
-        '==': operator.eq,
-        '<>': operator.ne,
-        '!=': operator.ne,
-        '<': operator.lt,
-        '>': operator.gt,
-        '<=': operator.le,
-        '>=': operator.ge,
+        "=": operator.eq,
+        "==": operator.eq,
+        "<>": operator.ne,
+        "!=": operator.ne,
+        "<": operator.lt,
+        ">": operator.gt,
+        "<=": operator.le,
+        ">=": operator.ge,
     }
 
     # Regex patterns
-    CELL_PATTERN = re.compile(r'\$?[A-Za-z]+\$?\d+')
-    NUMBER_PATTERN = re.compile(r'\d+\.?\d*([eE][+-]?\d+)?')
+    CELL_PATTERN = re.compile(r"\$?[A-Za-z]+\$?\d+")
+    NUMBER_PATTERN = re.compile(r"\d+\.?\d*([eE][+-]?\d+)?")
 
     def __init__(self, spreadsheet: Spreadsheet) -> None:
         self.spreadsheet = spreadsheet
@@ -104,7 +107,7 @@ class FormulaParser:
             return result
         except ZeroDivisionError:
             return "#DIV/0!"
-        except Exception as e:
+        except Exception:
             return "#ERR!"
 
     def _tokenize(self, formula: str) -> list[Token]:
@@ -124,77 +127,79 @@ class FormulaParser:
             if ch == '"':
                 j = i + 1
                 while j < len(formula) and formula[j] != '"':
-                    if formula[j] == '\\' and j + 1 < len(formula):
+                    if formula[j] == "\\" and j + 1 < len(formula):
                         j += 2
                     else:
                         j += 1
-                value = formula[i + 1:j].replace('\\"', '"')
+                value = formula[i + 1 : j].replace('\\"', '"')
                 tokens.append(Token(TokenType.STRING, value, i))
                 i = j + 1
                 continue
 
             # Multi-char comparison operators
             if i + 1 < len(formula):
-                two = formula[i:i + 2]
-                if two in ('<>', '<=', '>=', '!=', '=='):
+                two = formula[i : i + 2]
+                if two in ("<>", "<=", ">=", "!=", "=="):
                     tokens.append(Token(TokenType.COMPARISON, two, i))
                     i += 2
                     continue
 
             # Single char comparison/equals
-            if ch in '<>=':
+            if ch in "<>=":
                 tokens.append(Token(TokenType.COMPARISON, ch, i))
                 i += 1
                 continue
 
             # Operators
-            if ch in '+-*/^%':
+            if ch in "+-*/^%":
                 tokens.append(Token(TokenType.OPERATOR, ch, i))
                 i += 1
                 continue
 
             # Parentheses and punctuation
-            if ch == '(':
+            if ch == "(":
                 tokens.append(Token(TokenType.LPAREN, ch, i))
                 i += 1
                 continue
-            if ch == ')':
+            if ch == ")":
                 tokens.append(Token(TokenType.RPAREN, ch, i))
                 i += 1
                 continue
-            if ch == ',':
+            if ch == ",":
                 tokens.append(Token(TokenType.COMMA, ch, i))
                 i += 1
                 continue
-            if ch == ':':
+            if ch == ":":
                 tokens.append(Token(TokenType.COLON, ch, i))
                 i += 1
                 continue
             # Lotus-style range separator (..)
-            if ch == '.' and i + 1 < len(formula) and formula[i + 1] == '.':
-                tokens.append(Token(TokenType.COLON, ':', i))
+            if ch == "." and i + 1 < len(formula) and formula[i + 1] == ".":
+                tokens.append(Token(TokenType.COLON, ":", i))
                 i += 2
                 continue
 
             # @ prefix for Lotus-style functions
-            if ch == '@':
+            if ch == "@":
                 i += 1
                 continue
 
             # Number
-            if ch.isdigit() or (ch == '.' and i + 1 < len(formula) and formula[i + 1].isdigit()):
+            if ch.isdigit() or (ch == "." and i + 1 < len(formula) and formula[i + 1].isdigit()):
                 match = self.NUMBER_PATTERN.match(formula, i)
                 if match:
                     num_str = match.group(0)
-                    num_value: int | float = float(num_str) if '.' in num_str or 'e' in num_str.lower() else int(num_str)
+                    num_value: int | float = (
+                        float(num_str) if "." in num_str or "e" in num_str.lower() else int(num_str)
+                    )
                     tokens.append(Token(TokenType.NUMBER, num_value, i))
                     i = match.end()
                     continue
 
             # Identifier (function name or cell reference)
-            if ch.isalpha() or ch == '_' or ch == '$':
+            if ch.isalpha() or ch == "_" or ch == "$":
                 j = i
-                while j < len(formula) and (formula[j].isalnum() or formula[j] in '_$'):
+                while j < len(formula) and (formula[j].isalnum() or formula[j] in "_$"):
                     j += 1
                 name = formula[i:j]
 
@@ -203,7 +208,7 @@ class FormulaParser:
                 while k < len(formula) and formula[k].isspace():
                     k += 1
 
-                if k < len(formula) and formula[k] == '(':
+                if k < len(formula) and formula[k] == "(":
                     # It's a function
                     tokens.append(Token(TokenType.FUNCTION, name.upper(), i))
                 else:
@@ -212,9 +217,12 @@ class FormulaParser:
                         # Resolve named range to cell/range reference
                         named = self.spreadsheet.named_ranges.get(name)
                         if named:
-                            from ..core.reference import CellReference, RangeReference
+                            from ..core.reference import RangeReference
+
                             if isinstance(named.reference, RangeReference):
-                                tokens.append(Token(TokenType.RANGE, named.reference.to_string(), i))
+                                tokens.append(
+                                    Token(TokenType.RANGE, named.reference.to_string(), i)
+                                )
                             else:
                                 tokens.append(Token(TokenType.CELL, named.reference.to_string(), i))
                     else:
@@ -289,13 +297,13 @@ class FormulaParser:
         token = self._current()
 
         # Unary minus
-        if token.type == TokenType.OPERATOR and token.value == '-':
+        if token.type == TokenType.OPERATOR and token.value == "-":
             self._advance()
             val = self._parse_atom()
             return -val if isinstance(val, (int, float)) else val
 
         # Unary plus
-        if token.type == TokenType.OPERATOR and token.value == '+':
+        if token.type == TokenType.OPERATOR and token.value == "+":
             self._advance()
             return self._parse_atom()
 
@@ -326,7 +334,7 @@ class FormulaParser:
         # Range (already parsed as single token)
         if token.type == TokenType.RANGE:
             self._advance()
-            parts = token.value.split(':')
+            parts = token.value.split(":")
             if len(parts) == 2:
                 return self._get_range_values(parts[0], parts[1])
             return "#REF!"
@@ -376,25 +384,38 @@ class FormulaParser:
         # Look up and call function
         fn = self.functions.get(name)
         if not fn:
-            return f"#NAME?"
+            return "#NAME?"
 
         try:
             # Special handling for aggregate functions that need flattened lists
-            aggregate_fns = {'SUM', 'AVG', 'AVERAGE', 'MIN', 'MAX', 'COUNT',
-                           'COUNTA', 'AND', 'OR', 'STD', 'VAR', 'STDEV',
-                           'MEDIAN', 'MODE'}
+            aggregate_fns = {
+                "SUM",
+                "AVG",
+                "AVERAGE",
+                "MIN",
+                "MAX",
+                "COUNT",
+                "COUNTA",
+                "AND",
+                "OR",
+                "STD",
+                "VAR",
+                "STDEV",
+                "MEDIAN",
+                "MODE",
+            }
 
             if name in aggregate_fns:
                 return fn(*args)
             return fn(*args)
-        except Exception as e:
+        except Exception:
             return "#ERR!"
 
     def _get_cell_value(self, ref: str) -> Any:
         """Get value of a cell reference."""
         try:
             # Strip $ signs for lookup
-            clean_ref = ref.replace('$', '')
+            clean_ref = ref.replace("$", "")
             return self.spreadsheet.get_value_by_ref(clean_ref)
         except ValueError:
             return "#REF!"
@@ -402,8 +423,8 @@ class FormulaParser:
     def _get_range_values(self, start_ref: str, end_ref: str) -> list[Any]:
         """Get flat list of values from a range."""
         try:
-            start = start_ref.replace('$', '')
-            end = end_ref.replace('$', '')
+            start = start_ref.replace("$", "")
+            end = end_ref.replace("$", "")
             return self.spreadsheet.get_range_flat(start, end)
         except ValueError:
             return ["#REF!"]

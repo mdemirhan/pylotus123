@@ -4,12 +4,13 @@ Implements Lotus 1-2-3 compatible lookup functions:
 @VLOOKUP, @HLOOKUP, @INDEX, @CHOOSE
 @CELL, @CELLPOINTER, @COLS, @ROWS
 """
+
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ...core.spreadsheet import Spreadsheet
+    pass
 
 
 # These functions need access to the spreadsheet for range operations
@@ -37,8 +38,9 @@ def _is_match(lookup_value: Any, table_value: Any, range_lookup: bool = True) ->
         return bool(lookup_value == table_value)
 
 
-def fn_vlookup(lookup_value: Any, table: list[Any], col_index: Any,
-               range_lookup: Any = True) -> Any:
+def fn_vlookup(
+    lookup_value: Any, table: list[Any], col_index: Any, range_lookup: Any = True
+) -> Any:
     """@VLOOKUP - Vertical lookup.
 
     Searches first column of table for lookup_value, returns value from col_index.
@@ -92,8 +94,9 @@ def fn_vlookup(lookup_value: Any, table: list[Any], col_index: Any,
     return "#N/A"
 
 
-def fn_hlookup(lookup_value: Any, table: list[Any], row_index: Any,
-               range_lookup: Any = True) -> Any:
+def fn_hlookup(
+    lookup_value: Any, table: list[Any], row_index: Any, range_lookup: Any = True
+) -> Any:
     """@HLOOKUP - Horizontal lookup.
 
     Searches first row of table for lookup_value, returns value from row_index.
@@ -231,7 +234,9 @@ def fn_match(lookup_value: Any, lookup_array: list[Any], match_type: Any = 1) ->
         return last_match or 0
 
 
-def fn_lookup(lookup_value: Any, lookup_vector: list[Any], result_vector: list[Any] | None = None) -> Any:
+def fn_lookup(
+    lookup_value: Any, lookup_vector: list[Any], result_vector: list[Any] | None = None
+) -> Any:
     """@LOOKUP - Simple lookup.
 
     Usage: @LOOKUP(lookup_value, lookup_vector, result_vector)
@@ -326,8 +331,7 @@ def fn_transpose(array: Any) -> list[Any]:
     return result
 
 
-def fn_offset(reference: Any, rows: Any, cols: Any,
-              height: Any = None, width: Any = None) -> Any:
+def fn_offset(reference: Any, rows: Any, cols: Any, height: Any = None, width: Any = None) -> Any:
     """@OFFSET - Reference offset from starting point.
 
     Note: This is a reference function that requires spreadsheet context.
@@ -391,7 +395,6 @@ LOOKUP_FUNCTIONS = {
     "HLOOKUP": fn_hlookup,
     "LOOKUP": fn_lookup,
     "MATCH": fn_match,
-
     # Reference
     "INDEX": fn_index,
     "OFFSET": fn_offset,
@@ -399,7 +402,6 @@ LOOKUP_FUNCTIONS = {
     "ROW": fn_row,
     "COLUMN": fn_column,
     "ADDRESS": fn_address,
-
     # Array info
     "ROWS": fn_rows,
     "COLS": fn_cols,

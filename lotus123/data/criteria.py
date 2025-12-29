@@ -7,6 +7,7 @@ Supports Lotus 1-2-3 style criteria:
 - Compound criteria (AND across columns, OR across rows)
 - Formula-based criteria
 """
+
 from __future__ import annotations
 
 import re
@@ -17,13 +18,14 @@ from typing import Any, Callable
 
 class CriterionOperator(Enum):
     """Comparison operators for criteria."""
+
     EQUAL = auto()
     NOT_EQUAL = auto()
     LESS_THAN = auto()
     GREATER_THAN = auto()
     LESS_EQUAL = auto()
     GREATER_EQUAL = auto()
-    CONTAINS = auto()     # Wildcard pattern
+    CONTAINS = auto()  # Wildcard pattern
     STARTS_WITH = auto()
     ENDS_WITH = auto()
 
@@ -31,6 +33,7 @@ class CriterionOperator(Enum):
 @dataclass
 class Criterion:
     """A single criterion for matching."""
+
     column: int | None = None  # None for formula-based
     operator: CriterionOperator = CriterionOperator.EQUAL
     value: Any = None
@@ -131,7 +134,7 @@ class CriteriaParser:
     - Empty cell = no constraint on that field
     """
 
-    COMPARISON_PATTERN = re.compile(r'^(<>|<=|>=|<|>|=)(.*)$')
+    COMPARISON_PATTERN = re.compile(r"^(<>|<=|>=|<|>|=)(.*)$")
 
     def __init__(self) -> None:
         self._criteria: list[list[Criterion]] = []  # List of AND groups (OR between groups)
@@ -166,44 +169,30 @@ class CriteriaParser:
         if match:
             op_str, val = match.groups()
             operator = self._parse_operator(op_str)
-            return Criterion(
-                column=column,
-                operator=operator,
-                value=self._parse_value(val),
-            )
+            return Criterion(column=column, operator=operator, value=self._parse_value(val))
 
         # Check for wildcards
-        if '*' in value_str or '?' in value_str:
-            return Criterion(
-                column=column,
-                operator=CriterionOperator.CONTAINS,
-                pattern=value_str,
-            )
+        if "*" in value_str or "?" in value_str:
+            return Criterion(column=column, operator=CriterionOperator.CONTAINS, pattern=value_str)
 
         # Check for formula
-        if value_str.startswith('+') or value_str.startswith('='):
-            return Criterion(
-                column=column,
-                is_formula=True,
-                formula=value_str,
-            )
+        if value_str.startswith("+") or value_str.startswith("="):
+            return Criterion(column=column, is_formula=True, formula=value_str)
 
         # Exact match
         return Criterion(
-            column=column,
-            operator=CriterionOperator.EQUAL,
-            value=self._parse_value(value_str),
+            column=column, operator=CriterionOperator.EQUAL, value=self._parse_value(value_str)
         )
 
     def _parse_operator(self, op_str: str) -> CriterionOperator:
         """Convert operator string to enum."""
         operators = {
-            '=': CriterionOperator.EQUAL,
-            '<>': CriterionOperator.NOT_EQUAL,
-            '<': CriterionOperator.LESS_THAN,
-            '>': CriterionOperator.GREATER_THAN,
-            '<=': CriterionOperator.LESS_EQUAL,
-            '>=': CriterionOperator.GREATER_EQUAL,
+            "=": CriterionOperator.EQUAL,
+            "<>": CriterionOperator.NOT_EQUAL,
+            "<": CriterionOperator.LESS_THAN,
+            ">": CriterionOperator.GREATER_THAN,
+            "<=": CriterionOperator.LESS_EQUAL,
+            ">=": CriterionOperator.GREATER_EQUAL,
         }
         return operators.get(op_str, CriterionOperator.EQUAL)
 
@@ -215,7 +204,7 @@ class CriteriaParser:
 
         # Try numeric
         try:
-            if '.' in value:
+            if "." in value:
                 return float(value)
             return int(value)
         except ValueError:

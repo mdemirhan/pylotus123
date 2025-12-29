@@ -14,16 +14,17 @@ Available chart types:
 - XY_SCATTER: XY scatter plots
 - STACKED_BAR, AREA, HLBAR: Fall back to bar chart rendering
 """
-from .chart import Chart, ChartType, ChartSeries, ChartOptions, ChartAxis, LineStyle, ScaleType
+
+from .chart import Chart, ChartAxis, ChartOptions, ChartSeries, ChartType, LineStyle, ScaleType
 from .renderer import ChartRenderer, TextChartRenderer
 from .renderers import (
-    ChartTypeRenderer,
-    RenderContext,
-    LineChartRenderer,
-    BarChartRenderer,
-    PieChartRenderer,
-    ScatterChartRenderer,
     RENDERER_REGISTRY,
+    BarChartRenderer,
+    ChartTypeRenderer,
+    LineChartRenderer,
+    PieChartRenderer,
+    RenderContext,
+    ScatterChartRenderer,
     get_renderer,
 )
 

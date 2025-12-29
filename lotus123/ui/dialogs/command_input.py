@@ -3,16 +3,17 @@
 Provides a modal dialog for entering commands like Goto cell reference,
 column width values, and other text inputs.
 """
+
 from __future__ import annotations
 
 from typing import Any
 
 from textual import on
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container
 from textual.screen import ModalScreen
 from textual.widgets import Input, Label
-from textual.app import ComposeResult
 
 
 class CommandInput(ModalScreen[str | None]):

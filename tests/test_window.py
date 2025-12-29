@@ -1,8 +1,12 @@
 """Tests for window management system."""
-import pytest
+
 from lotus123.ui.window import (
-    ViewPort, FrozenTitles, WindowSplit, WindowManager,
-    SplitType, TitleFreezeType
+    FrozenTitles,
+    SplitType,
+    TitleFreezeType,
+    ViewPort,
+    WindowManager,
+    WindowSplit,
 )
 
 
@@ -345,45 +349,45 @@ class TestWindowManager:
         wm = WindowManager()
         regions = wm.get_visible_regions()
         assert len(regions) == 1
-        assert regions[0]['type'] == 'main'
+        assert regions[0]["type"] == "main"
 
     def test_get_visible_regions_with_frozen_rows(self):
         """Test visible regions with frozen rows."""
         wm = WindowManager()
         wm.freeze_titles_horizontal(5)
         regions = wm.get_visible_regions()
-        types = [r['type'] for r in regions]
-        assert 'frozen_row' in types
-        assert 'main' in types
+        types = [r["type"] for r in regions]
+        assert "frozen_row" in types
+        assert "main" in types
 
     def test_get_visible_regions_with_frozen_cols(self):
         """Test visible regions with frozen columns."""
         wm = WindowManager()
         wm.freeze_titles_vertical(3)
         regions = wm.get_visible_regions()
-        types = [r['type'] for r in regions]
-        assert 'frozen_col' in types
-        assert 'main' in types
+        types = [r["type"] for r in regions]
+        assert "frozen_col" in types
+        assert "main" in types
 
     def test_get_visible_regions_with_both_frozen(self):
         """Test visible regions with both frozen."""
         wm = WindowManager()
         wm.freeze_titles_both(5, 3)
         regions = wm.get_visible_regions()
-        types = [r['type'] for r in regions]
-        assert 'frozen_corner' in types
-        assert 'frozen_row' in types
-        assert 'frozen_col' in types
-        assert 'main' in types
+        types = [r["type"] for r in regions]
+        assert "frozen_corner" in types
+        assert "frozen_row" in types
+        assert "frozen_col" in types
+        assert "main" in types
 
     def test_get_visible_regions_with_split(self):
         """Test visible regions with split."""
         wm = WindowManager()
         wm.split_horizontal(10)
         regions = wm.get_visible_regions()
-        types = [r['type'] for r in regions]
-        assert 'main' in types
-        assert 'secondary' in types
+        types = [r["type"] for r in regions]
+        assert "main" in types
+        assert "secondary" in types
 
     def test_resize(self):
         """Test window resize."""

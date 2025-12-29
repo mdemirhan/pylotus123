@@ -1,6 +1,7 @@
 """Utility modules for the spreadsheet."""
-from .undo import UndoManager, Command, CellChangeCommand, RangeChangeCommand
+
 from .clipboard import Clipboard, ClipboardMode
+from .undo import CellChangeCommand, Command, RangeChangeCommand, UndoManager
 
 __all__ = [
     "UndoManager",

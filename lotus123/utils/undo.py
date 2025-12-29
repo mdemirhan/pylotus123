@@ -1,10 +1,11 @@
 """Undo/Redo system using the Command pattern."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
 from collections import deque
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
@@ -74,6 +75,7 @@ class CellChangeCommand(Command):
     @property
     def description(self) -> str:
         from ..core.reference import make_cell_ref
+
         return f"Edit {make_cell_ref(self.row, self.col)}"
 
 
@@ -158,6 +160,7 @@ class DeleteRowCommand(Command):
 
         # Restore saved cells - use the Cell class from spreadsheet module
         from ..core.cell import Cell
+
         for col, cell_data in self.saved_data.items():
             self.spreadsheet._cells[(self.row, col)] = Cell.from_dict(cell_data)
 
@@ -194,6 +197,7 @@ class InsertColCommand(Command):
     @property
     def description(self) -> str:
         from ..core.reference import index_to_col
+
         return f"Insert column {index_to_col(self.col)}"
 
 
@@ -226,6 +230,7 @@ class DeleteColCommand(Command):
 
         # Restore saved cells - use the Cell class from spreadsheet module
         from ..core.cell import Cell
+
         for row, cell_data in self.saved_data.items():
             self.spreadsheet._cells[(row, self.col)] = Cell.from_dict(cell_data)
 
@@ -242,6 +247,7 @@ class DeleteColCommand(Command):
     @property
     def description(self) -> str:
         from ..core.reference import index_to_col
+
         return f"Delete column {index_to_col(self.col)}"
 
 
@@ -271,6 +277,7 @@ class ClearRangeCommand(Command):
     def undo(self) -> None:
         """Restore the cleared data."""
         from ..core.cell import Cell
+
         for (r, c), cell_data in self.saved_data.items():
             self.spreadsheet._cells[(r, c)] = Cell.from_dict(cell_data)
 
@@ -288,7 +295,7 @@ class ClearRangeCommand(Command):
 
     @property
     def description(self) -> str:
-        return f"Clear range"
+        return "Clear range"
 
 
 class CompositeCommand(Command):

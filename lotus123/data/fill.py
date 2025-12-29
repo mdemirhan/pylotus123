@@ -2,13 +2,13 @@
 
 Implements /Data Fill command functionality.
 """
+
 from __future__ import annotations
 
+import datetime
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Iterator
-import re
-import datetime
 
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
@@ -16,16 +16,18 @@ if TYPE_CHECKING:
 
 class FillType(Enum):
     """Type of fill operation."""
-    LINEAR = auto()       # Numeric sequence with constant step
-    GROWTH = auto()       # Geometric sequence (multiply by step)
-    DATE = auto()         # Date sequence
-    AUTO = auto()         # Auto-detect pattern
-    COPY = auto()         # Just copy values
+
+    LINEAR = auto()  # Numeric sequence with constant step
+    GROWTH = auto()  # Geometric sequence (multiply by step)
+    DATE = auto()  # Date sequence
+    AUTO = auto()  # Auto-detect pattern
+    COPY = auto()  # Just copy values
 
 
 @dataclass
 class FillSpec:
     """Specification for a fill operation."""
+
     fill_type: FillType = FillType.LINEAR
     start_value: float = 1
     step: float = 1
@@ -46,10 +48,15 @@ class FillOperations:
     def __init__(self, spreadsheet: Spreadsheet) -> None:
         self.spreadsheet = spreadsheet
 
-    def fill_series(self, start_row: int, start_col: int,
-                    end_row: int, end_col: int,
-                    spec: FillSpec,
-                    direction: str = "down") -> None:
+    def fill_series(
+        self,
+        start_row: int,
+        start_col: int,
+        end_row: int,
+        end_col: int,
+        spec: FillSpec,
+        direction: str = "down",
+    ) -> None:
         """Fill a range with a series.
 
         Args:
@@ -77,9 +84,15 @@ class FillOperations:
 
         self.spreadsheet._invalidate_cache()
 
-    def _fill_linear(self, start_row: int, start_col: int,
-                     end_row: int, end_col: int,
-                     spec: FillSpec, direction: str) -> None:
+    def _fill_linear(
+        self,
+        start_row: int,
+        start_col: int,
+        end_row: int,
+        end_col: int,
+        spec: FillSpec,
+        direction: str,
+    ) -> None:
         """Fill with linear sequence."""
         value = spec.start_value
         step = spec.step
@@ -92,9 +105,15 @@ class FillOperations:
             self.spreadsheet.set_cell(row, col, str(value))
             value += step
 
-    def _fill_growth(self, start_row: int, start_col: int,
-                     end_row: int, end_col: int,
-                     spec: FillSpec, direction: str) -> None:
+    def _fill_growth(
+        self,
+        start_row: int,
+        start_col: int,
+        end_row: int,
+        end_col: int,
+        spec: FillSpec,
+        direction: str,
+    ) -> None:
         """Fill with geometric sequence."""
         value = spec.start_value
         step = spec.step
@@ -107,11 +126,17 @@ class FillOperations:
             self.spreadsheet.set_cell(row, col, str(value))
             value *= step
 
-    def _fill_date(self, start_row: int, start_col: int,
-                   end_row: int, end_col: int,
-                   spec: FillSpec, direction: str) -> None:
+    def _fill_date(
+        self,
+        start_row: int,
+        start_col: int,
+        end_row: int,
+        end_col: int,
+        spec: FillSpec,
+        direction: str,
+    ) -> None:
         """Fill with date sequence."""
-        from ..core.formatting import serial_to_date, date_to_serial
+        from ..core.formatting import date_to_serial, serial_to_date
 
         serial = spec.start_value
         step = int(spec.step)
@@ -131,6 +156,7 @@ class FillOperations:
                     new_year = date.year + (new_month - 1) // 12
                     new_month = ((new_month - 1) % 12) + 1
                     import calendar
+
                     max_day = calendar.monthrange(new_year, new_month)[1]
                     new_day = min(date.day, max_day)
                     date = datetime.date(new_year, new_month, new_day)
@@ -144,8 +170,9 @@ class FillOperations:
             except (ValueError, OverflowError):
                 break
 
-    def _fill_copy(self, start_row: int, start_col: int,
-                   end_row: int, end_col: int, direction: str) -> None:
+    def _fill_copy(
+        self, start_row: int, start_col: int, end_row: int, end_col: int, direction: str
+    ) -> None:
         """Fill by copying source cells."""
         # Get source values
         if direction in ("down", "up"):
@@ -173,8 +200,9 @@ class FillOperations:
                 self.spreadsheet.set_cell(row, col, source[src_idx])
             idx += 1
 
-    def _fill_auto(self, start_row: int, start_col: int,
-                   end_row: int, end_col: int, direction: str) -> None:
+    def _fill_auto(
+        self, start_row: int, start_col: int, end_row: int, end_col: int, direction: str
+    ) -> None:
         """Fill by detecting and continuing pattern."""
         # Get source values to detect pattern
         source_values = []
@@ -192,16 +220,15 @@ class FillOperations:
         # Detect pattern
         pattern = self._detect_pattern(source_values)
 
-        if pattern['type'] == 'linear':
+        if pattern["type"] == "linear":
             spec = FillSpec(
-                fill_type=FillType.LINEAR,
-                start_value=pattern['start'],
-                step=pattern['step'],
+                fill_type=FillType.LINEAR, start_value=pattern["start"], step=pattern["step"]
             )
             self._fill_linear(start_row, start_col, end_row, end_col, spec, direction)
-        elif pattern['type'] == 'text_sequence':
-            self._fill_text_sequence(start_row, start_col, end_row, end_col,
-                                    pattern['values'], direction)
+        elif pattern["type"] == "text_sequence":
+            self._fill_text_sequence(
+                start_row, start_col, end_row, end_col, pattern["values"], direction
+            )
         else:
             # Default to copy
             self._fill_copy(start_row, start_col, end_row, end_col, direction)
@@ -209,7 +236,7 @@ class FillOperations:
     def _detect_pattern(self, values: list[Any]) -> dict[str, Any]:
         """Detect the pattern in a list of values."""
         if not values:
-            return {'type': 'none'}
+            return {"type": "none"}
 
         # Check for numeric sequence
         numbers = []
@@ -225,50 +252,72 @@ class FillOperations:
 
         if len(numbers) >= 2:
             # Check for constant step (linear)
-            diffs = [numbers[i+1] - numbers[i] for i in range(len(numbers)-1)]
+            diffs = [numbers[i + 1] - numbers[i] for i in range(len(numbers) - 1)]
             if all(abs(d - diffs[0]) < 0.0001 for d in diffs):
-                return {
-                    'type': 'linear',
-                    'start': numbers[0],
-                    'step': diffs[0],
-                }
+                return {"type": "linear", "start": numbers[0], "step": diffs[0]}
 
             # Check for constant ratio (growth)
             if all(n != 0 for n in numbers[:-1]):
-                ratios = [numbers[i+1] / numbers[i] for i in range(len(numbers)-1)]
+                ratios = [numbers[i + 1] / numbers[i] for i in range(len(numbers) - 1)]
                 if all(abs(r - ratios[0]) < 0.0001 for r in ratios):
-                    return {
-                        'type': 'growth',
-                        'start': numbers[0],
-                        'ratio': ratios[0],
-                    }
+                    return {"type": "growth", "start": numbers[0], "ratio": ratios[0]}
 
         # Check for text patterns (like Mon, Tue, Wed or Jan, Feb, Mar)
         strings = [str(v).strip() for v in values if v]
         if strings:
             # Known sequences
-            days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-            days_short = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-            months = ['january', 'february', 'march', 'april', 'may', 'june',
-                     'july', 'august', 'september', 'october', 'november', 'december']
-            months_short = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
-                           'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+            days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+            days_short = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+            months = [
+                "january",
+                "february",
+                "march",
+                "april",
+                "may",
+                "june",
+                "july",
+                "august",
+                "september",
+                "october",
+                "november",
+                "december",
+            ]
+            months_short = [
+                "jan",
+                "feb",
+                "mar",
+                "apr",
+                "may",
+                "jun",
+                "jul",
+                "aug",
+                "sep",
+                "oct",
+                "nov",
+                "dec",
+            ]
 
             lower_strings = [s.lower() for s in strings]
 
             for seq_list in [days, days_short, months, months_short]:
                 if lower_strings[0] in seq_list:
                     return {
-                        'type': 'text_sequence',
-                        'values': seq_list,
-                        'start_idx': seq_list.index(lower_strings[0]),
+                        "type": "text_sequence",
+                        "values": seq_list,
+                        "start_idx": seq_list.index(lower_strings[0]),
                     }
 
-        return {'type': 'none'}
+        return {"type": "none"}
 
-    def _fill_text_sequence(self, start_row: int, start_col: int,
-                           end_row: int, end_col: int,
-                           sequence: list[str], direction: str) -> None:
+    def _fill_text_sequence(
+        self,
+        start_row: int,
+        start_col: int,
+        end_row: int,
+        end_col: int,
+        sequence: list[str],
+        direction: str,
+    ) -> None:
         """Fill with a cyclical text sequence."""
         # Find starting index
         start_cell = self.spreadsheet.get_value(start_row, start_col)
@@ -287,9 +336,9 @@ class FillOperations:
             self.spreadsheet.set_cell(row, col, value)
             idx += 1
 
-    def _iter_cells(self, start_row: int, start_col: int,
-                    end_row: int, end_col: int,
-                    direction: str) -> Iterator[tuple[int, int]]:
+    def _iter_cells(
+        self, start_row: int, start_col: int, end_row: int, end_col: int, direction: str
+    ) -> Iterator[tuple[int, int]]:
         """Iterate over cells in specified direction."""
         if direction == "down":
             for r in range(start_row, end_row + 1):
@@ -308,8 +357,7 @@ class FillOperations:
                 for r in range(start_row, end_row + 1):
                     yield r, c
 
-    def fill_down(self, start_row: int, start_col: int,
-                  end_row: int, end_col: int) -> None:
+    def fill_down(self, start_row: int, start_col: int, end_row: int, end_col: int) -> None:
         """Fill down from first row to remaining rows."""
         for c in range(start_col, end_col + 1):
             source = self.spreadsheet.get_cell_if_exists(start_row, c)
@@ -322,8 +370,7 @@ class FillOperations:
 
         self.spreadsheet._invalidate_cache()
 
-    def fill_right(self, start_row: int, start_col: int,
-                   end_row: int, end_col: int) -> None:
+    def fill_right(self, start_row: int, start_col: int, end_row: int, end_col: int) -> None:
         """Fill right from first column to remaining columns."""
         for r in range(start_row, end_row + 1):
             source = self.spreadsheet.get_cell_if_exists(r, start_col)

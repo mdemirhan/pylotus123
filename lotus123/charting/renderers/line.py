@@ -2,14 +2,15 @@
 
 Renders line charts with data points and optional connecting lines.
 """
+
 from __future__ import annotations
 
 from .base import (
-    ChartTypeRenderer,
-    RenderContext,
-    BOX_VERTICAL,
     BOX_CORNER_BL,
     BOX_HORIZONTAL,
+    BOX_VERTICAL,
+    ChartTypeRenderer,
+    RenderContext,
     get_series_values,
 )
 
@@ -18,7 +19,7 @@ class LineChartRenderer(ChartTypeRenderer):
     """Renders line charts with data points connected by lines."""
 
     # Symbols for different data series
-    SYMBOLS = ['*', '+', 'o', 'x', '#', '@']
+    SYMBOLS = ["*", "+", "o", "x", "#", "@"]
 
     def render(self, ctx: RenderContext) -> list[str]:
         """Render a line chart.
@@ -41,7 +42,7 @@ class LineChartRenderer(ChartTypeRenderer):
         y_label_width = max(
             len(f"{ctx.max_val:.1f}"),
             len(f"{ctx.min_val:.1f}"),
-            len(f"{(ctx.max_val + ctx.min_val) / 2:.1f}")
+            len(f"{(ctx.max_val + ctx.min_val) / 2:.1f}"),
         )
 
         # Recalculate plot width with dynamic Y-axis
@@ -51,7 +52,7 @@ class LineChartRenderer(ChartTypeRenderer):
             return self.render_too_small(ctx)
 
         # Create plot grid
-        plot = [[' ' for _ in range(ctx.plot_width)] for _ in range(ctx.plot_height)]
+        plot = [[" " for _ in range(ctx.plot_width)] for _ in range(ctx.plot_height)]
 
         # Plot each series
         for series_idx, series in enumerate(ctx.chart.series):
@@ -87,11 +88,7 @@ class LineChartRenderer(ChartTypeRenderer):
         return lines
 
     def _plot_series(
-        self,
-        plot: list[list[str]],
-        values: list[float],
-        symbol: str,
-        ctx: RenderContext
+        self, plot: list[list[str]], values: list[float], symbol: str, ctx: RenderContext
     ) -> None:
         """Plot a single data series onto the plot grid.
 
@@ -117,10 +114,7 @@ class LineChartRenderer(ChartTypeRenderer):
                 plot[y][x] = symbol
 
     def _build_plot_output(
-        self,
-        plot: list[list[str]],
-        ctx: RenderContext,
-        y_label_width: int
+        self, plot: list[list[str]], ctx: RenderContext, y_label_width: int
     ) -> list[str]:
         """Build output lines with Y-axis labels.
 
@@ -161,6 +155,6 @@ class LineChartRenderer(ChartTypeRenderer):
         legend_parts = []
         for i, series in enumerate(ctx.chart.series):
             symbol = self.SYMBOLS[i % len(self.SYMBOLS)]
-            name = series.name or f"Series {i+1}"
+            name = series.name or f"Series {i + 1}"
             legend_parts.append(f"{symbol} {name}")
         return " | ".join(legend_parts)

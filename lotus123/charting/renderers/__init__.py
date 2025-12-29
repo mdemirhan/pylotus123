@@ -2,14 +2,14 @@
 
 Each chart type has its own renderer class implementing the ChartTypeRenderer protocol.
 """
-from .base import ChartTypeRenderer, RenderContext
-from .line import LineChartRenderer
-from .bar import BarChartRenderer
-from .pie import PieChartRenderer
-from .scatter import ScatterChartRenderer
 
 # Registry mapping ChartType to renderer class
 from ..chart import ChartType
+from .bar import BarChartRenderer
+from .base import ChartTypeRenderer, RenderContext
+from .line import LineChartRenderer
+from .pie import PieChartRenderer
+from .scatter import ScatterChartRenderer
 
 RENDERER_REGISTRY: dict[ChartType, type[ChartTypeRenderer]] = {
     ChartType.LINE: LineChartRenderer,

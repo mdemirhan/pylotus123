@@ -1,4 +1,5 @@
 """Formatting system for numeric, date, and time values."""
+
 from __future__ import annotations
 
 import datetime
@@ -9,39 +10,42 @@ from typing import Any
 
 class FormatCode(Enum):
     """Standard Lotus 1-2-3 format codes."""
-    GENERAL = "G"           # Automatic formatting
-    FIXED = "F"             # Fixed decimal places (F0-F15)
-    SCIENTIFIC = "S"        # Scientific notation (S0-S15)
-    CURRENCY = "C"          # Currency format (C0-C15)
-    COMMA = ","             # Thousands separator (,0-,15)
-    PERCENT = "P"           # Percentage (P0-P15)
-    DATE = "D"              # Date formats (D1-D9)
-    TIME = "T"              # Time formats (T1-T4)
-    TEXT = "T"              # Display formula as text
-    HIDDEN = "H"            # Hidden (suppressed display)
-    PLUSMINUS = "+"         # Horizontal bar graph
-    LABEL = "L"             # Label prefix handling
+
+    GENERAL = "G"  # Automatic formatting
+    FIXED = "F"  # Fixed decimal places (F0-F15)
+    SCIENTIFIC = "S"  # Scientific notation (S0-S15)
+    CURRENCY = "C"  # Currency format (C0-C15)
+    COMMA = ","  # Thousands separator (,0-,15)
+    PERCENT = "P"  # Percentage (P0-P15)
+    DATE = "D"  # Date formats (D1-D9)
+    TIME = "T"  # Time formats (T1-T4)
+    TEXT = "T"  # Display formula as text
+    HIDDEN = "H"  # Hidden (suppressed display)
+    PLUSMINUS = "+"  # Horizontal bar graph
+    LABEL = "L"  # Label prefix handling
 
 
 class DateFormat(Enum):
     """Lotus 1-2-3 date format variants."""
-    D1 = "DD-MMM-YY"        # 05-Jun-23
-    D2 = "DD-MMM"           # 05-Jun
-    D3 = "MMM-YY"           # Jun-23
-    D4 = "MM/DD/YY"         # 06/05/23
-    D5 = "MM/DD"            # 06/05
-    D6 = "DD-MMM-YYYY"      # 05-Jun-2023 (extended)
-    D7 = "YYYY-MM-DD"       # 2023-06-05 (ISO)
-    D8 = "DD/MM/YY"         # 05/06/23 (European)
-    D9 = "DD.MM.YYYY"       # 05.06.2023 (German)
+
+    D1 = "DD-MMM-YY"  # 05-Jun-23
+    D2 = "DD-MMM"  # 05-Jun
+    D3 = "MMM-YY"  # Jun-23
+    D4 = "MM/DD/YY"  # 06/05/23
+    D5 = "MM/DD"  # 06/05
+    D6 = "DD-MMM-YYYY"  # 05-Jun-2023 (extended)
+    D7 = "YYYY-MM-DD"  # 2023-06-05 (ISO)
+    D8 = "DD/MM/YY"  # 05/06/23 (European)
+    D9 = "DD.MM.YYYY"  # 05.06.2023 (German)
 
 
 class TimeFormat(Enum):
     """Lotus 1-2-3 time format variants."""
-    T1 = "HH:MM:SS AM/PM"   # 02:30:45 PM
-    T2 = "HH:MM AM/PM"      # 02:30 PM
-    T3 = "HH:MM:SS"         # 14:30:45 (24-hour)
-    T4 = "HH:MM"            # 14:30 (24-hour)
+
+    T1 = "HH:MM:SS AM/PM"  # 02:30:45 PM
+    T2 = "HH:MM AM/PM"  # 02:30 PM
+    T3 = "HH:MM:SS"  # 14:30:45 (24-hour)
+    T4 = "HH:MM"  # 14:30 (24-hour)
 
 
 # Lotus 1-2-3 date epoch: January 1, 1900
@@ -61,6 +65,7 @@ class FormatSpec:
         currency_symbol: Currency symbol to use
         negative_format: How to display negatives (parentheses, red, etc.)
     """
+
     format_type: FormatCode
     decimals: int = 2
     date_variant: DateFormat | None = None
@@ -230,9 +235,14 @@ def format_value(value: Any, spec: FormatSpec, width: int = 10) -> str:
         return value
 
     # Handle non-numeric values for numeric formats
-    if spec.format_type in (FormatCode.FIXED, FormatCode.SCIENTIFIC,
-                            FormatCode.CURRENCY, FormatCode.COMMA,
-                            FormatCode.PERCENT, FormatCode.PLUSMINUS):
+    if spec.format_type in (
+        FormatCode.FIXED,
+        FormatCode.SCIENTIFIC,
+        FormatCode.CURRENCY,
+        FormatCode.COMMA,
+        FormatCode.PERCENT,
+        FormatCode.PLUSMINUS,
+    ):
         if not isinstance(value, (int, float)):
             try:
                 value = float(value)

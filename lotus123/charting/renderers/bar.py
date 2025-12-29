@@ -2,14 +2,15 @@
 
 Renders vertical bar charts with solid bars.
 """
+
 from __future__ import annotations
 
 from .base import (
-    ChartTypeRenderer,
-    RenderContext,
-    BOX_VERTICAL,
     BOX_CORNER_BL,
     BOX_HORIZONTAL,
+    BOX_VERTICAL,
+    ChartTypeRenderer,
+    RenderContext,
     get_series_values,
 )
 
@@ -18,7 +19,7 @@ class BarChartRenderer(ChartTypeRenderer):
     """Renders vertical bar charts with clean, solid bars."""
 
     # Fill characters for different series
-    FILL_CHARS = ['#', '@', '*', '+', '=', '%']
+    FILL_CHARS = ["#", "@", "*", "+", "=", "%"]
 
     def render(self, ctx: RenderContext) -> list[str]:
         """Render a bar chart.
@@ -48,7 +49,7 @@ class BarChartRenderer(ChartTypeRenderer):
         y_label_width = max(
             len(f"{ctx.max_val:.1f}"),
             len(f"{ctx.min_val:.1f}"),
-            len(f"{(ctx.max_val + ctx.min_val) / 2:.1f}")
+            len(f"{(ctx.max_val + ctx.min_val) / 2:.1f}"),
         )
         y_axis_width = y_label_width + 1  # +1 for vertical line
 
@@ -107,7 +108,7 @@ class BarChartRenderer(ChartTypeRenderer):
         series_values: list[list[float]],
         bar_width: int,
         ctx: RenderContext,
-        y_label_width: int
+        y_label_width: int,
     ) -> str:
         """Build a single row of the bar chart.
 
@@ -138,7 +139,7 @@ class BarChartRenderer(ChartTypeRenderer):
         num_groups = max(len(vals) for vals in series_values)
 
         for group_idx in range(num_groups):
-            line += ' '  # Space before group
+            line += " "  # Space before group
             for series_idx, vals in enumerate(series_values):
                 fill_char = self.FILL_CHARS[series_idx % len(self.FILL_CHARS)]
                 if group_idx < len(vals):
@@ -148,11 +149,11 @@ class BarChartRenderer(ChartTypeRenderer):
                     if row_from_bottom < bar_height:
                         line += fill_char * bar_width
                     else:
-                        line += ' ' * bar_width
+                        line += " " * bar_width
                 else:
-                    line += ' ' * bar_width
-                line += ' '  # Space between bars in group
-            line += ' '  # Extra space between groups
+                    line += " " * bar_width
+                line += " "  # Space between bars in group
+            line += " "  # Extra space between groups
 
         return line
 
@@ -168,6 +169,6 @@ class BarChartRenderer(ChartTypeRenderer):
         legend_parts = []
         for i, series in enumerate(ctx.chart.series):
             fill_char = self.FILL_CHARS[i % len(self.FILL_CHARS)]
-            name = series.name or f"Series {i+1}"
+            name = series.name or f"Series {i + 1}"
             legend_parts.append(f"[{fill_char}] {name}")
         return "  ".join(legend_parts)

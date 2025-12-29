@@ -4,6 +4,7 @@ Implements Lotus 1-2-3 compatible math functions:
 @SUM, @ABS, @INT, @ROUND, @MOD, @SQRT, @EXP, @LN, @LOG
 Trigonometric: @SIN, @COS, @TAN, @ASIN, @ACOS, @ATAN, @ATAN2, @PI, @RAND
 """
+
 from __future__ import annotations
 
 import math
@@ -66,7 +67,7 @@ def fn_mod(dividend: Any, divisor: Any) -> float:
     n = _to_number(dividend)
     d = _to_number(divisor)
     if d == 0:
-        return float('nan')  # Will be converted to #DIV/0!
+        return float("nan")  # Will be converted to #DIV/0!
     return n % d
 
 
@@ -74,7 +75,7 @@ def fn_sqrt(value: Any) -> float:
     """@SQRT - Square root."""
     n = _to_number(value)
     if n < 0:
-        return float('nan')  # Will be converted to #ERR!
+        return float("nan")  # Will be converted to #ERR!
     return math.sqrt(n)
 
 
@@ -87,7 +88,7 @@ def fn_ln(value: Any) -> float:
     """@LN - Natural logarithm."""
     n = _to_number(value)
     if n <= 0:
-        return float('nan')
+        return float("nan")
     return math.log(n)
 
 
@@ -95,7 +96,7 @@ def fn_log(value: Any) -> float:
     """@LOG - Base-10 logarithm."""
     n = _to_number(value)
     if n <= 0:
-        return float('nan')
+        return float("nan")
     return math.log10(n)
 
 
@@ -118,7 +119,7 @@ def fn_asin(value: Any) -> float:
     """@ASIN - Arc sine (result in radians)."""
     n = _to_number(value)
     if n < -1 or n > 1:
-        return float('nan')
+        return float("nan")
     return math.asin(n)
 
 
@@ -126,7 +127,7 @@ def fn_acos(value: Any) -> float:
     """@ACOS - Arc cosine (result in radians)."""
     n = _to_number(value)
     if n < -1 or n > 1:
-        return float('nan')
+        return float("nan")
     return math.acos(n)
 
 
@@ -172,7 +173,7 @@ def fn_trunc(value: Any, decimals: Any = 0) -> float:
     """@TRUNC - Truncate to specified decimal places."""
     n = _to_number(value)
     d = int(_to_number(decimals))
-    factor = 10.0 ** d
+    factor = 10.0**d
     return float(int(n * factor) / factor)
 
 
@@ -232,12 +233,10 @@ MATH_FUNCTIONS = {
     "FACT": fn_fact,
     "GCD": fn_gcd,
     "LCM": fn_lcm,
-
     # Exponential and logarithmic
     "EXP": fn_exp,
     "LN": fn_ln,
     "LOG": fn_log,
-
     # Trigonometric
     "SIN": fn_sin,
     "COS": fn_cos,
@@ -248,7 +247,6 @@ MATH_FUNCTIONS = {
     "ATAN2": fn_atan2,
     "DEGREES": fn_degrees,
     "RADIANS": fn_radians,
-
     # Constants and random
     "PI": fn_pi,
     "RAND": fn_rand,

@@ -5,10 +5,10 @@ Implements Lotus 1-2-3 compatible string functions:
 @UPPER, @LOWER, @PROPER, @TRIM, @CLEAN
 @VALUE, @STRING, @CHAR, @CODE, @REPEAT, @N, @S
 """
+
 from __future__ import annotations
 
 import re
-import string
 from typing import Any
 
 
@@ -62,7 +62,7 @@ def fn_mid(text: Any, start_pos: Any, num_chars: Any) -> str:
     s = _to_string(text)
     start = max(1, _to_int(start_pos)) - 1  # Convert to 0-based
     n = max(0, _to_int(num_chars))
-    return s[start:start + n]
+    return s[start : start + n]
 
 
 def fn_length(text: Any) -> int:
@@ -123,7 +123,7 @@ def fn_replace(old_text: Any, start_pos: Any, num_chars: Any, new_text: Any) -> 
     n = max(0, _to_int(num_chars))
     new_s = _to_string(new_text)
 
-    return s[:start] + new_s + s[start + n:]
+    return s[:start] + new_s + s[start + n :]
 
 
 def fn_substitute(text: Any, old_text: Any, new_text: Any, instance: Any = None) -> str:
@@ -148,7 +148,7 @@ def fn_substitute(text: Any, old_text: Any, new_text: Any, instance: Any = None)
     result = []
     i = 0
     while i < len(s):
-        if s[i:i + len(old_s)] == old_s:
+        if s[i : i + len(old_s)] == old_s:
             count += 1
             if count == inst:
                 result.append(new_s)
@@ -317,28 +317,22 @@ STRING_FUNCTIONS = {
     "LEFT": fn_left,
     "RIGHT": fn_right,
     "MID": fn_mid,
-
     # Length
     "LENGTH": fn_length,
     "LEN": fn_len,
-
     # Search
     "FIND": fn_find,
     "SEARCH": fn_search,
-
     # Replacement
     "REPLACE": fn_replace,
     "SUBSTITUTE": fn_substitute,
-
     # Case conversion
     "UPPER": fn_upper,
     "LOWER": fn_lower,
     "PROPER": fn_proper,
-
     # Cleaning
     "TRIM": fn_trim,
     "CLEAN": fn_clean,
-
     # Conversion
     "VALUE": fn_value,
     "STRING": fn_string,
@@ -348,18 +342,14 @@ STRING_FUNCTIONS = {
     "N": fn_n,
     "S": fn_s,
     "T": fn_t,
-
     # Repetition
     "REPEAT": fn_repeat,
     "REPT": fn_rept,
-
     # Comparison
     "EXACT": fn_exact,
-
     # Concatenation
     "CONCATENATE": fn_concatenate,
     "CONCAT": fn_concat,
-
     # Formatting
     "FIXED": fn_fixed,
     "DOLLAR": fn_dollar,

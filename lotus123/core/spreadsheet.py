@@ -1,18 +1,15 @@
 """Main spreadsheet class with expanded dimensions and features."""
+
 from __future__ import annotations
 
 import json
-from typing import Any, Iterator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Iterator
 
-from .cell import Cell, CellType, TextAlignment
-from .reference import (
-    CellReference, RangeReference,
-    parse_cell_ref, make_cell_ref, index_to_col, col_to_index,
-    adjust_formula_references,
-)
-from .formatting import FormatSpec, parse_format_code, format_value
+from .cell import Cell
+from .formatting import format_value, parse_format_code
 from .named_ranges import NamedRangeManager
 from .protection import ProtectionManager
+from .reference import adjust_formula_references, parse_cell_ref
 
 if TYPE_CHECKING:
     from ..formula.recalc import RecalcEngine
@@ -20,7 +17,7 @@ if TYPE_CHECKING:
 
 # Lotus 1-2-3 dimensions
 MAX_ROWS = 65536  # 65,536 rows (early versions had 8,192)
-MAX_COLS = 256    # 256 columns (A through IV)
+MAX_COLS = 256  # 256 columns (A through IV)
 
 # Default column width
 DEFAULT_COL_WIDTH = 10
@@ -200,7 +197,7 @@ class Spreadsheet:
             return ""
         try:
             # Try integer first
-            if '.' not in value and 'e' not in value.lower():
+            if "." not in value and "e" not in value.lower():
                 return int(value.replace(",", ""))
             return float(value.replace(",", ""))
         except ValueError:
@@ -221,8 +218,8 @@ class Spreadsheet:
             parser = FormulaParser(self)
             result = parser.evaluate(cell.formula)
             return result
-        except Exception as e:
-            return f"#ERR!"
+        except Exception:
+            return "#ERR!"
         finally:
             self._computing.discard((row, col))
 
@@ -344,8 +341,9 @@ class Spreadsheet:
         rows = self.get_range(start_ref, end_ref)
         return [val for row in rows for val in row]
 
-    def set_range_format(self, start_row: int, start_col: int,
-                         end_row: int, end_col: int, format_code: str) -> None:
+    def set_range_format(
+        self, start_row: int, start_col: int, end_row: int, end_col: int, format_code: str
+    ) -> None:
         """Set format for a range of cells."""
         for r in range(start_row, end_row + 1):
             for c in range(start_col, end_col + 1):
@@ -501,8 +499,9 @@ class Spreadsheet:
     # Copy Operations
     # -------------------------------------------------------------------------
 
-    def copy_cell(self, from_row: int, from_col: int,
-                  to_row: int, to_col: int, adjust_refs: bool = True) -> None:
+    def copy_cell(
+        self, from_row: int, from_col: int, to_row: int, to_col: int, adjust_refs: bool = True
+    ) -> None:
         """Copy a cell to another location.
 
         Args:
@@ -532,8 +531,13 @@ class Spreadsheet:
         self.modified = True
         self._invalidate_cache()
 
-    def copy_range(self, src_start: tuple[int, int], src_end: tuple[int, int],
-                   dest_start: tuple[int, int], adjust_refs: bool = True) -> None:
+    def copy_range(
+        self,
+        src_start: tuple[int, int],
+        src_end: tuple[int, int],
+        dest_start: tuple[int, int],
+        adjust_refs: bool = True,
+    ) -> None:
         """Copy a range of cells.
 
         Args:
@@ -574,14 +578,14 @@ class Spreadsheet:
             "frozen_rows": self.frozen_rows,
             "frozen_cols": self.frozen_cols,
         }
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             json.dump(data, f, indent=2)
         self.filename = filename
         self.modified = False
 
     def load(self, filename: str) -> None:
         """Load spreadsheet from JSON file."""
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             data = json.load(f)
 
         self.clear()
@@ -592,7 +596,7 @@ class Spreadsheet:
         self._row_heights = {int(k): v for k, v in data.get("row_heights", {}).items()}
 
         for key, cell_data in data.get("cells", {}).items():
-            r, c = map(int, key.split(','))
+            r, c = map(int, key.split(","))
             self._cells[(r, c)] = Cell.from_dict(cell_data)
 
         if "named_ranges" in data:
@@ -644,7 +648,7 @@ class Spreadsheet:
         if not self._cells:
             return None
 
-        min_row = min_col = float('inf')
+        min_row = min_col = float("inf")
         max_row = max_col = 0
 
         for (r, c), cell in self._cells.items():
@@ -654,7 +658,7 @@ class Spreadsheet:
                 max_row = max(max_row, r)
                 max_col = max(max_col, c)
 
-        if min_row == float('inf'):
+        if min_row == float("inf"):
             return None
 
         return ((int(min_row), int(min_col)), (int(max_row), int(max_col)))

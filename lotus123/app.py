@@ -1,33 +1,47 @@
 """Lotus 1-2-3 Clone - Main TUI Application."""
+
 from __future__ import annotations
 
 from pathlib import Path
 
-from textual import on, events
+from textual import events, on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
-from textual.widgets import Static, Input, Footer
 from textual.css.query import NoMatches
+from textual.widgets import Footer, Input, Static
 
-from .core.spreadsheet import Spreadsheet
-from .core.reference import index_to_col, make_cell_ref, parse_cell_ref, col_to_index
-from .core.reference import adjust_formula_references
-from .utils.undo import (
-    UndoManager, CellChangeCommand, RangeChangeCommand,
-    InsertRowCommand, DeleteRowCommand
+from .charting import Chart, ChartType, TextChartRenderer
+from .core import (
+    Spreadsheet,
+    adjust_formula_references,
+    col_to_index,
+    index_to_col,
+    make_cell_ref,
+    parse_cell_ref,
 )
-from .charting.chart import Chart, ChartType
-from .charting.renderer import TextChartRenderer
 
 # UI components
 from .ui import (
-    Theme, ThemeType, THEMES, get_theme_type,
+    THEMES,
     AppConfig,
-    SpreadsheetGrid,
+    ChartViewScreen,
+    CommandInput,
+    FileDialog,
     LotusMenu,
-    StatusBarWidget, Mode,
-    FileDialog, CommandInput, ThemeDialog, ChartViewScreen,
+    Mode,
+    SpreadsheetGrid,
+    StatusBarWidget,
+    ThemeDialog,
+    ThemeType,
+    get_theme_type,
+)
+from .utils.undo import (
+    CellChangeCommand,
+    DeleteRowCommand,
+    InsertRowCommand,
+    RangeChangeCommand,
+    UndoManager,
 )
 
 
@@ -434,6 +448,7 @@ class LotusApp(App[None]):
             value = cell_input.value
             if value.startswith("=") or value.startswith("@"):
                 import re
+
                 def toggle_ref(m: re.Match[str]) -> str:
                     ref = m.group(0)
                     if ref.startswith("$") and "$" in ref[1:]:
@@ -444,10 +459,11 @@ class LotusApp(App[None]):
                         match = re.match(r"([A-Za-z]+)", ref)
                         if match:
                             col = match.group(1)
-                            row = ref[len(col):]
+                            row = ref[len(col) :]
                             return f"${col}${row}"
                         return ref
-                new_value = re.sub(r'\$?[A-Za-z]+\$?\d+', toggle_ref, value)
+
+                new_value = re.sub(r"\$?[A-Za-z]+\$?\d+", toggle_ref, value)
                 cell_input.value = new_value
 
     def action_recalculate(self) -> None:
@@ -713,8 +729,8 @@ class LotusApp(App[None]):
     def _do_save(self, result: str | None) -> None:
         if result:
             try:
-                if not result.endswith('.json'):
-                    result += '.json'
+                if not result.endswith(".json"):
+                    result += ".json"
                 self.spreadsheet.save(result)
                 self._dirty = False
                 self._update_title()
@@ -738,8 +754,7 @@ class LotusApp(App[None]):
     def action_quit_app(self) -> None:
         if self._dirty:
             self.push_screen(
-                CommandInput("Save changes before quitting? (Y/N/C=Cancel):"),
-                self._do_quit_confirm
+                CommandInput("Save changes before quitting? (Y/N/C=Cancel):"), self._do_quit_confirm
             )
         else:
             self.config.save()
@@ -771,10 +786,7 @@ class LotusApp(App[None]):
         r1, c1, r2, c2 = grid.selection_range
         source_range = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
         self._pending_source_range = (r1, c1, r2, c2)
-        self.push_screen(
-            CommandInput(f"Copy {source_range} TO (e.g., D1):"),
-            self._do_menu_copy
-        )
+        self.push_screen(CommandInput(f"Copy {source_range} TO (e.g., D1):"), self._do_menu_copy)
 
     def _do_menu_copy(self, result: str | None) -> None:
         if not result:
@@ -816,10 +828,7 @@ class LotusApp(App[None]):
         r1, c1, r2, c2 = grid.selection_range
         source_range = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
         self._pending_source_range = (r1, c1, r2, c2)
-        self.push_screen(
-            CommandInput(f"Move {source_range} TO (e.g., D1):"),
-            self._do_menu_move
-        )
+        self.push_screen(CommandInput(f"Move {source_range} TO (e.g., D1):"), self._do_menu_move)
 
     def _do_menu_move(self, result: str | None) -> None:
         if not result:
@@ -918,7 +927,7 @@ class LotusApp(App[None]):
 
         grid = self.query_one("#grid", SpreadsheetGrid)
         dest_row, dest_col = grid.cursor_row, grid.cursor_col
-        src_row, src_col = getattr(self, '_clipboard_origin', (0, 0))
+        src_row, src_col = getattr(self, "_clipboard_origin", (0, 0))
         changes = []
         for r_offset, row_data in enumerate(self._range_clipboard):
             for c_offset, value in enumerate(row_data):
@@ -952,7 +961,11 @@ class LotusApp(App[None]):
             self._clipboard_is_cut = False
         grid.refresh_grid()
         self._update_status()
-        cells_count = len(self._range_clipboard) * len(self._range_clipboard[0]) if self._range_clipboard else 0
+        cells_count = (
+            len(self._range_clipboard) * len(self._range_clipboard[0])
+            if self._range_clipboard
+            else 0
+        )
         self.notify(f"Pasted {cells_count} cell(s)")
 
     def _insert_row(self) -> None:
@@ -974,8 +987,10 @@ class LotusApp(App[None]):
     def _set_chart_type(self, chart_type: ChartType) -> None:
         self.chart.set_type(chart_type)
         type_names = {
-            ChartType.LINE: "Line", ChartType.BAR: "Bar",
-            ChartType.XY_SCATTER: "XY Scatter", ChartType.STACKED_BAR: "Stacked Bar",
+            ChartType.LINE: "Line",
+            ChartType.BAR: "Bar",
+            ChartType.XY_SCATTER: "XY Scatter",
+            ChartType.STACKED_BAR: "Stacked Bar",
             ChartType.PIE: "Pie",
         }
         self.notify(f"Chart type set to {type_names.get(chart_type, 'Unknown')}")
@@ -1036,7 +1051,9 @@ class LotusApp(App[None]):
         # Use ~75% of terminal size for the chart (dialog is 80%, minus padding/border)
         chart_width = int(self.size.width * 0.75)
         chart_height = int(self.size.height * 0.70)
-        chart_lines = self._chart_renderer.render(self.chart, width=chart_width, height=chart_height)
+        chart_lines = self._chart_renderer.render(
+            self.chart, width=chart_width, height=chart_height
+        )
         self.push_screen(ChartViewScreen(chart_lines))
 
     def _reset_chart(self) -> None:
@@ -1047,7 +1064,7 @@ class LotusApp(App[None]):
     def _range_format(self) -> None:
         self.push_screen(
             CommandInput("Format (F=Fixed, S=Scientific, C=Currency, P=Percent, G=General):"),
-            self._do_range_format
+            self._do_range_format,
         )
 
     def _do_range_format(self, result: str | None) -> None:
@@ -1068,8 +1085,7 @@ class LotusApp(App[None]):
 
     def _range_label(self) -> None:
         self.push_screen(
-            CommandInput("Label alignment (L=Left, R=Right, C=Center):"),
-            self._do_range_label
+            CommandInput("Label alignment (L=Left, R=Right, C=Center):"), self._do_range_label
         )
 
     def _do_range_label(self, result: str | None) -> None:
@@ -1136,10 +1152,7 @@ class LotusApp(App[None]):
         if not grid.has_selection:
             self.notify("Select a range first")
             return
-        self.push_screen(
-            CommandInput("Fill with (start,step,stop) or value:"),
-            self._do_data_fill
-        )
+        self.push_screen(CommandInput("Fill with (start,step,stop) or value:"), self._do_data_fill)
 
     def _do_data_fill(self, result: str | None) -> None:
         if not result:
@@ -1184,7 +1197,7 @@ class LotusApp(App[None]):
         col_range = first_col if c1 == c2 else f"{first_col}-{last_col}"
         self.push_screen(
             CommandInput(f"Sort column [{col_range}] (add D for descending, e.g., 'A' or 'AD'):"),
-            self._do_data_sort
+            self._do_data_sort,
         )
 
     def _do_data_sort(self, result: str | None) -> None:
@@ -1201,7 +1214,10 @@ class LotusApp(App[None]):
                 sort_col_idx = ord(sort_col_letter) - ord("A")
                 sort_col_abs = c1 + sort_col_idx
             if sort_col_abs < c1 or sort_col_abs > c2:
-                self.notify(f"Sort column must be within selection ({index_to_col(c1)}-{index_to_col(c2)})", severity="error")
+                self.notify(
+                    f"Sort column must be within selection ({index_to_col(c1)}-{index_to_col(c2)})",
+                    severity="error",
+                )
                 return
             rows_data = []
             for r in range(r1, r2 + 1):
@@ -1234,20 +1250,26 @@ class LotusApp(App[None]):
                 grid.refresh_grid()
                 self._update_status()
                 order_name = "descending" if reverse else "ascending"
-                self.notify(f"Sorted {len(rows_data)} rows by column {sort_col_letter} ({order_name})")
+                self.notify(
+                    f"Sorted {len(rows_data)} rows by column {sort_col_letter} ({order_name})"
+                )
             else:
                 self.notify("Data already sorted")
         except Exception as e:
             self.notify(f"Sort error: {e}", severity="error")
 
     def _data_query(self) -> None:
-        self.notify("Data Query: Select criteria range, then input range. Use @D functions for queries.")
+        self.notify(
+            "Data Query: Select criteria range, then input range. Use @D functions for queries."
+        )
 
     # Worksheet global methods
     def _global_format(self) -> None:
         self.push_screen(
-            CommandInput(f"Default format (F=Fixed, S=Scientific, C=Currency, P=Percent, G=General) [{self._global_format_code}]:"),
-            self._do_global_format
+            CommandInput(
+                f"Default format (F=Fixed, S=Scientific, C=Currency, P=Percent, G=General) [{self._global_format_code}]:"
+            ),
+            self._do_global_format,
         )
 
     def _do_global_format(self, result: str | None) -> None:
@@ -1261,7 +1283,7 @@ class LotusApp(App[None]):
     def _global_label_prefix_action(self) -> None:
         self.push_screen(
             CommandInput("Default label alignment (L=Left, R=Right, C=Center):"),
-            self._do_global_label_prefix
+            self._do_global_label_prefix,
         )
 
     def _do_global_label_prefix(self, result: str | None) -> None:
@@ -1271,12 +1293,14 @@ class LotusApp(App[None]):
         prefix_map = {"L": "'", "R": '"', "C": "^"}
         self._global_label_prefix = prefix_map.get(align_char, "'")
         align_names = {"'": "Left", '"': "Right", "^": "Center"}
-        self.notify(f"Default label alignment set to {align_names.get(self._global_label_prefix, 'Left')}")
+        self.notify(
+            f"Default label alignment set to {align_names.get(self._global_label_prefix, 'Left')}"
+        )
 
     def _global_column_width(self) -> None:
         self.push_screen(
             CommandInput(f"Default column width (3-50) [{self._global_col_width}]:"),
-            self._do_global_column_width
+            self._do_global_column_width,
         )
 
     def _do_global_column_width(self, result: str | None) -> None:
@@ -1322,10 +1346,7 @@ class LotusApp(App[None]):
             self.notify("Zero values: Hidden (blank)")
 
     def _worksheet_erase(self) -> None:
-        self.push_screen(
-            CommandInput("Erase entire worksheet? (Y/N):"),
-            self._do_worksheet_erase
-        )
+        self.push_screen(CommandInput("Erase entire worksheet? (Y/N):"), self._do_worksheet_erase)
 
     def _do_worksheet_erase(self, result: str | None) -> None:
         if result and result.upper().startswith("Y"):
@@ -1411,16 +1432,16 @@ class LotusApp(App[None]):
             return
 
         # Start editing on printable character
-        if event.character and event.character.isprintable() and event.character != '/':
+        if event.character and event.character.isprintable() and event.character != "/":
             cell_input = self.query_one("#cell-input", Input)
             cell_input.select_on_focus = False
             cell_input.value = ""
             cell_input.focus()
             self.editing = True
             # Determine mode based on first character (Lotus 1-2-3 style)
-            if event.character in '0123456789.+-@#(':
+            if event.character in "0123456789.+-@#(":
                 self.query_one("#status-bar", StatusBarWidget).set_mode(Mode.VALUE)
-            elif event.character == '=':
+            elif event.character == "=":
                 self.query_one("#status-bar", StatusBarWidget).set_mode(Mode.VALUE)
             else:
                 self.query_one("#status-bar", StatusBarWidget).set_mode(Mode.LABEL)
@@ -1430,6 +1451,7 @@ class LotusApp(App[None]):
 
 def main() -> None:
     import argparse
+
     parser = argparse.ArgumentParser(
         description="Lotus 1-2-3 Clone - A terminal-based spreadsheet application"
     )

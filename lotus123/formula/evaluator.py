@@ -1,9 +1,10 @@
 """Formula evaluation engine with dependency tracking."""
+
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
-from dataclasses import dataclass, field
 import re
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
@@ -15,6 +16,7 @@ class EvaluationContext:
 
     Tracks the current cell being evaluated and dependencies.
     """
+
     current_row: int = 0
     current_col: int = 0
     dependencies: set[tuple[int, int]] = field(default_factory=set)
@@ -31,8 +33,8 @@ class FormulaEvaluator:
     """
 
     # Pattern to find cell references in formulas
-    CELL_REF_PATTERN = re.compile(r'\$?([A-Za-z]+)\$?(\d+)')
-    RANGE_PATTERN = re.compile(r'(\$?[A-Za-z]+\$?\d+):(\$?[A-Za-z]+\$?\d+)')
+    CELL_REF_PATTERN = re.compile(r"\$?([A-Za-z]+)\$?(\d+)")
+    RANGE_PATTERN = re.compile(r"(\$?[A-Za-z]+\$?\d+):(\$?[A-Za-z]+\$?\d+)")
 
     def __init__(self, spreadsheet: Spreadsheet) -> None:
         self.spreadsheet = spreadsheet
@@ -66,6 +68,7 @@ class FormulaEvaluator:
 
         try:
             from .parser import FormulaParser
+
             parser = FormulaParser(self.spreadsheet)
             result = parser.evaluate(cell.formula)
             return result
@@ -90,11 +93,12 @@ class FormulaEvaluator:
 
         # Find single cell references (not part of ranges)
         # Remove range patterns first to avoid double-counting
-        formula_no_ranges = self.RANGE_PATTERN.sub('', formula)
+        formula_no_ranges = self.RANGE_PATTERN.sub("", formula)
         for match in self.CELL_REF_PATTERN.finditer(formula_no_ranges):
             col_str, row_str = match.groups()
             try:
                 from ..core.reference import parse_cell_ref
+
                 row, col = parse_cell_ref(f"{col_str}{row_str}")
                 deps.add((row, col))
             except ValueError:
@@ -107,8 +111,9 @@ class FormulaEvaluator:
         deps = set()
         try:
             from ..core.reference import parse_cell_ref
-            start_row, start_col = parse_cell_ref(start_ref.replace('$', ''))
-            end_row, end_col = parse_cell_ref(end_ref.replace('$', ''))
+
+            start_row, start_col = parse_cell_ref(start_ref.replace("$", ""))
+            end_row, end_col = parse_cell_ref(end_ref.replace("$", ""))
 
             # Normalize
             if start_row > end_row:
@@ -128,7 +133,7 @@ class FormulaEvaluator:
         if not value:
             return ""
         try:
-            if '.' not in value and 'e' not in value.lower():
+            if "." not in value and "e" not in value.lower():
                 return int(value.replace(",", ""))
             return float(value.replace(",", ""))
         except ValueError:
@@ -161,7 +166,9 @@ def build_dependency_graph(spreadsheet: Spreadsheet) -> dict[tuple[int, int], se
     return graph
 
 
-def find_circular_references(dependency_graph: dict[tuple[int, int], set[tuple[int, int]]]) -> list[tuple[int, int]]:
+def find_circular_references(
+    dependency_graph: dict[tuple[int, int], set[tuple[int, int]]],
+) -> list[tuple[int, int]]:
     """Find cells involved in circular references.
 
     Uses Tarjan's algorithm to find strongly connected components.
@@ -213,7 +220,9 @@ def find_circular_references(dependency_graph: dict[tuple[int, int], set[tuple[i
     return circular
 
 
-def topological_sort(dependency_graph: dict[tuple[int, int], set[tuple[int, int]]]) -> list[tuple[int, int]]:
+def topological_sort(
+    dependency_graph: dict[tuple[int, int], set[tuple[int, int]]],
+) -> list[tuple[int, int]]:
     """Sort cells in dependency order for recalculation.
 
     Args:
@@ -233,7 +242,9 @@ def topological_sort(dependency_graph: dict[tuple[int, int], set[tuple[int, int]
                 pass
 
     # Actually we need dependents, not dependencies
-    dependents: dict[tuple[int, int], set[tuple[int, int]]] = {node: set() for node in dependency_graph}
+    dependents: dict[tuple[int, int], set[tuple[int, int]]] = {
+        node: set() for node in dependency_graph
+    }
     for node, deps in dependency_graph.items():
         for dep in deps:
             if dep in dependents:

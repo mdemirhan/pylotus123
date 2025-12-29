@@ -1,6 +1,9 @@
 """Tests for formula parser and evaluator."""
-import pytest
+
 import math
+
+import pytest
+
 from lotus123 import Spreadsheet
 from lotus123.formula import FormulaParser
 
@@ -203,20 +206,20 @@ class TestLogicalFunctions:
         assert self.parser.evaluate('IF(A1>50, "big", "small")') == "big"
 
     def test_and_true(self):
-        assert self.parser.evaluate("AND(1, 1)") == True
+        assert self.parser.evaluate("AND(1, 1)") is True
 
     def test_and_false(self):
-        assert self.parser.evaluate("AND(1, 0)") == False
+        assert self.parser.evaluate("AND(1, 0)") is False
 
     def test_or_true(self):
-        assert self.parser.evaluate("OR(1, 0)") == True
+        assert self.parser.evaluate("OR(1, 0)") is True
 
     def test_or_false(self):
-        assert self.parser.evaluate("OR(0, 0)") == False
+        assert self.parser.evaluate("OR(0, 0)") is False
 
     def test_not(self):
-        assert self.parser.evaluate("NOT(0)") == True
-        assert self.parser.evaluate("NOT(1)") == False
+        assert self.parser.evaluate("NOT(0)") is True
+        assert self.parser.evaluate("NOT(1)") is False
 
 
 class TestComparisons:
@@ -225,30 +228,30 @@ class TestComparisons:
         self.parser = FormulaParser(self.ss)
 
     def test_equal(self):
-        assert self.parser.evaluate("5=5") == True
-        assert self.parser.evaluate("5=6") == False
+        assert self.parser.evaluate("5=5") is True
+        assert self.parser.evaluate("5=6") is False
 
     def test_not_equal(self):
-        assert self.parser.evaluate("5<>6") == True
-        assert self.parser.evaluate("5<>5") == False
+        assert self.parser.evaluate("5<>6") is True
+        assert self.parser.evaluate("5<>5") is False
 
     def test_less_than(self):
-        assert self.parser.evaluate("5<6") == True
-        assert self.parser.evaluate("6<5") == False
+        assert self.parser.evaluate("5<6") is True
+        assert self.parser.evaluate("6<5") is False
 
     def test_greater_than(self):
-        assert self.parser.evaluate("6>5") == True
-        assert self.parser.evaluate("5>6") == False
+        assert self.parser.evaluate("6>5") is True
+        assert self.parser.evaluate("5>6") is False
 
     def test_less_equal(self):
-        assert self.parser.evaluate("5<=5") == True
-        assert self.parser.evaluate("5<=6") == True
-        assert self.parser.evaluate("6<=5") == False
+        assert self.parser.evaluate("5<=5") is True
+        assert self.parser.evaluate("5<=6") is True
+        assert self.parser.evaluate("6<=5") is False
 
     def test_greater_equal(self):
-        assert self.parser.evaluate("5>=5") == True
-        assert self.parser.evaluate("6>=5") == True
-        assert self.parser.evaluate("5>=6") == False
+        assert self.parser.evaluate("5>=5") is True
+        assert self.parser.evaluate("6>=5") is True
+        assert self.parser.evaluate("5>=6") is False
 
 
 class TestComplexFormulas:

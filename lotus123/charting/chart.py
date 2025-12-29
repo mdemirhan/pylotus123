@@ -7,6 +7,7 @@ Supports Lotus 1-2-3 style charts:
 - XY scatter plots
 - Pie charts
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -16,6 +17,7 @@ from typing import Any
 
 class ChartType(Enum):
     """Types of charts available."""
+
     LINE = auto()
     BAR = auto()
     STACKED_BAR = auto()
@@ -27,14 +29,16 @@ class ChartType(Enum):
 
 class LineStyle(Enum):
     """Line/symbol styles for data series."""
-    LINES = auto()      # Lines only
-    SYMBOLS = auto()    # Symbols only
-    BOTH = auto()       # Lines and symbols
-    NEITHER = auto()    # No display (for hidden series)
+
+    LINES = auto()  # Lines only
+    SYMBOLS = auto()  # Symbols only
+    BOTH = auto()  # Lines and symbols
+    NEITHER = auto()  # No display (for hidden series)
 
 
 class ScaleType(Enum):
     """Scale type for axes."""
+
     LINEAR = auto()
     LOGARITHMIC = auto()
 
@@ -49,6 +53,7 @@ class ChartSeries:
         line_style: How to display the series
         color: Color name or index
     """
+
     name: str = ""
     data_range: str = ""
     values: list[float] = field(default_factory=list)
@@ -69,6 +74,7 @@ class ChartAxis:
         grid_lines: Show grid lines
         labels: Custom labels for categories
     """
+
     title: str = ""
     min_value: float | None = None
     max_value: float | None = None
@@ -91,6 +97,7 @@ class ChartOptions:
         color_mode: 'color' or 'bw' (black/white)
         data_labels: Show values on data points
     """
+
     title: str = ""
     subtitle: str = ""
     show_legend: bool = True
@@ -107,6 +114,7 @@ class Chart:
 
     Lotus 1-2-3 charts support up to 6 data ranges (A through F).
     """
+
     chart_type: ChartType = ChartType.LINE
     x_range: str = ""  # X-axis values/labels
     series: list[ChartSeries] = field(default_factory=list)
@@ -114,8 +122,9 @@ class Chart:
     y_axis: ChartAxis = field(default_factory=ChartAxis)
     options: ChartOptions = field(default_factory=ChartOptions)
 
-    def add_series(self, name: str, data_range: str = "",
-                   values: list[float] | None = None) -> ChartSeries:
+    def add_series(
+        self, name: str, data_range: str = "", values: list[float] | None = None
+    ) -> ChartSeries:
         """Add a data series to the chart.
 
         Args:
@@ -126,11 +135,7 @@ class Chart:
         Returns:
             The created series
         """
-        series = ChartSeries(
-            name=name,
-            data_range=data_range,
-            values=values or [],
-        )
+        series = ChartSeries(name=name, data_range=data_range, values=values or [])
         self.series.append(series)
         return series
 
@@ -152,10 +157,13 @@ class Chart:
         self.x_axis.title = x_title
         self.y_axis.title = y_title
 
-    def set_scale(self, axis: str = "y",
-                  min_val: float | None = None,
-                  max_val: float | None = None,
-                  scale_type: ScaleType = ScaleType.LINEAR) -> None:
+    def set_scale(
+        self,
+        axis: str = "y",
+        min_val: float | None = None,
+        max_val: float | None = None,
+        scale_type: ScaleType = ScaleType.LINEAR,
+    ) -> None:
         """Set axis scale options.
 
         Args:
@@ -164,7 +172,7 @@ class Chart:
             max_val: Maximum value
             scale_type: Linear or logarithmic
         """
-        ax = self.y_axis if axis.lower() == 'y' else self.x_axis
+        ax = self.y_axis if axis.lower() == "y" else self.x_axis
         if min_val is not None:
             ax.min_value = min_val
         if max_val is not None:

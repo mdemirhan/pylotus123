@@ -1,16 +1,16 @@
 """Cell and range reference handling with absolute/relative reference support."""
+
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
 from typing import Iterator
 
-
 # Pattern for cell references: optional $ before column and/or row
-CELL_REF_PATTERN = re.compile(r'^(\$?)([A-Za-z]+)(\$?)(\d+)$')
+CELL_REF_PATTERN = re.compile(r"^(\$?)([A-Za-z]+)(\$?)(\d+)$")
 
 # Pattern for range references: cell:cell
-RANGE_PATTERN = re.compile(r'^(\$?[A-Za-z]+\$?\d+):(\$?[A-Za-z]+\$?\d+)$')
+RANGE_PATTERN = re.compile(r"^(\$?[A-Za-z]+\$?\d+):(\$?[A-Za-z]+\$?\d+)$")
 
 
 def col_to_index(col: str) -> int:
@@ -21,7 +21,7 @@ def col_to_index(col: str) -> int:
     """
     result = 0
     for char in col.upper():
-        result = result * 26 + (ord(char) - ord('A') + 1)
+        result = result * 26 + (ord(char) - ord("A") + 1)
     return result - 1
 
 
@@ -35,7 +35,7 @@ def index_to_col(index: int) -> str:
     index += 1
     while index > 0:
         index, remainder = divmod(index - 1, 26)
-        result = chr(ord('A') + remainder) + result
+        result = chr(ord("A") + remainder) + result
     return result
 
 
@@ -81,7 +81,9 @@ def parse_range_ref(range_ref: str) -> tuple[tuple[int, int], tuple[int, int]]:
     return start, end
 
 
-def make_cell_ref(row: int, col: int, col_absolute: bool = False, row_absolute: bool = False) -> str:
+def make_cell_ref(
+    row: int, col: int, col_absolute: bool = False, row_absolute: bool = False
+) -> str:
     """Convert (row, col) 0-based indices to cell reference.
 
     Args:
@@ -108,6 +110,7 @@ class CellReference:
         col_absolute: Whether column is absolute ($A vs A)
         row_absolute: Whether row is absolute ($1 vs 1)
     """
+
     row: int
     col: int
     col_absolute: bool = False
@@ -138,7 +141,9 @@ class CellReference:
         """Convert to reference string."""
         return make_cell_ref(self.row, self.col, self.col_absolute, self.row_absolute)
 
-    def adjust(self, row_delta: int, col_delta: int, max_row: int = 8191, max_col: int = 255) -> CellReference:
+    def adjust(
+        self, row_delta: int, col_delta: int, max_row: int = 8191, max_col: int = 255
+    ) -> CellReference:
         """Create adjusted reference for copy/paste operations.
 
         Relative references are adjusted by the deltas.
@@ -177,6 +182,7 @@ class RangeReference:
         start: Starting cell reference (top-left)
         end: Ending cell reference (bottom-right)
     """
+
     start: CellReference
     end: CellReference
 
@@ -194,10 +200,7 @@ class RangeReference:
         if not match:
             raise ValueError(f"Invalid range reference: {range_ref}")
         start_ref, end_ref = match.groups()
-        return cls(
-            start=CellReference.parse(start_ref),
-            end=CellReference.parse(end_ref),
-        )
+        return cls(start=CellReference.parse(start_ref), end=CellReference.parse(end_ref))
 
     def to_string(self) -> str:
         """Convert to range string."""
@@ -238,7 +241,9 @@ class RangeReference:
             for col in range(norm.start.col, norm.end.col + 1):
                 yield row, col
 
-    def adjust(self, row_delta: int, col_delta: int, max_row: int = 8191, max_col: int = 255) -> RangeReference:
+    def adjust(
+        self, row_delta: int, col_delta: int, max_row: int = 8191, max_col: int = 255
+    ) -> RangeReference:
         """Create adjusted range reference for copy/paste operations."""
         return RangeReference(
             self.start.adjust(row_delta, col_delta, max_row, max_col),
@@ -248,15 +253,15 @@ class RangeReference:
     def contains(self, row: int, col: int) -> bool:
         """Check if a cell is within this range."""
         norm = self.normalized
-        return (norm.start.row <= row <= norm.end.row and
-                norm.start.col <= col <= norm.end.col)
+        return norm.start.row <= row <= norm.end.row and norm.start.col <= col <= norm.end.col
 
     def __str__(self) -> str:
         return self.to_string()
 
 
-def adjust_formula_references(formula: str, row_delta: int, col_delta: int,
-                               max_row: int = 8191, max_col: int = 255) -> str:
+def adjust_formula_references(
+    formula: str, row_delta: int, col_delta: int, max_row: int = 8191, max_col: int = 255
+) -> str:
     """Adjust cell references in a formula for copy/paste.
 
     Relative references are adjusted, absolute references ($) are kept.
@@ -271,6 +276,7 @@ def adjust_formula_references(formula: str, row_delta: int, col_delta: int,
     Returns:
         Formula with adjusted references
     """
+
     def replace_ref(match: re.Match[str]) -> str:
         ref_str = match.group(0)
         try:
@@ -281,5 +287,5 @@ def adjust_formula_references(formula: str, row_delta: int, col_delta: int,
             return str(ref_str)
 
     # Match cell references but not function names
-    pattern = r'\$?[A-Za-z]+\$?\d+'
+    pattern = r"\$?[A-Za-z]+\$?\d+"
     return re.sub(pattern, replace_ref, formula)

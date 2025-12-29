@@ -13,86 +13,64 @@ This package provides:
 """
 
 # Core data model
+# App
+from .app import LotusApp
+
+# Charting
+from .charting import Chart, ChartRenderer, ChartType, TextChartRenderer
 from .core import (
     Cell,
-    CellType,
-    TextAlignment,
     CellReference,
-    RangeReference,
-    parse_cell_ref,
-    make_cell_ref,
-    col_to_index,
-    index_to_col,
+    CellType,
     FormatCode,
-    format_value,
     NamedRangeManager,
     ProtectionManager,
+    RangeReference,
+    TextAlignment,
+    col_to_index,
+    format_value,
+    index_to_col,
+    make_cell_ref,
+    parse_cell_ref,
 )
 from .core.spreadsheet import Spreadsheet
 
+# Data operations
+from .data import CriteriaParser, DatabaseOperations, FillOperations, FillType, SortOrder
+
 # Formula engine
 from .formula import (
-    FormulaParser,
     FormulaEvaluator,
+    FormulaParser,
+    FunctionRegistry,
     RecalcEngine,
     RecalcMode,
     RecalcOrder,
-    FunctionRegistry,
-)
-
-# Utilities
-from .utils import (
-    UndoManager,
-    Command,
-    Clipboard,
-    ClipboardMode,
-)
-
-# Data operations
-from .data import (
-    DatabaseOperations,
-    SortOrder,
-    CriteriaParser,
-    FillOperations,
-    FillType,
-)
-
-# Charting
-from .charting import (
-    Chart,
-    ChartType,
-    ChartRenderer,
-    TextChartRenderer,
 )
 
 # File I/O
-from .io import (
-    TextImporter,
-    TextExporter,
-    ImportOptions,
-    ExportOptions,
-)
+from .io import ExportOptions, ImportOptions, TextExporter, TextImporter
 
 # UI
 from .ui import (
-    StatusBar,
-    ModeIndicator,
-    Mode,
-    MenuSystem,
-    Menu,
-    MenuItem,
-    MenuAction,
-    MenuState,
-    WindowManager,
-    ViewPort,
     FrozenTitles,
-    WindowSplit,
+    Menu,
+    MenuAction,
+    MenuItem,
+    MenuState,
+    MenuSystem,
+    Mode,
+    ModeIndicator,
     SplitType,
+    StatusBar,
     TitleFreezeType,
+    ViewPort,
+    WindowManager,
+    WindowSplit,
 )
 
-# App
-from .app import LotusApp
+# Utilities
+from .utils import Clipboard, ClipboardMode, Command, UndoManager
 
 __version__ = "1.0.0"
 

@@ -6,6 +6,7 @@ Implements Lotus 1-2-3 compatible database functions:
 Database functions operate on a table with headers and apply criteria
 to filter rows before calculating statistics.
 """
+
 from __future__ import annotations
 
 import math
@@ -142,6 +143,7 @@ def _matches_criteria(row: list[Any], headers: list[Any], criteria: list[Any]) -
                 if "*" in crit_str or "?" in crit_str:
                     # Wildcard matching
                     import fnmatch
+
                     if not fnmatch.fnmatch(str(cell_value).upper(), crit_str.upper()):
                         row_matches = False
                         break

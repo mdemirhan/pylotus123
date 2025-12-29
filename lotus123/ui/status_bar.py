@@ -8,11 +8,12 @@ Status indicators include:
 - Lock indicators (CAPS, NUM, SCROLL)
 - Circular reference warning (CIRC)
 """
+
 from __future__ import annotations
 
-from enum import Enum, auto
 from dataclasses import dataclass
-from typing import Any, TYPE_CHECKING
+from enum import Enum, auto
+from typing import TYPE_CHECKING, Any
 
 from textual.widgets import Static
 
@@ -22,23 +23,25 @@ if TYPE_CHECKING:
 
 class Mode(Enum):
     """Spreadsheet operation modes."""
-    READY = auto()      # Ready for input
-    VALUE = auto()      # Entering numeric value
-    LABEL = auto()      # Entering text label
-    EDIT = auto()       # Editing cell
-    MENU = auto()       # In menu system
-    POINT = auto()      # Pointing to cell for formula
-    WAIT = auto()       # Processing
-    ERROR = auto()      # Error state
-    HELP = auto()       # Help mode
-    FILES = auto()      # File operations
-    NAMES = auto()      # Named range operations
-    STAT = auto()       # Status display
+
+    READY = auto()  # Ready for input
+    VALUE = auto()  # Entering numeric value
+    LABEL = auto()  # Entering text label
+    EDIT = auto()  # Editing cell
+    MENU = auto()  # In menu system
+    POINT = auto()  # Pointing to cell for formula
+    WAIT = auto()  # Processing
+    ERROR = auto()  # Error state
+    HELP = auto()  # Help mode
+    FILES = auto()  # File operations
+    NAMES = auto()  # Named range operations
+    STAT = auto()  # Status display
 
 
 @dataclass
 class ModeIndicator:
     """Mode indicator display text."""
+
     mode: Mode = Mode.READY
     text: str = "READY"
 
@@ -66,6 +69,7 @@ class ModeIndicator:
 @dataclass
 class LockIndicators:
     """Keyboard lock state indicators."""
+
     caps_lock: bool = False
     num_lock: bool = False
     scroll_lock: bool = False
@@ -144,7 +148,9 @@ class StatusBar:
     def get_cell_display(self) -> str:
         """Get cell reference and value display."""
         if self.current_cell_formula:
-            return f"{self.current_cell_ref}: {self.current_cell_formula} = {self.current_cell_value}"
+            return (
+                f"{self.current_cell_ref}: {self.current_cell_formula} = {self.current_cell_value}"
+            )
         elif self.current_cell_value:
             return f"{self.current_cell_ref}: {self.current_cell_value}"
         else:
@@ -237,7 +243,10 @@ class StatusBarWidget(Static):
     """
 
     def __init__(self, spreadsheet: Spreadsheet | None = None, **kwargs: Any) -> None:
-        super().__init__(" A1:                                                                    READY ", **kwargs)
+        super().__init__(
+            " A1:                                                                    READY ",
+            **kwargs,
+        )
         self._status = StatusBar(spreadsheet)
 
     def on_mount(self) -> None:

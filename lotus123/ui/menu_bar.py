@@ -3,15 +3,16 @@
 Provides the horizontal menu bar with keyboard and mouse support,
 featuring single-letter shortcuts and hierarchical navigation.
 """
+
 from __future__ import annotations
 
 from typing import Any
 
+from rich.style import Style
+from rich.text import Text
 from textual import events
 from textual.message import Message
 from textual.widgets import Static
-from rich.text import Text
-from rich.style import Style
 
 from .themes import Theme
 
@@ -25,48 +26,86 @@ class LotusMenu(Static, can_focus=True):
 
     class MenuItemSelected(Message):
         """Sent when a menu item is selected."""
+
         def __init__(self, path: str) -> None:
             self.path = path
             super().__init__()
 
     class MenuActivated(Message):
         """Sent when menu is activated."""
+
         pass
 
     class MenuDeactivated(Message):
         """Sent when menu is deactivated."""
+
         pass
 
     MENU_STRUCTURE: dict[str, MenuData] = {
-        "Worksheet": {"key": "W", "items": [
-            ("G", "Global", [
+        "Worksheet": {
+            "key": "W",
+            "items": [
+                (
+                    "G",
+                    "Global",
+                    [
+                        ("F", "Format"),
+                        ("L", "Label-Prefix"),
+                        ("C", "Column-Width"),
+                        ("R", "Recalculation"),
+                        ("P", "Protection"),
+                        ("Z", "Zero"),
+                    ],
+                ),
+                ("I", "Insert"),
+                ("D", "Delete"),
+                ("C", "Column"),
+                ("E", "Erase"),
+            ],
+        },
+        "Range": {
+            "key": "R",
+            "items": [
                 ("F", "Format"),
-                ("L", "Label-Prefix"),
-                ("C", "Column-Width"),
-                ("R", "Recalculation"),
-                ("P", "Protection"),
-                ("Z", "Zero"),
-            ]),
-            ("I", "Insert"),
-            ("D", "Delete"),
-            ("C", "Column"),
-            ("E", "Erase"),
-        ]},
-        "Range": {"key": "R", "items": [("F", "Format"), ("L", "Label"), ("E", "Erase"), ("N", "Name"), ("P", "Protect")]},
+                ("L", "Label"),
+                ("E", "Erase"),
+                ("N", "Name"),
+                ("P", "Protect"),
+            ],
+        },
         "Copy": {"key": "C", "items": []},
         "Move": {"key": "M", "items": []},
-        "File": {"key": "F", "items": [("R", "Retrieve"), ("S", "Save"), ("N", "New"), ("Q", "Quit")]},
-        "Graph": {"key": "G", "items": [
-            ("T", "Type", [("L", "Line"), ("B", "Bar"), ("X", "XY"), ("S", "Stacked"), ("P", "Pie")]),
-            ("X", "X-Range"),
-            ("A", "A-Range"),
-            ("B", "B-Range"),
-            ("C", "C-Range"),
-            ("V", "View"),
-            ("R", "Reset"),
-            ("S", "Save"),
-        ]},
-        "Print": {"key": "P", "items": [("P", "Printer"), ("F", "File"), ("R", "Range"), ("L", "Line"), ("O", "Options")]},
+        "File": {
+            "key": "F",
+            "items": [("R", "Retrieve"), ("S", "Save"), ("N", "New"), ("Q", "Quit")],
+        },
+        "Graph": {
+            "key": "G",
+            "items": [
+                (
+                    "T",
+                    "Type",
+                    [("L", "Line"), ("B", "Bar"), ("X", "XY"), ("S", "Stacked"), ("P", "Pie")],
+                ),
+                ("X", "X-Range"),
+                ("A", "A-Range"),
+                ("B", "B-Range"),
+                ("C", "C-Range"),
+                ("V", "View"),
+                ("R", "Reset"),
+                ("S", "Save"),
+            ],
+        },
+        "Print": {
+            "key": "P",
+            "items": [
+                ("P", "Printer"),
+                ("F", "File"),
+                ("R", "Range"),
+                ("L", "Line"),
+                ("O", "Options"),
+            ],
+        },
         "Data": {"key": "D", "items": [("F", "Fill"), ("S", "Sort"), ("Q", "Query")]},
         "Quit": {"key": "Q", "items": [("Y", "Yes"), ("N", "No")]},
     }

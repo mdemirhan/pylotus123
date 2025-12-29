@@ -33,7 +33,6 @@ The codebase follows a modular architecture with clear separation of concerns:
 
 - **lotus123/app.py** - Main TUI application using Textual framework
 - **lotus123/spreadsheet.py** - Core spreadsheet grid data model
-- **lotus123/formula.py** - Legacy formula parsing/evaluation (being migrated)
 - **lotus123/core/** - Core data model (cell, reference, formatting)
 - **lotus123/formula/** - Modular formula engine with function registry pattern
 - **lotus123/ui/** - UI components including menu system and dialogs

@@ -3,12 +3,12 @@
 Handles loading and saving user preferences like theme, default column width,
 and recent files list.
 """
+
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-
 
 CONFIG_DIR = Path.home() / ".config" / "lotus123"
 CONFIG_FILE = CONFIG_DIR / "config.json"
@@ -17,6 +17,7 @@ CONFIG_FILE = CONFIG_DIR / "config.json"
 @dataclass
 class AppConfig:
     """Application configuration."""
+
     theme: str = "LOTUS"
     default_col_width: int = 10
     recent_files: list[str] = field(default_factory=list)

@@ -1,7 +1,6 @@
 """Comprehensive UI tests for Lotus 1-2-3 clone."""
+
 import pytest
-import asyncio
-from unittest.mock import patch, MagicMock
 
 
 class TestLotusMenu:
@@ -9,7 +8,7 @@ class TestLotusMenu:
 
     def test_menu_initialization(self):
         """Test menu initializes with correct state."""
-        from lotus123.app import LotusMenu, THEMES, ThemeType
+        from lotus123.app import THEMES, LotusMenu, ThemeType
 
         theme = THEMES[ThemeType.LOTUS]
         menu = LotusMenu(theme)
@@ -20,7 +19,7 @@ class TestLotusMenu:
 
     def test_menu_structure(self):
         """Test menu structure contains expected items."""
-        from lotus123.app import LotusMenu, THEMES, ThemeType
+        from lotus123.app import THEMES, LotusMenu, ThemeType
 
         theme = THEMES[ThemeType.LOTUS]
         menu = LotusMenu(theme)
@@ -37,7 +36,7 @@ class TestLotusMenu:
 
     def test_menu_keys(self):
         """Test menu items have correct shortcut keys."""
-        from lotus123.app import LotusMenu, THEMES, ThemeType
+        from lotus123.app import THEMES, LotusMenu, ThemeType
 
         theme = THEMES[ThemeType.LOTUS]
         menu = LotusMenu(theme)
@@ -49,7 +48,7 @@ class TestLotusMenu:
 
     def test_file_menu_items(self):
         """Test File menu has correct sub-items."""
-        from lotus123.app import LotusMenu, THEMES, ThemeType
+        from lotus123.app import THEMES, LotusMenu, ThemeType
 
         theme = THEMES[ThemeType.LOTUS]
         menu = LotusMenu(theme)
@@ -79,10 +78,24 @@ class TestThemeSystem:
         from lotus123.app import THEMES, ThemeType
 
         required_colors = [
-            'name', 'background', 'foreground', 'header_bg', 'header_fg',
-            'cell_bg', 'cell_fg', 'selected_bg', 'selected_fg', 'border',
-            'menu_bg', 'menu_fg', 'menu_highlight', 'status_bg', 'status_fg',
-            'input_bg', 'input_fg', 'accent'
+            "name",
+            "background",
+            "foreground",
+            "header_bg",
+            "header_fg",
+            "cell_bg",
+            "cell_fg",
+            "selected_bg",
+            "selected_fg",
+            "border",
+            "menu_bg",
+            "menu_fg",
+            "menu_highlight",
+            "status_bg",
+            "status_fg",
+            "input_bg",
+            "input_fg",
+            "accent",
         ]
 
         for theme_type in ThemeType:
@@ -100,7 +113,7 @@ class TestThemeSystem:
 
     def test_get_theme_type(self):
         """Test theme type lookup by name."""
-        from lotus123.app import get_theme_type, ThemeType
+        from lotus123.app import ThemeType, get_theme_type
 
         assert get_theme_type("LOTUS") == ThemeType.LOTUS
         assert get_theme_type("TOMORROW") == ThemeType.TOMORROW
@@ -122,9 +135,10 @@ class TestAppConfig:
 
     def test_config_serialization(self):
         """Test config can be serialized and deserialized."""
-        from lotus123.app import AppConfig
-        from dataclasses import asdict
         import json
+        from dataclasses import asdict
+
+        from lotus123.app import AppConfig
 
         config = AppConfig(theme="MOCHA", default_col_width=15)
         data = asdict(config)
@@ -146,8 +160,8 @@ class TestSpreadsheetGrid:
     @pytest.mark.skip(reason="SpreadsheetGrid requires app context for reactive attributes")
     def test_grid_initialization(self):
         """Test grid initializes with correct state."""
-        from lotus123.app import SpreadsheetGrid, THEMES, ThemeType
         from lotus123 import Spreadsheet
+        from lotus123.app import THEMES, SpreadsheetGrid, ThemeType
 
         ss = Spreadsheet()
         theme = THEMES[ThemeType.LOTUS]
@@ -161,8 +175,8 @@ class TestSpreadsheetGrid:
     @pytest.mark.skip(reason="SpreadsheetGrid requires app context for reactive attributes")
     def test_grid_move_cursor(self):
         """Test cursor movement."""
-        from lotus123.app import SpreadsheetGrid, THEMES, ThemeType
         from lotus123 import Spreadsheet
+        from lotus123.app import THEMES, SpreadsheetGrid, ThemeType
 
         ss = Spreadsheet()
         theme = THEMES[ThemeType.LOTUS]
@@ -179,8 +193,8 @@ class TestSpreadsheetGrid:
     @pytest.mark.skip(reason="SpreadsheetGrid requires app context for reactive attributes")
     def test_grid_cursor_bounds(self):
         """Test cursor respects grid bounds."""
-        from lotus123.app import SpreadsheetGrid, THEMES, ThemeType
         from lotus123 import Spreadsheet
+        from lotus123.app import THEMES, SpreadsheetGrid, ThemeType
 
         ss = Spreadsheet(rows=100, cols=26)
         theme = THEMES[ThemeType.LOTUS]
@@ -203,7 +217,7 @@ class TestLotusAppAsync:
         from lotus123.app import LotusApp
 
         app = LotusApp()
-        async with app.run_test() as pilot:
+        async with app.run_test() as _pilot:
             # App should start with grid focused
             assert app.editing is False
             assert app._menu_active is False

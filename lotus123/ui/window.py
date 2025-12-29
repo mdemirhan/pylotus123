@@ -5,9 +5,10 @@ Implements Lotus 1-2-3 style window management:
 - Frozen row/column titles
 - Synchronized and unsynchronized scrolling
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
 
 class SplitType(Enum):
     """Type of window split."""
+
     NONE = auto()
     HORIZONTAL = auto()
     VERTICAL = auto()
@@ -24,10 +26,11 @@ class SplitType(Enum):
 
 class TitleFreezeType(Enum):
     """Type of frozen titles."""
+
     NONE = auto()
     HORIZONTAL = auto()  # Freeze rows (horizontal titles)
-    VERTICAL = auto()    # Freeze columns (vertical titles)
-    BOTH = auto()        # Freeze both rows and columns
+    VERTICAL = auto()  # Freeze columns (vertical titles)
+    BOTH = auto()  # Freeze both rows and columns
 
 
 @dataclass
@@ -37,6 +40,7 @@ class ViewPort:
     Represents a visible portion of the spreadsheet with its own
     scroll position.
     """
+
     top_row: int = 0
     left_col: int = 0
     visible_rows: int = 20
@@ -66,8 +70,10 @@ class ViewPort:
 
     def is_visible(self, row: int, col: int) -> bool:
         """Check if cell is visible in this viewport."""
-        return (self.top_row <= row < self.top_row + self.visible_rows and
-                self.left_col <= col < self.left_col + self.visible_cols)
+        return (
+            self.top_row <= row < self.top_row + self.visible_rows
+            and self.left_col <= col < self.left_col + self.visible_cols
+        )
 
     def get_visible_range(self) -> tuple[int, int, int, int]:
         """Get visible range as (start_row, end_row, start_col, end_col)."""
@@ -75,18 +81,19 @@ class ViewPort:
             self.top_row,
             self.top_row + self.visible_rows - 1,
             self.left_col,
-            self.left_col + self.visible_cols - 1
+            self.left_col + self.visible_cols - 1,
         )
 
 
 @dataclass
 class FrozenTitles:
     """Frozen row and column titles configuration."""
+
     freeze_type: TitleFreezeType = TitleFreezeType.NONE
-    frozen_rows: int = 0      # Number of rows frozen at top
-    frozen_cols: int = 0      # Number of columns frozen at left
-    freeze_row: int = 0       # Row where freeze was applied (for reference)
-    freeze_col: int = 0       # Column where freeze was applied
+    frozen_rows: int = 0  # Number of rows frozen at top
+    frozen_cols: int = 0  # Number of columns frozen at left
+    freeze_row: int = 0  # Row where freeze was applied (for reference)
+    freeze_col: int = 0  # Column where freeze was applied
 
     def freeze_horizontal(self, at_row: int) -> None:
         """Freeze rows above current row."""
@@ -134,8 +141,9 @@ class FrozenTitles:
 @dataclass
 class WindowSplit:
     """Window split configuration."""
+
     split_type: SplitType = SplitType.NONE
-    split_position: int = 0   # Row for horizontal, column for vertical
+    split_position: int = 0  # Row for horizontal, column for vertical
     synchronized: bool = True  # Synchronize scrolling between panes
 
     def split_horizontal(self, at_row: int) -> None:
@@ -331,36 +339,42 @@ class WindowManager:
 
         # Frozen corner (if both frozen)
         if self.titles.has_frozen_rows and self.titles.has_frozen_cols:
-            regions.append({
-                'type': 'frozen_corner',
-                'viewport': None,
-                'fixed_rows': True,
-                'fixed_cols': True,
-                'row_range': (0, self.titles.frozen_rows - 1),
-                'col_range': (0, self.titles.frozen_cols - 1),
-            })
+            regions.append(
+                {
+                    "type": "frozen_corner",
+                    "viewport": None,
+                    "fixed_rows": True,
+                    "fixed_cols": True,
+                    "row_range": (0, self.titles.frozen_rows - 1),
+                    "col_range": (0, self.titles.frozen_cols - 1),
+                }
+            )
 
         # Frozen rows (top)
         if self.titles.has_frozen_rows:
-            regions.append({
-                'type': 'frozen_row',
-                'viewport': vp,
-                'fixed_rows': True,
-                'fixed_cols': False,
-                'row_range': (0, self.titles.frozen_rows - 1),
-                'col_range': (vp.left_col, vp.left_col + vp.visible_cols - 1),
-            })
+            regions.append(
+                {
+                    "type": "frozen_row",
+                    "viewport": vp,
+                    "fixed_rows": True,
+                    "fixed_cols": False,
+                    "row_range": (0, self.titles.frozen_rows - 1),
+                    "col_range": (vp.left_col, vp.left_col + vp.visible_cols - 1),
+                }
+            )
 
         # Frozen columns (left)
         if self.titles.has_frozen_cols:
-            regions.append({
-                'type': 'frozen_col',
-                'viewport': vp,
-                'fixed_rows': False,
-                'fixed_cols': True,
-                'row_range': (vp.top_row, vp.top_row + vp.visible_rows - 1),
-                'col_range': (0, self.titles.frozen_cols - 1),
-            })
+            regions.append(
+                {
+                    "type": "frozen_col",
+                    "viewport": vp,
+                    "fixed_rows": False,
+                    "fixed_cols": True,
+                    "row_range": (vp.top_row, vp.top_row + vp.visible_rows - 1),
+                    "col_range": (0, self.titles.frozen_cols - 1),
+                }
+            )
 
         # Main scrolling area
         main_start_row = vp.top_row
@@ -372,28 +386,32 @@ class WindowManager:
             # Main area accounts for frozen cols visually
             pass
 
-        regions.append({
-            'type': 'main',
-            'viewport': vp,
-            'fixed_rows': False,
-            'fixed_cols': False,
-            'row_range': (main_start_row, main_start_row + vp.visible_rows - 1),
-            'col_range': (main_start_col, main_start_col + vp.visible_cols - 1),
-            'is_active': self.active_pane == 0,
-        })
+        regions.append(
+            {
+                "type": "main",
+                "viewport": vp,
+                "fixed_rows": False,
+                "fixed_cols": False,
+                "row_range": (main_start_row, main_start_row + vp.visible_rows - 1),
+                "col_range": (main_start_col, main_start_col + vp.visible_cols - 1),
+                "is_active": self.active_pane == 0,
+            }
+        )
 
         # Secondary pane if split
         if self.split.is_split:
             sec = self.secondary
-            regions.append({
-                'type': 'secondary',
-                'viewport': sec,
-                'fixed_rows': False,
-                'fixed_cols': False,
-                'row_range': (sec.top_row, sec.top_row + sec.visible_rows - 1),
-                'col_range': (sec.left_col, sec.left_col + sec.visible_cols - 1),
-                'is_active': self.active_pane == 1,
-            })
+            regions.append(
+                {
+                    "type": "secondary",
+                    "viewport": sec,
+                    "fixed_rows": False,
+                    "fixed_cols": False,
+                    "row_range": (sec.top_row, sec.top_row + sec.visible_rows - 1),
+                    "col_range": (sec.left_col, sec.left_col + sec.visible_cols - 1),
+                    "is_active": self.active_pane == 1,
+                }
+            )
 
         return regions
 

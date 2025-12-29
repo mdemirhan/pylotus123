@@ -6,6 +6,7 @@ Supports exporting to:
 - Other delimited files
 - Plain text with formatting
 """
+
 from __future__ import annotations
 
 import csv
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
 
 class ExportFormat(Enum):
     """Export file format."""
+
     CSV = auto()
     TSV = auto()
     CUSTOM_DELIMITED = auto()
@@ -43,6 +45,7 @@ class ExportOptions:
         use_formulas: Export formulas instead of values
         line_ending: Line ending character(s)
     """
+
     format: ExportFormat = ExportFormat.CSV
     delimiter: str = ","
     include_header: bool = False
@@ -125,7 +128,7 @@ class TextExporter:
         start_row, start_col, end_row, end_col = self._get_export_range(options)
         rows_exported = 0
 
-        with open(path, 'w', encoding=options.encoding, newline='') as f:
+        with open(path, "w", encoding=options.encoding, newline="") as f:
             writer = csv.writer(
                 f,
                 delimiter=options.delimiter,
@@ -136,6 +139,7 @@ class TextExporter:
             # Header row with column letters
             if options.include_header:
                 from ..core.reference import index_to_col
+
                 headers = [index_to_col(c) for c in range(start_col, end_col + 1)]
                 writer.writerow(headers)
                 rows_exported += 1
@@ -167,10 +171,11 @@ class TextExporter:
             width = self.spreadsheet.get_col_width(col)
             col_widths.append(width)
 
-        with open(path, 'w', encoding=options.encoding) as f:
+        with open(path, "w", encoding=options.encoding) as f:
             # Header row
             if options.include_header:
                 from ..core.reference import index_to_col
+
                 header_line = ""
                 for i, col in enumerate(range(start_col, end_col + 1)):
                     col_name = index_to_col(col)
@@ -199,7 +204,7 @@ class TextExporter:
                     if cell:
                         aligned = cell.get_aligned_display(col_widths[i])
                     else:
-                        aligned = value.ljust(col_widths[i])[:col_widths[i]]
+                        aligned = value.ljust(col_widths[i])[: col_widths[i]]
 
                     row_line += aligned + " "
 
@@ -234,9 +239,9 @@ class TextExporter:
 
                 # Quote if needed
                 if options.delimiter in str(value) or options.text_qualifier in str(value):
-                    value = f'{options.text_qualifier}{value}{options.text_qualifier}'
+                    value = f"{options.text_qualifier}{value}{options.text_qualifier}"
                 elif options.quote_all:
-                    value = f'{options.text_qualifier}{value}{options.text_qualifier}'
+                    value = f"{options.text_qualifier}{value}{options.text_qualifier}"
 
                 row_data.append(str(value))
 
@@ -244,10 +249,15 @@ class TextExporter:
 
         return options.line_ending.join(lines)
 
-    def export_range(self, start_row: int, start_col: int,
-                     end_row: int, end_col: int,
-                     filename: str | Path,
-                     options: ExportOptions | None = None) -> int:
+    def export_range(
+        self,
+        start_row: int,
+        start_col: int,
+        end_row: int,
+        end_col: int,
+        filename: str | Path,
+        options: ExportOptions | None = None,
+    ) -> int:
         """Export a specific range.
 
         Args:

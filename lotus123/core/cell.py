@@ -1,4 +1,5 @@
 """Cell data model with support for various data types and alignment."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -8,6 +9,7 @@ from typing import Any
 
 class CellType(Enum):
     """Types of cell content."""
+
     EMPTY = auto()
     NUMBER = auto()
     TEXT = auto()
@@ -27,11 +29,12 @@ class TextAlignment(Enum):
     - ^ (caret) = centered
     - \\ (backslash) = repeating character
     """
-    DEFAULT = auto()    # Based on content type (numbers right, text left)
-    LEFT = auto()       # Apostrophe prefix (')
-    RIGHT = auto()      # Quotation mark prefix (")
-    CENTER = auto()     # Caret prefix (^)
-    REPEAT = auto()     # Backslash prefix (\\) for separator lines
+
+    DEFAULT = auto()  # Based on content type (numbers right, text left)
+    LEFT = auto()  # Apostrophe prefix (')
+    RIGHT = auto()  # Quotation mark prefix (")
+    CENTER = auto()  # Caret prefix (^)
+    REPEAT = auto()  # Backslash prefix (\\) for separator lines
 
 
 # Prefix characters for alignment
@@ -61,6 +64,7 @@ class Cell:
         _cached_value: Cached computed value
         _cached_display: Cached display string
     """
+
     raw_value: str = ""
     format_code: str = "G"  # General format by default
     is_protected: bool = False
@@ -224,7 +228,5 @@ class Cell:
     def copy(self) -> Cell:
         """Create a copy of this cell."""
         return Cell(
-            raw_value=self.raw_value,
-            format_code=self.format_code,
-            is_protected=self.is_protected,
+            raw_value=self.raw_value, format_code=self.format_code, is_protected=self.is_protected
         )

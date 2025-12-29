@@ -3,22 +3,24 @@
 Provides a modal dialog for selecting the application color theme
 with keyboard and mouse support.
 """
+
 from __future__ import annotations
 
 from typing import Any
 
 from textual import on
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
 from textual.screen import ModalScreen
-from textual.widgets import Button, Label, ListView, ListItem
-from textual.app import ComposeResult
+from textual.widgets import Button, Label, ListItem, ListView
 
-from ..themes import Theme, ThemeType, THEMES
+from ..themes import THEMES, Theme, ThemeType
 
 
 class ThemeItem(ListItem):
     """A theme list item."""
+
     def __init__(self, theme_type: ThemeType, theme: Theme, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.theme_type = theme_type
@@ -90,7 +92,7 @@ class ThemeDialog(ModalScreen[ThemeType | None]):
                 ThemeItem(ThemeType.LOTUS, THEMES[ThemeType.LOTUS], id="theme-lotus"),
                 ThemeItem(ThemeType.TOMORROW, THEMES[ThemeType.TOMORROW], id="theme-tomorrow"),
                 ThemeItem(ThemeType.MOCHA, THEMES[ThemeType.MOCHA], id="theme-mocha"),
-                id="theme-list"
+                id="theme-list",
             )
             with Horizontal(id="dialog-buttons"):
                 yield Button("Cancel", id="cancel-btn")

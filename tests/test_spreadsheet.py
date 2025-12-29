@@ -1,48 +1,49 @@
 """Tests for spreadsheet data model."""
-import pytest
-import tempfile
+
 import os
-from lotus123 import (
-    Spreadsheet, Cell, col_to_index, index_to_col, parse_cell_ref, make_cell_ref
-)
+import tempfile
+
+import pytest
+
+from lotus123 import Cell, Spreadsheet, col_to_index, index_to_col, make_cell_ref, parse_cell_ref
 
 
 class TestCellReferenceConversions:
     def test_col_to_index(self):
-        assert col_to_index('A') == 0
-        assert col_to_index('B') == 1
-        assert col_to_index('Z') == 25
-        assert col_to_index('AA') == 26
-        assert col_to_index('AB') == 27
-        assert col_to_index('AZ') == 51
-        assert col_to_index('BA') == 52
+        assert col_to_index("A") == 0
+        assert col_to_index("B") == 1
+        assert col_to_index("Z") == 25
+        assert col_to_index("AA") == 26
+        assert col_to_index("AB") == 27
+        assert col_to_index("AZ") == 51
+        assert col_to_index("BA") == 52
 
     def test_index_to_col(self):
-        assert index_to_col(0) == 'A'
-        assert index_to_col(1) == 'B'
-        assert index_to_col(25) == 'Z'
-        assert index_to_col(26) == 'AA'
-        assert index_to_col(27) == 'AB'
-        assert index_to_col(51) == 'AZ'
-        assert index_to_col(52) == 'BA'
+        assert index_to_col(0) == "A"
+        assert index_to_col(1) == "B"
+        assert index_to_col(25) == "Z"
+        assert index_to_col(26) == "AA"
+        assert index_to_col(27) == "AB"
+        assert index_to_col(51) == "AZ"
+        assert index_to_col(52) == "BA"
 
     def test_parse_cell_ref(self):
-        assert parse_cell_ref('A1') == (0, 0)
-        assert parse_cell_ref('B2') == (1, 1)
-        assert parse_cell_ref('Z10') == (9, 25)
-        assert parse_cell_ref('AA100') == (99, 26)
+        assert parse_cell_ref("A1") == (0, 0)
+        assert parse_cell_ref("B2") == (1, 1)
+        assert parse_cell_ref("Z10") == (9, 25)
+        assert parse_cell_ref("AA100") == (99, 26)
 
     def test_parse_cell_ref_invalid(self):
         with pytest.raises(ValueError):
-            parse_cell_ref('invalid')
+            parse_cell_ref("invalid")
         with pytest.raises(ValueError):
-            parse_cell_ref('123')
+            parse_cell_ref("123")
 
     def test_make_cell_ref(self):
-        assert make_cell_ref(0, 0) == 'A1'
-        assert make_cell_ref(1, 1) == 'B2'
-        assert make_cell_ref(9, 25) == 'Z10'
-        assert make_cell_ref(99, 26) == 'AA100'
+        assert make_cell_ref(0, 0) == "A1"
+        assert make_cell_ref(1, 1) == "B2"
+        assert make_cell_ref(9, 25) == "Z10"
+        assert make_cell_ref(99, 26) == "AA100"
 
 
 class TestCell:
@@ -222,7 +223,7 @@ class TestSpreadsheetSaveLoad:
         ss.set_cell(0, 1, "=A1*2")
         ss.set_col_width(0, 15)
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_path = f.name
 
         try:

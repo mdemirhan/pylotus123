@@ -20,8 +20,16 @@ pythonpath = ["."]
 dev = [
     "mypy>=1.14.0",
     "pytest-asyncio>=1.3.0",
+    "ruff>=0.14.10",
 ]
 
 [tool.mypy]
 python_version = "3.12"
 no_implicit_optional = true
+
+[tool.ruff.lint.isort]
+force-single-line = false           # allows multiple imports per line
+combine-as-imports = true           # combines from x import a and from x import b into from x import a, b
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true    # ignore trailing commas that force one-per-line

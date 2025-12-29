@@ -4,6 +4,7 @@ Implements Lotus 1-2-3 compatible logical functions:
 @IF, @TRUE, @FALSE, @AND, @OR, @NOT
 @ISERR, @ISNA, @ISNUMBER, @ISSTRING
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -274,14 +275,12 @@ LOGICAL_FUNCTIONS = {
     "OR": fn_or,
     "NOT": fn_not,
     "XOR": fn_xor,
-
     # Error checking
     "ISERR": fn_iserr,
     "ISERROR": fn_iserror,
     "ISNA": fn_isna,
     "NA": fn_na,
     "ERR": fn_err,
-
     # Type checking
     "ISNUMBER": fn_isnumber,
     "ISSTRING": fn_isstring,
@@ -291,7 +290,6 @@ LOGICAL_FUNCTIONS = {
     "ISEVEN": fn_iseven,
     "ISODD": fn_isodd,
     "ISREF": fn_isref,
-
     # Conditional
     "IFERROR": fn_iferror,
     "IFNA": fn_ifna,

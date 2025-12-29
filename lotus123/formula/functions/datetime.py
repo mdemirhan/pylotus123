@@ -5,11 +5,11 @@ Implements Lotus 1-2-3 compatible date/time functions:
 @TIME, @TIMEVALUE, @HOUR, @MINUTE, @SECOND
 @NOW, @TODAY, @WEEKDAY
 """
+
 from __future__ import annotations
 
 import datetime
 from typing import Any
-
 
 # Lotus 1-2-3 date epoch: Day 1 = January 1, 1900
 # Note: Lotus has the infamous leap year bug (treats 1900 as leap year)
@@ -52,15 +52,7 @@ def _time_to_serial(time: datetime.time) -> float:
 
 def _parse_date_string(text: str) -> datetime.date | None:
     """Try to parse a date string."""
-    formats = [
-        "%Y-%m-%d",
-        "%m/%d/%Y",
-        "%m/%d/%y",
-        "%d-%b-%Y",
-        "%d-%b-%y",
-        "%B %d, %Y",
-        "%d.%m.%Y",
-    ]
+    formats = ["%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%d-%b-%Y", "%d-%b-%y", "%B %d, %Y", "%d.%m.%Y"]
     for fmt in formats:
         try:
             return datetime.datetime.strptime(text, fmt).date()
@@ -80,6 +72,7 @@ def _to_number(value: Any) -> float:
 
 
 # === Date Functions ===
+
 
 def fn_date(year: Any, month: Any, day: Any) -> int:
     """@DATE - Create date serial number.
@@ -202,6 +195,7 @@ def fn_now() -> float:
 
 # === Time Functions ===
 
+
 def fn_time(hour: Any, minute: Any, second: Any) -> float:
     """@TIME - Create time serial number.
 
@@ -230,12 +224,7 @@ def fn_timevalue(time_text: Any) -> float:
     """
     text = str(time_text).strip()
 
-    formats = [
-        "%H:%M:%S",
-        "%H:%M",
-        "%I:%M:%S %p",
-        "%I:%M %p",
-    ]
+    formats = ["%H:%M:%S", "%H:%M", "%I:%M:%S %p", "%I:%M %p"]
     for fmt in formats:
         try:
             time = datetime.datetime.strptime(text, fmt).time()
@@ -286,6 +275,7 @@ def fn_second(serial_number: Any) -> int:
 
 # === Date Calculation Functions ===
 
+
 def fn_days(end_date: Any, start_date: Any) -> int:
     """@DAYS - Days between two dates.
 
@@ -309,6 +299,7 @@ def fn_edate(start_date: Any, months: Any) -> int:
 
         # Handle day overflow
         import calendar
+
         max_day = calendar.monthrange(new_year, new_month)[1]
         new_day = min(date.day, max_day)
 
@@ -332,6 +323,7 @@ def fn_eomonth(start_date: Any, months: Any) -> int:
         new_month = ((new_month - 1) % 12) + 1
 
         import calendar
+
         last_day = calendar.monthrange(new_year, new_month)[1]
         new_date = datetime.date(new_year, new_month, last_day)
         return _date_to_serial(new_date)
@@ -364,26 +356,21 @@ DATETIME_FUNCTIONS = {
     # Date construction
     "DATE": fn_date,
     "DATEVALUE": fn_datevalue,
-
     # Date extraction
     "DAY": fn_day,
     "MONTH": fn_month,
     "YEAR": fn_year,
     "WEEKDAY": fn_weekday,
-
     # Current date/time
     "TODAY": fn_today,
     "NOW": fn_now,
-
     # Time construction
     "TIME": fn_time,
     "TIMEVALUE": fn_timevalue,
-
     # Time extraction
     "HOUR": fn_hour,
     "MINUTE": fn_minute,
     "SECOND": fn_second,
-
     # Date calculations
     "DAYS": fn_days,
     "EDATE": fn_edate,

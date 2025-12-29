@@ -1,4 +1,5 @@
 """Clipboard management for copy/cut/paste operations."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -11,6 +12,7 @@ if TYPE_CHECKING:
 
 class ClipboardMode(Enum):
     """Mode of clipboard content."""
+
     EMPTY = auto()
     COPY = auto()
     CUT = auto()
@@ -19,6 +21,7 @@ class ClipboardMode(Enum):
 @dataclass
 class ClipboardCell:
     """A cell stored in the clipboard."""
+
     raw_value: str
     format_code: str = "G"
     is_formula: bool = False
@@ -27,6 +30,7 @@ class ClipboardCell:
 @dataclass
 class ClipboardContent:
     """Content stored in the clipboard."""
+
     mode: ClipboardMode = ClipboardMode.EMPTY
     # Source location
     source_row: int = 0
@@ -71,8 +75,7 @@ class Clipboard:
         """Copy a single cell to clipboard."""
         self.copy_range(row, col, row, col)
 
-    def copy_range(self, start_row: int, start_col: int,
-                   end_row: int, end_col: int) -> None:
+    def copy_range(self, start_row: int, start_col: int, end_row: int, end_col: int) -> None:
         """Copy a range of cells to clipboard."""
         # Normalize range
         if start_row > end_row:
@@ -105,16 +108,16 @@ class Clipboard:
         """Cut a single cell to clipboard."""
         self.cut_range(row, col, row, col)
 
-    def cut_range(self, start_row: int, start_col: int,
-                  end_row: int, end_col: int) -> None:
+    def cut_range(self, start_row: int, start_col: int, end_row: int, end_col: int) -> None:
         """Cut a range of cells to clipboard."""
         # First copy
         self.copy_range(start_row, start_col, end_row, end_col)
         # Mark as cut
         self._content.mode = ClipboardMode.CUT
 
-    def paste(self, dest_row: int, dest_col: int,
-              adjust_references: bool = True) -> list[tuple[int, int]]:
+    def paste(
+        self, dest_row: int, dest_col: int, adjust_references: bool = True
+    ) -> list[tuple[int, int]]:
         """Paste clipboard content to destination.
 
         Args:
@@ -148,10 +151,13 @@ class Clipboard:
             value = clip_cell.raw_value
             if adjust_references and clip_cell.is_formula:
                 from ..core.reference import adjust_formula_references
+
                 value = adjust_formula_references(
-                    value, row_delta, col_delta,
+                    value,
+                    row_delta,
+                    col_delta,
                     self.spreadsheet.rows - 1,
-                    self.spreadsheet.cols - 1
+                    self.spreadsheet.cols - 1,
                 )
 
             # Set cell
@@ -162,7 +168,7 @@ class Clipboard:
 
         # If cut, clear source cells
         if self._content.mode == ClipboardMode.CUT:
-            for (rel_r, rel_c) in self._content.cells.keys():
+            for rel_r, rel_c in self._content.cells.keys():
                 src_row = self._content.source_row + rel_r
                 src_col = self._content.source_col + rel_c
 
@@ -180,10 +186,14 @@ class Clipboard:
         self.spreadsheet._invalidate_cache()
         return modified
 
-    def paste_special(self, dest_row: int, dest_col: int,
-                      values_only: bool = False,
-                      formats_only: bool = False,
-                      transpose: bool = False) -> list[tuple[int, int]]:
+    def paste_special(
+        self,
+        dest_row: int,
+        dest_col: int,
+        values_only: bool = False,
+        formats_only: bool = False,
+        transpose: bool = False,
+    ) -> list[tuple[int, int]]:
         """Paste with special options.
 
         Args:

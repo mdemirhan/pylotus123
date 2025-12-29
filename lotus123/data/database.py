@@ -2,6 +2,7 @@
 
 Implements Lotus 1-2-3 /Data commands for treating ranges as databases.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
 
 class SortOrder(Enum):
     """Sort order direction."""
+
     ASCENDING = auto()
     DESCENDING = auto()
 
@@ -21,6 +23,7 @@ class SortOrder(Enum):
 @dataclass
 class SortKey:
     """A sorting key specification."""
+
     column: int  # Column index within the range
     order: SortOrder = SortOrder.ASCENDING
 
@@ -37,10 +40,15 @@ class DatabaseOperations:
     def __init__(self, spreadsheet: Spreadsheet) -> None:
         self.spreadsheet = spreadsheet
 
-    def sort_range(self, start_row: int, start_col: int,
-                   end_row: int, end_col: int,
-                   keys: list[SortKey],
-                   has_header: bool = True) -> None:
+    def sort_range(
+        self,
+        start_row: int,
+        start_col: int,
+        end_row: int,
+        end_col: int,
+        keys: list[SortKey],
+        has_header: bool = True,
+    ) -> None:
         """Sort a range of data.
 
         Args:
@@ -106,6 +114,7 @@ class DatabaseOperations:
                         if isinstance(val, str):
                             return val
                     return ""
+
                 sorted_rows = sorted(sorted_rows, key=desc_key, reverse=True)
 
         # Simple approach: collect all cell data, sort, put back
@@ -146,7 +155,11 @@ class DatabaseOperations:
             if sk.order == SortOrder.DESCENDING:
                 # Check if this column has strings
                 has_strings = any(
-                    not row_data[sk.column][0].replace(",", "").replace(".", "").replace("-", "").isdigit()
+                    not row_data[sk.column][0]
+                    .replace(",", "")
+                    .replace(".", "")
+                    .replace("-", "")
+                    .isdigit()
                     for row_data in sorted_data
                     if sk.column < len(row_data) and row_data[sk.column][0]
                 )
@@ -169,9 +182,12 @@ class DatabaseOperations:
 
         self.spreadsheet._invalidate_cache()
 
-    def query(self, data_range: tuple[int, int, int, int],
-              criteria_range: tuple[int, int, int, int] | None = None,
-              criteria_func: Callable[[list[Any]], bool] | None = None) -> list[int]:
+    def query(
+        self,
+        data_range: tuple[int, int, int, int],
+        criteria_range: tuple[int, int, int, int] | None = None,
+        criteria_func: Callable[[list[Any]], bool] | None = None,
+    ) -> list[int]:
         """Query records matching criteria.
 
         Args:
@@ -203,10 +219,13 @@ class DatabaseOperations:
 
         return matching_rows
 
-    def extract(self, data_range: tuple[int, int, int, int],
-                output_start: tuple[int, int],
-                matching_rows: list[int],
-                columns: list[int] | None = None) -> int:
+    def extract(
+        self,
+        data_range: tuple[int, int, int, int],
+        output_start: tuple[int, int],
+        matching_rows: list[int],
+        columns: list[int] | None = None,
+    ) -> int:
         """Extract matching records to output range.
 
         Args:
@@ -243,8 +262,9 @@ class DatabaseOperations:
         self.spreadsheet._invalidate_cache()
         return len(matching_rows)
 
-    def delete_matching(self, data_range: tuple[int, int, int, int],
-                        matching_rows: list[int]) -> int:
+    def delete_matching(
+        self, data_range: tuple[int, int, int, int], matching_rows: list[int]
+    ) -> int:
         """Delete matching records from data range.
 
         Args:
@@ -260,8 +280,7 @@ class DatabaseOperations:
 
         return len(matching_rows)
 
-    def unique(self, data_range: tuple[int, int, int, int],
-               key_columns: list[int]) -> list[int]:
+    def unique(self, data_range: tuple[int, int, int, int], key_columns: list[int]) -> list[int]:
         """Find unique records based on key columns.
 
         Args:
@@ -278,18 +297,16 @@ class DatabaseOperations:
         unique_rows = []
 
         for r in range(data_start, end_row + 1):
-            key = tuple(
-                self.spreadsheet.get_value(r, start_col + c)
-                for c in key_columns
-            )
+            key = tuple(self.spreadsheet.get_value(r, start_col + c) for c in key_columns)
             if key not in seen:
                 seen.add(key)
                 unique_rows.append(r)
 
         return unique_rows
 
-    def subtotal(self, data_range: tuple[int, int, int, int],
-                 group_col: int, sum_cols: list[int]) -> dict[Any, dict[int, float]]:
+    def subtotal(
+        self, data_range: tuple[int, int, int, int], group_col: int, sum_cols: list[int]
+    ) -> dict[Any, dict[int, float]]:
         """Calculate subtotals by group.
 
         Args:

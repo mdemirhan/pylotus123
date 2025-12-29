@@ -1,14 +1,16 @@
 """Formula function implementations organized by category."""
+
 from typing import Callable
+
+from .database import DATABASE_FUNCTIONS
+from .datetime import DATETIME_FUNCTIONS
+from .financial import FINANCIAL_FUNCTIONS
+from .info import INFO_FUNCTIONS
+from .logical import LOGICAL_FUNCTIONS
+from .lookup import LOOKUP_FUNCTIONS
 from .math import MATH_FUNCTIONS
 from .statistical import STATISTICAL_FUNCTIONS
 from .string import STRING_FUNCTIONS
-from .logical import LOGICAL_FUNCTIONS
-from .lookup import LOOKUP_FUNCTIONS
-from .datetime import DATETIME_FUNCTIONS
-from .info import INFO_FUNCTIONS
-from .financial import FINANCIAL_FUNCTIONS
-from .database import DATABASE_FUNCTIONS
 
 
 class FunctionRegistry:

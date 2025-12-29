@@ -2,14 +2,15 @@
 
 Renders XY scatter plots with data points.
 """
+
 from __future__ import annotations
 
 from .base import (
-    ChartTypeRenderer,
-    RenderContext,
-    BOX_VERTICAL,
     BOX_CORNER_BL,
     BOX_HORIZONTAL,
+    BOX_VERTICAL,
+    ChartTypeRenderer,
+    RenderContext,
     get_series_values,
 )
 
@@ -18,7 +19,7 @@ class ScatterChartRenderer(ChartTypeRenderer):
     """Renders XY scatter plots."""
 
     # Default point marker
-    POINT_MARKER = '*'
+    POINT_MARKER = "*"
 
     def render(self, ctx: RenderContext) -> list[str]:
         """Render an XY scatter plot.
@@ -59,9 +60,7 @@ class ScatterChartRenderer(ChartTypeRenderer):
 
         # Calculate Y-axis label width dynamically
         y_label_width = max(
-            len(f"{y_max:.1f}"),
-            len(f"{y_min:.1f}"),
-            len(f"{(y_max + y_min) / 2:.1f}")
+            len(f"{y_max:.1f}"), len(f"{y_min:.1f}"), len(f"{(y_max + y_min) / 2:.1f}")
         )
 
         # Calculate plot area
@@ -72,7 +71,7 @@ class ScatterChartRenderer(ChartTypeRenderer):
             return self.render_too_small(ctx)
 
         # Create plot grid
-        plot = [[' ' for _ in range(plot_width)] for _ in range(plot_height)]
+        plot = [[" " for _ in range(plot_width)] for _ in range(plot_height)]
 
         # Plot points
         for x, y in zip(x_values, y_values):
@@ -126,8 +125,8 @@ class ScatterChartRenderer(ChartTypeRenderer):
         # Default to indices
         x_values: list[float] = [float(i) for i in range(default_count)]
 
-        if ctx.chart.x_range and ctx.spreadsheet and ':' in ctx.chart.x_range:
-            parts = ctx.chart.x_range.split(':')
+        if ctx.chart.x_range and ctx.spreadsheet and ":" in ctx.chart.x_range:
+            parts = ctx.chart.x_range.split(":")
             flat = ctx.spreadsheet.get_range_flat(parts[0], parts[1])
             parsed_values = []
             for v in flat:

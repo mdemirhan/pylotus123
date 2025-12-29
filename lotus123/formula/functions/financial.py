@@ -4,10 +4,11 @@ Implements Lotus 1-2-3 compatible financial functions:
 @PMT, @PV, @FV, @NPV, @IRR, @RATE, @NPER, @CTERM
 @SLN, @SYD, @DDB, @IPMT, @PPMT, @TERM
 """
+
 from __future__ import annotations
 
-from typing import Any
 import math
+from typing import Any
 
 
 def fn_pmt(principal: Any, rate: Any, nper: Any) -> float:
@@ -116,8 +117,12 @@ def fn_irr(guess: Any, *cash_flows: Any) -> float | str:
         else:
             flows.append(cf)
 
-    float_flows = [float(f) for f in flows if isinstance(f, (int, float)) or
-             (isinstance(f, str) and f.replace('.', '').replace('-', '').isdigit())]
+    float_flows = [
+        float(f)
+        for f in flows
+        if isinstance(f, (int, float))
+        or (isinstance(f, str) and f.replace(".", "").replace("-", "").isdigit())
+    ]
 
     if not float_flows:
         return "#ERR!"
@@ -164,7 +169,7 @@ def fn_rate(nper: Any, pmt: Any, pv: Any, fv: Any = 0, guess: Any = 0.1) -> floa
             r1 = (1 + rate) ** n
             y = present * r1 + payment * (r1 - 1) / rate + future
             dy = present * n * (1 + rate) ** (n - 1) + payment * (
-                (n * (1 + rate) ** (n - 1) * rate - (r1 - 1)) / (rate ** 2)
+                (n * (1 + rate) ** (n - 1) * rate - (r1 - 1)) / (rate**2)
             )
 
         if abs(dy) < 1e-10:
