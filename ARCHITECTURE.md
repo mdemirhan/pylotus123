@@ -12,6 +12,18 @@ lotus123/
 ├── __init__.py              # Package exports
 ├── app.py                   # Main TUI application entry point
 │
+├── handlers/                # Application handlers (composition pattern)
+│   ├── __init__.py          # Handler exports
+│   ├── base.py              # AppProtocol and BaseHandler
+│   ├── chart_handlers.py    # Chart operations
+│   ├── clipboard_handlers.py # Copy/paste operations
+│   ├── data_handlers.py     # Data menu operations (sort, fill)
+│   ├── file_handlers.py     # File I/O operations
+│   ├── navigation_handlers.py # Cursor/navigation operations
+│   ├── query_handlers.py    # Query operations (find, extract)
+│   ├── range_handlers.py    # Range operations (format, name, protect)
+│   └── worksheet_handlers.py # Worksheet operations (insert/delete row)
+│
 ├── core/                    # Core data model
 │   ├── __init__.py
 │   ├── cell.py              # Cell class with data types, formats, alignment
@@ -92,6 +104,7 @@ lotus123/
 - **Formula Engine (formula/)**: Parsing and evaluation, uses core but no UI
 - **UI Components (ui/)**: Presentation layer, uses core and formula
 - **Data Operations (data/)**: Business logic for data manipulation
+- **Handlers (handlers/)**: Application logic organized by domain, uses composition pattern
 
 ### 2. Extensibility Patterns
 
@@ -123,6 +136,48 @@ class MenuItem:
     action: Callable   # Handler function
     submenu: list[MenuItem] | None
 ```
+
+#### Handler Composition Pattern (handlers/)
+The application uses composition over inheritance for organizing functionality.
+Handlers receive the app instance via dependency injection and access app
+features through an explicit `AppProtocol` interface:
+
+```python
+class AppProtocol(Protocol):
+    """Contract defining what handlers can access from the app."""
+    spreadsheet: Spreadsheet
+    chart: Chart
+    undo_manager: UndoManager
+    # ... other attributes and methods
+
+class BaseHandler:
+    """Base class providing common handler functionality."""
+    def __init__(self, app: AppProtocol) -> None:
+        self._app = app
+
+    @property
+    def spreadsheet(self) -> Spreadsheet:
+        return self._app.spreadsheet
+
+    def notify(self, message: str, *, severity: str = "information") -> None:
+        self._app.notify(message, severity=severity)
+
+    def get_grid(self) -> SpreadsheetGrid:
+        return self._app.query_one("#grid", SpreadsheetGrid)
+
+# Example handler
+class ClipboardHandler(BaseHandler):
+    def copy_cells(self) -> None:
+        grid = self.get_grid()
+        # ... implementation
+        self.notify("Cells copied")
+```
+
+Benefits:
+- Explicit dependencies via Protocol (type-safe contracts)
+- Easy to test handlers in isolation
+- Clear separation of concerns
+- IDE support for autocomplete and refactoring
 
 ### 3. Data Types & Cell Model
 
@@ -245,6 +300,7 @@ class RecalcEngine:
 | Clipboard operations | utils/clipboard.py | ✓ Complete |
 | Fill operations | data/fill.py | ✓ Complete |
 | Criteria parsing | data/criteria.py | ✓ Complete |
+| Handler composition | handlers/ | ✓ Complete |
 
 ## Testing Strategy
 

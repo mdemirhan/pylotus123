@@ -8,7 +8,7 @@ class TestLotusMenu:
 
     def test_menu_initialization(self):
         """Test menu initializes with correct state."""
-        from lotus123.app import THEMES, LotusMenu, ThemeType
+        from lotus123.ui import THEMES, LotusMenu, ThemeType
 
         theme = THEMES[ThemeType.LOTUS]
         menu = LotusMenu(theme)
@@ -19,7 +19,7 @@ class TestLotusMenu:
 
     def test_menu_structure(self):
         """Test menu structure contains expected items."""
-        from lotus123.app import THEMES, LotusMenu, ThemeType
+        from lotus123.ui import THEMES, LotusMenu, ThemeType
 
         theme = THEMES[ThemeType.LOTUS]
         menu = LotusMenu(theme)
@@ -35,7 +35,7 @@ class TestLotusMenu:
 
     def test_menu_keys(self):
         """Test menu items have correct shortcut keys."""
-        from lotus123.app import THEMES, LotusMenu, ThemeType
+        from lotus123.ui import THEMES, LotusMenu, ThemeType
 
         theme = THEMES[ThemeType.LOTUS]
         menu = LotusMenu(theme)
@@ -47,7 +47,7 @@ class TestLotusMenu:
 
     def test_file_menu_items(self):
         """Test File menu has correct sub-items."""
-        from lotus123.app import THEMES, LotusMenu, ThemeType
+        from lotus123.ui import THEMES, LotusMenu, ThemeType
 
         theme = THEMES[ThemeType.LOTUS]
         menu = LotusMenu(theme)
@@ -66,7 +66,7 @@ class TestThemeSystem:
 
     def test_all_themes_exist(self):
         """Test all expected themes are defined."""
-        from lotus123.app import THEMES, ThemeType
+        from lotus123.ui import THEMES, ThemeType
 
         assert ThemeType.LOTUS in THEMES
         assert ThemeType.TOMORROW in THEMES
@@ -74,7 +74,7 @@ class TestThemeSystem:
 
     def test_theme_has_all_colors(self):
         """Test each theme has all required color properties."""
-        from lotus123.app import THEMES, ThemeType
+        from lotus123.ui import THEMES, ThemeType
 
         required_colors = [
             "name",
@@ -104,7 +104,7 @@ class TestThemeSystem:
 
     def test_lotus_theme_colors(self):
         """Test Lotus theme has classic blue colors."""
-        from lotus123.app import THEMES, ThemeType
+        from lotus123.ui import THEMES, ThemeType
 
         lotus = THEMES[ThemeType.LOTUS]
         assert lotus.name == "Lotus 1-2-3"
@@ -112,7 +112,7 @@ class TestThemeSystem:
 
     def test_get_theme_type(self):
         """Test theme type lookup by name."""
-        from lotus123.app import ThemeType, get_theme_type
+        from lotus123.ui import ThemeType, get_theme_type
 
         assert get_theme_type("LOTUS") == ThemeType.LOTUS
         assert get_theme_type("TOMORROW") == ThemeType.TOMORROW
@@ -125,7 +125,7 @@ class TestAppConfig:
 
     def test_config_defaults(self):
         """Test config has correct defaults."""
-        from lotus123.app import AppConfig
+        from lotus123.ui import AppConfig
 
         config = AppConfig()
         assert config.theme == "LOTUS"
@@ -137,7 +137,7 @@ class TestAppConfig:
         import json
         from dataclasses import asdict
 
-        from lotus123.app import AppConfig
+        from lotus123.ui import AppConfig
 
         config = AppConfig(theme="MOCHA", default_col_width=15)
         data = asdict(config)
@@ -160,7 +160,7 @@ class TestSpreadsheetGrid:
     def test_grid_initialization(self):
         """Test grid initializes with correct state."""
         from lotus123 import Spreadsheet
-        from lotus123.app import THEMES, SpreadsheetGrid, ThemeType
+        from lotus123.ui import THEMES, SpreadsheetGrid, ThemeType
 
         ss = Spreadsheet()
         theme = THEMES[ThemeType.LOTUS]
@@ -175,7 +175,7 @@ class TestSpreadsheetGrid:
     def test_grid_move_cursor(self):
         """Test cursor movement."""
         from lotus123 import Spreadsheet
-        from lotus123.app import THEMES, SpreadsheetGrid, ThemeType
+        from lotus123.ui import THEMES, SpreadsheetGrid, ThemeType
 
         ss = Spreadsheet()
         theme = THEMES[ThemeType.LOTUS]
@@ -193,7 +193,7 @@ class TestSpreadsheetGrid:
     def test_grid_cursor_bounds(self):
         """Test cursor respects grid bounds."""
         from lotus123 import Spreadsheet
-        from lotus123.app import THEMES, SpreadsheetGrid, ThemeType
+        from lotus123.ui import THEMES, SpreadsheetGrid, ThemeType
 
         ss = Spreadsheet(rows=100, cols=26)
         theme = THEMES[ThemeType.LOTUS]
@@ -454,21 +454,21 @@ class TestDialogs:
 
     def test_theme_dialog_initialization(self):
         """Test ThemeDialog initializes correctly."""
-        from lotus123.app import ThemeDialog, ThemeType
+        from lotus123.ui import ThemeDialog, ThemeType
 
         dialog = ThemeDialog(current=ThemeType.LOTUS)
         assert dialog.current == ThemeType.LOTUS
 
     def test_command_input_initialization(self):
         """Test CommandInput initializes correctly."""
-        from lotus123.app import CommandInput
+        from lotus123.ui import CommandInput
 
         dialog = CommandInput(prompt="Enter cell:")
         assert dialog.prompt == "Enter cell:"
 
     def test_file_dialog_modes(self):
         """Test FileDialog supports open and save modes."""
-        from lotus123.app import FileDialog
+        from lotus123.ui import FileDialog
 
         open_dialog = FileDialog(mode="open")
         assert open_dialog.mode == "open"

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable
 
 from textual import events, on
 from textual.app import App, ComposeResult
@@ -13,34 +12,32 @@ from textual.css.query import NoMatches
 from textual.widgets import Footer, Input, Static
 
 from .charting import Chart, ChartType, TextChartRenderer
-from .core import (
-    Spreadsheet,
-    adjust_formula_references,
-    col_to_index,
-    index_to_col,
-    make_cell_ref,
-    parse_cell_ref,
+from .core import Spreadsheet, make_cell_ref
+
+# Handler classes
+from .handlers import (
+    ChartHandler,
+    ClipboardHandler,
+    DataHandler,
+    FileHandler,
+    NavigationHandler,
+    QueryHandler,
+    RangeHandler,
+    WorksheetHandler,
 )
 
 # UI components
 from .ui import (
     THEMES,
     AppConfig,
-    ChartViewScreen,
-    CommandInput,
-    FileDialog,
     LotusMenu,
     Mode,
     SpreadsheetGrid,
     StatusBarWidget,
-    ThemeDialog,
-    ThemeType,
     get_theme_type,
 )
 from .utils.undo import (
     CellChangeCommand,
-    DeleteRowCommand,
-    InsertRowCommand,
     RangeChangeCommand,
     UndoManager,
 )
@@ -146,6 +143,7 @@ class LotusApp(App[None]):
         self._cell_clipboard: tuple[int, int, str] | None = None
         self._range_clipboard: list[list[str]] | None = None
         self._clipboard_is_cut = False
+        self._clipboard_origin: tuple[int, int] = (0, 0)
         self._menu_active = False
         self.undo_manager = UndoManager(max_history=100)
         self._recalc_mode = "auto"
@@ -161,9 +159,24 @@ class LotusApp(App[None]):
         # Query settings (Data Query)
         self._query_input_range: tuple[int, int, int, int] | None = None
         self._query_criteria_range: tuple[int, int, int, int] | None = None
-        self._query_output_range: tuple[int, int] | None = None  # Just start position
-        self._query_find_results: list[int] | None = None  # Matching row indices
-        self._query_find_index: int = 0  # Current position in find results
+        self._query_output_range: tuple[int, int] | None = None
+        self._query_find_results: list[int] | None = None
+        self._query_find_index: int = 0
+        # Pending operation state
+        self._pending_source_range: tuple[int, int, int, int] = (0, 0, 0, 0)
+        self._pending_range: str = ""
+
+        # Initialize handlers with explicit dependency injection
+        # Note: type: ignore needed because Textual's overloaded methods
+        # can't be fully matched by Protocol signatures
+        self._chart_handler = ChartHandler(self)  # type: ignore[arg-type]
+        self._clipboard_handler = ClipboardHandler(self)  # type: ignore[arg-type]
+        self._data_handler = DataHandler(self)  # type: ignore[arg-type]
+        self._file_handler = FileHandler(self)  # type: ignore[arg-type]
+        self._navigation_handler = NavigationHandler(self)  # type: ignore[arg-type]
+        self._query_handler = QueryHandler(self)  # type: ignore[arg-type]
+        self._range_handler = RangeHandler(self)  # type: ignore[arg-type]
+        self._worksheet_handler = WorksheetHandler(self)  # type: ignore[arg-type]
 
     @property
     def _has_modal(self) -> bool:
@@ -269,7 +282,7 @@ class LotusApp(App[None]):
         self.query_one("#grid", SpreadsheetGrid).focus()
 
         if self._initial_file:
-            self._load_initial_file()
+            self._file_handler.load_initial_file(self._initial_file)
 
     def _update_title(self) -> None:
         """Update the window title with filename and dirty indicator."""
@@ -281,9 +294,8 @@ class LotusApp(App[None]):
 
     def _apply_theme(self) -> None:
         """Apply the current theme to all widgets."""
-        # Get theme fresh from THEMES dict to avoid stale references
         t = THEMES[self.current_theme_type]
-        self.color_theme = t  # Update the reference too
+        self.color_theme = t
         self.stylesheet.add_source(self._generate_css())
 
         try:
@@ -339,7 +351,6 @@ class LotusApp(App[None]):
 
         self.query_one("#cell-ref", Static).update(f"{ref}:")
 
-        # Update status bar widget
         status_bar = self.query_one("#status-bar", StatusBarWidget)
         status_bar.update_cell(grid.cursor_row, grid.cursor_col)
         status_bar.set_modified(self._dirty)
@@ -443,15 +454,15 @@ class LotusApp(App[None]):
 
     def action_copy(self) -> None:
         if not self.editing and not self._menu_active:
-            self._copy_cells()
+            self._clipboard_handler.copy_cells()
 
     def action_cut(self) -> None:
         if not self.editing and not self._menu_active:
-            self._cut_cells()
+            self._clipboard_handler.cut_cells()
 
     def action_paste(self) -> None:
         if not self.editing and not self._menu_active:
-            self._paste_cells()
+            self._clipboard_handler.paste_cells()
 
     def action_toggle_absolute(self) -> None:
         if self.editing:
@@ -484,1339 +495,169 @@ class LotusApp(App[None]):
         self._update_status()
         self.notify("Recalculated")
 
-    # Navigation actions (for key bindings)
-    def action_scroll_half_down(self) -> None:
-        """Scroll down by half a page (Ctrl+D)."""
-        if not self.editing and not self._menu_active:
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            grid.move_cursor(grid.visible_rows // 2, 0)
-
-    def action_scroll_half_up(self) -> None:
-        """Scroll up by half a page (Ctrl+U)."""
-        if not self.editing and not self._menu_active:
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            grid.move_cursor(-(grid.visible_rows // 2), 0)
-
-    def action_page_up(self) -> None:
-        """Move up by one page."""
-        if not self.editing and not self._menu_active:
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            grid.move_cursor(-grid.visible_rows, 0)
-
-    def action_page_down(self) -> None:
-        """Move down by one page."""
-        if not self.editing and not self._menu_active:
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            grid.move_cursor(grid.visible_rows, 0)
-
-    def action_go_home(self) -> None:
-        """Go to beginning of current row."""
-        if not self.editing and not self._menu_active:
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            grid.cursor_col = 0
-            grid.scroll_col = 0
-            grid.refresh_grid()
-            self._update_status()
-
-    def action_go_end(self) -> None:
-        """Go to end of current row (last used cell)."""
-        if not self.editing and not self._menu_active:
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            # Find last used column in current row
-            last_col = 0
-            for col in range(self.spreadsheet.cols):
-                cell = self.spreadsheet.get_cell_if_exists(grid.cursor_row, col)
-                if cell and cell.raw_value:
-                    last_col = col
-            grid.cursor_col = last_col
-            grid.refresh_grid()
-            self._update_status()
-
-    def action_go_start(self) -> None:
-        """Go to cell A1 (Ctrl+Home)."""
-        if not self.editing and not self._menu_active:
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            grid.cursor_row = 0
-            grid.cursor_col = 0
-            grid.scroll_row = 0
-            grid.scroll_col = 0
-            grid.refresh_grid()
-            self._update_status()
-
-    def action_go_last(self) -> None:
-        """Go to last used cell (Ctrl+End)."""
-        if not self.editing and not self._menu_active:
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            # Find last used cell
-            last_row, last_col = 0, 0
-            for row in range(self.spreadsheet.rows):
-                for col in range(self.spreadsheet.cols):
-                    cell = self.spreadsheet.get_cell_if_exists(row, col)
-                    if cell and cell.raw_value:
-                        last_row = max(last_row, row)
-                        last_col = max(last_col, col)
-            grid.cursor_row = last_row
-            grid.cursor_col = last_col
-            grid.refresh_grid()
-            self._update_status()
-
     def action_show_menu(self) -> None:
         if not self.editing and not self._has_modal:
             menu = self.query_one("#menu-bar", LotusMenu)
             menu.activate()
 
+    # Navigation actions - delegate to handler
+    def action_scroll_half_down(self) -> None:
+        if not self.editing and not self._menu_active:
+            self._navigation_handler.scroll_half_down()
+
+    def action_scroll_half_up(self) -> None:
+        if not self.editing and not self._menu_active:
+            self._navigation_handler.scroll_half_up()
+
+    def action_page_up(self) -> None:
+        if not self.editing and not self._menu_active:
+            self._navigation_handler.page_up()
+
+    def action_page_down(self) -> None:
+        if not self.editing and not self._menu_active:
+            self._navigation_handler.page_down()
+
+    def action_go_home(self) -> None:
+        if not self.editing and not self._menu_active:
+            self._navigation_handler.go_home()
+
+    def action_go_end(self) -> None:
+        if not self.editing and not self._menu_active:
+            self._navigation_handler.go_end()
+
+    def action_go_start(self) -> None:
+        if not self.editing and not self._menu_active:
+            self._navigation_handler.go_start()
+
+    def action_go_last(self) -> None:
+        if not self.editing and not self._menu_active:
+            self._navigation_handler.go_last()
+
+    def action_goto(self) -> None:
+        self._navigation_handler.goto()
+
+    # File actions - delegate to handler
+    def action_new_file(self) -> None:
+        self._file_handler.new_file()
+
+    def action_open_file(self) -> None:
+        self._file_handler.open_file()
+
+    def action_save(self) -> None:
+        self._file_handler.save()
+
+    def action_change_theme(self) -> None:
+        self._file_handler.change_theme()
+
+    def action_quit_app(self) -> None:
+        self._file_handler.quit_app()
+
     def _handle_menu(self, result: str | None) -> None:
         if not result:
             return
 
+        # Navigation
         if result == "Goto" or result == "Worksheet:Goto":
-            self.action_goto()
+            self._navigation_handler.goto()
+        # Clipboard
         elif result == "Copy":
-            self._menu_copy()
+            self._clipboard_handler.menu_copy()
         elif result == "Move":
-            self._menu_move()
+            self._clipboard_handler.menu_move()
+        # File
         elif result == "File:New":
-            self.action_new_file()
+            self._file_handler.new_file()
         elif result == "File:Retrieve":
-            self.action_open_file()
+            self._file_handler.open_file()
         elif result == "File:Save":
-            self.action_save()
+            self._file_handler.save()
         elif result == "File:Quit" or result == "Quit:Yes":
-            self.action_quit_app()
+            self._file_handler.quit_app()
         elif result == "Quit:No":
             pass
+        # Range
         elif result == "Range:Erase":
             self.action_clear_cell()
         elif result == "Range:Format":
-            self._range_format()
+            self._range_handler.range_format()
         elif result == "Range:Label":
-            self._range_label()
+            self._range_handler.range_label()
         elif result == "Range:Name":
-            self._range_name()
+            self._range_handler.range_name()
         elif result == "Range:Protect":
-            self._range_protect()
+            self._range_handler.range_protect()
+        # Data
         elif result == "Data:Fill":
-            self._data_fill()
+            self._data_handler.data_fill()
         elif result == "Data:Sort":
-            self._data_sort()
+            self._data_handler.data_sort()
+        # Query
         elif result == "Data:Query:Input":
-            self._query_set_input()
+            self._query_handler.set_input()
         elif result == "Data:Query:Criteria":
-            self._query_set_criteria()
+            self._query_handler.set_criteria()
         elif result == "Data:Query:Output":
-            self._query_set_output()
+            self._query_handler.set_output()
         elif result == "Data:Query:Find":
-            self._query_find()
+            self._query_handler.find()
         elif result == "Data:Query:Extract":
-            self._query_extract()
+            self._query_handler.extract()
         elif result == "Data:Query:Unique":
-            self._query_unique()
+            self._query_handler.unique()
         elif result == "Data:Query:Delete":
-            self._query_delete()
+            self._query_handler.delete()
         elif result == "Data:Query:Reset":
-            self._query_reset()
+            self._query_handler.reset()
+        # Worksheet
         elif result == "Worksheet:Insert":
-            self._insert_row()
+            self._worksheet_handler.insert_row()
         elif result == "Worksheet:Delete":
-            self._delete_row()
+            self._worksheet_handler.delete_row()
         elif result == "Worksheet:Column":
-            self._set_column_width()
+            self._worksheet_handler.set_column_width()
         elif result == "Worksheet:Erase":
-            self._worksheet_erase()
+            self._worksheet_handler.worksheet_erase()
         elif result == "Worksheet:Global:Format":
-            self._global_format()
+            self._worksheet_handler.global_format()
         elif result == "Worksheet:Global:Label-Prefix":
-            self._global_label_prefix_action()
+            self._worksheet_handler.global_label_prefix()
         elif result == "Worksheet:Global:Column-Width":
-            self._global_column_width()
+            self._worksheet_handler.global_column_width()
         elif result == "Worksheet:Global:Recalculation":
-            self._global_recalculation()
+            self._worksheet_handler.global_recalculation()
         elif result == "Worksheet:Global:Protection":
-            self._global_protection_action()
+            self._worksheet_handler.global_protection()
         elif result == "Worksheet:Global:Zero":
-            self._global_zero()
+            self._worksheet_handler.global_zero()
+        # Graph/Chart
         elif result == "Graph:Type:Line":
-            self._set_chart_type(ChartType.LINE)
+            self._chart_handler.set_chart_type(ChartType.LINE)
         elif result == "Graph:Type:Bar":
-            self._set_chart_type(ChartType.BAR)
+            self._chart_handler.set_chart_type(ChartType.BAR)
         elif result == "Graph:Type:XY":
-            self._set_chart_type(ChartType.XY_SCATTER)
+            self._chart_handler.set_chart_type(ChartType.XY_SCATTER)
         elif result == "Graph:Type:Stacked":
-            self._set_chart_type(ChartType.STACKED_BAR)
+            self._chart_handler.set_chart_type(ChartType.STACKED_BAR)
         elif result == "Graph:Type:Pie":
-            self._set_chart_type(ChartType.PIE)
+            self._chart_handler.set_chart_type(ChartType.PIE)
         elif result == "Graph:X-Range":
-            self._set_chart_x_range()
+            self._chart_handler.set_x_range()
         elif result == "Graph:A-Range":
-            self._set_chart_a_range()
+            self._chart_handler.set_a_range()
         elif result == "Graph:B-Range":
-            self._set_chart_b_range()
+            self._chart_handler.set_b_range()
         elif result == "Graph:C-Range":
-            self._set_chart_c_range()
+            self._chart_handler.set_c_range()
         elif result == "Graph:D-Range":
-            self._set_chart_d_range()
+            self._chart_handler.set_d_range()
         elif result == "Graph:E-Range":
-            self._set_chart_e_range()
+            self._chart_handler.set_e_range()
         elif result == "Graph:F-Range":
-            self._set_chart_f_range()
+            self._chart_handler.set_f_range()
         elif result == "Graph:View":
-            self._view_chart()
+            self._chart_handler.view_chart()
         elif result == "Graph:Reset":
-            self._reset_chart()
-
-    def action_goto(self) -> None:
-        self.push_screen(CommandInput("Go to cell (e.g., A1):"), self._do_goto)
-
-    def _do_goto(self, result: str | None) -> None:
-        if result:
-            self.query_one("#grid", SpreadsheetGrid).goto_cell(result.upper())
-            self._update_status()
-
-    def _set_column_width(self) -> None:
-        self.push_screen(CommandInput("Column width (3-50):"), self._do_set_width)
-
-    def _do_set_width(self, result: str | None) -> None:
-        if result:
-            try:
-                width = int(result)
-                if width < 3 or width > 50:
-                    self.notify("Width must be between 3 and 50", severity="error")
-                    return
-                grid = self.query_one("#grid", SpreadsheetGrid)
-                self.spreadsheet.set_col_width(grid.cursor_col, width)
-                self._mark_dirty()
-                grid.recalculate_visible_area()
-                grid.refresh_grid()
-            except ValueError:
-                self.notify("Invalid width value", severity="error")
-
-    def action_new_file(self) -> None:
-        self.spreadsheet.clear()
-        self.spreadsheet.filename = ""
-        self.undo_manager.clear()
-        self._dirty = False
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        grid.cursor_row = 0
-        grid.cursor_col = 0
-        grid.scroll_row = 0
-        grid.scroll_col = 0
-        grid.refresh_grid()
-        self._update_status()
-        self._update_title()
-        self.notify("New spreadsheet created")
-
-    def action_open_file(self) -> None:
-        self.push_screen(FileDialog(mode="open"), self._do_open)
-
-    def _load_initial_file(self) -> None:
-        if not self._initial_file:
-            return
-        try:
-            filepath = Path(self._initial_file)
-            if filepath.exists():
-                self.spreadsheet.load(str(filepath))
-                self.undo_manager.clear()
-                self._dirty = False
-                grid = self.query_one("#grid", SpreadsheetGrid)
-                grid.refresh_grid()
-                self._update_status()
-                self._update_title()
-                self.config.add_recent_file(str(filepath))
-                self.config.save()
-                self.notify(f"Loaded: {filepath}")
-            else:
-                self.notify(f"File not found: {self._initial_file}", severity="error")
-        except Exception as e:
-            self.notify(f"Error loading file: {e}", severity="error")
-
-    def _do_open(self, result: str | None) -> None:
-        if result:
-            try:
-                self.spreadsheet.load(result)
-                self.undo_manager.clear()
-                self._dirty = False
-                grid = self.query_one("#grid", SpreadsheetGrid)
-                grid.scroll_row = 1
-                grid.scroll_col = 1
-                grid.scroll_row = 0
-                grid.scroll_col = 0
-                grid.cursor_row = 0
-                grid.cursor_col = 0
-                grid.recalculate_visible_area()
-                grid.refresh_grid()
-                self._update_status()
-                self._update_title()
-                self.config.add_recent_file(result)
-                self.config.save()
-                self.notify(f"Loaded: {result}")
-            except Exception as e:
-                self.notify(f"Error: {e}", severity="error")
-
-    def action_save(self) -> None:
-        if self.spreadsheet.filename:
-            self.spreadsheet.save(self.spreadsheet.filename)
-            self._dirty = False
-            self._update_title()
-            self.notify(f"Saved: {self.spreadsheet.filename}")
-        else:
-            self._save_as()
-
-    def _save_as(self) -> None:
-        self.push_screen(FileDialog(mode="save"), self._do_save)
-
-    def _do_save(self, result: str | None) -> None:
-        if result:
-            try:
-                if not result.endswith(".json"):
-                    result += ".json"
-                self.spreadsheet.save(result)
-                self._dirty = False
-                self._update_title()
-                self.notify(f"Saved: {result}")
-            except Exception as e:
-                self.notify(f"Error: {e}", severity="error")
-
-    def action_change_theme(self) -> None:
-        self.push_screen(ThemeDialog(self.current_theme_type), self._do_change_theme)
-
-    def _do_change_theme(self, result: ThemeType | None) -> None:
-        if result:
-            self.current_theme_type = result
-            self.color_theme = THEMES[result]
-            self.sub_title = f"Theme: {self.color_theme.name}"
-            self._apply_theme()
-            self.config.theme = result.name
-            self.config.save()
-            self.notify(f"Theme changed to {self.color_theme.name}")
-
-    def action_quit_app(self) -> None:
-        if self._dirty:
-            self.push_screen(
-                CommandInput("Save changes before quitting? (Y/N/C=Cancel):"),
-                self._do_quit_confirm,
-            )
-        else:
-            self.config.save()
-            self.exit()
-
-    def _do_quit_confirm(self, result: str | None) -> None:
-        if not result:
-            return
-        response = result.strip().upper()
-        if response.startswith("Y"):
-            if self.spreadsheet.filename:
-                self.spreadsheet.save(self.spreadsheet.filename)
-                self.config.save()
-                self.exit()
-            else:
-                self.push_screen(FileDialog(mode="save"), self._do_save_and_quit)
-        elif response.startswith("N"):
-            self.config.save()
-            self.exit()
-
-    def _do_save_and_quit(self, result: str | None) -> None:
-        if result:
-            self.spreadsheet.save(result)
-        self.config.save()
-        self.exit()
-
-    def _menu_copy(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        r1, c1, r2, c2 = grid.selection_range
-        source_range = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-        self._pending_source_range = (r1, c1, r2, c2)
-        self.push_screen(
-            CommandInput(f"Copy {source_range} TO (e.g., D1):"), self._do_menu_copy
-        )
-
-    def _do_menu_copy(self, result: str | None) -> None:
-        if not result:
-            return
-        try:
-            dest_row, dest_col = parse_cell_ref(result.upper())
-            r1, c1, r2, c2 = self._pending_source_range
-            changes = []
-            for r_offset in range(r2 - r1 + 1):
-                for c_offset in range(c2 - c1 + 1):
-                    src_row, src_col = r1 + r_offset, c1 + c_offset
-                    target_row, target_col = dest_row + r_offset, dest_col + c_offset
-                    if (
-                        target_row >= self.spreadsheet.rows
-                        or target_col >= self.spreadsheet.cols
-                    ):
-                        continue
-                    src_cell = self.spreadsheet.get_cell(src_row, src_col)
-                    target_cell = self.spreadsheet.get_cell(target_row, target_col)
-                    old_value = target_cell.raw_value
-                    new_value = src_cell.raw_value
-                    if new_value and (
-                        new_value.startswith("=") or new_value.startswith("@")
-                    ):
-                        row_delta = target_row - src_row
-                        col_delta = target_col - src_col
-                        new_value = new_value[0] + adjust_formula_references(
-                            new_value[1:], row_delta, col_delta
-                        )
-                    if new_value != old_value:
-                        changes.append((target_row, target_col, new_value, old_value))
-            if changes:
-                cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
-                self.undo_manager.execute(cmd)
-                grid = self.query_one("#grid", SpreadsheetGrid)
-                grid.refresh_grid()
-                self._update_status()
-                self._mark_dirty()
-                self.notify(f"Copied {len(changes)} cell(s)")
-        except ValueError as e:
-            self.notify(f"Invalid destination: {e}", severity="error")
-
-    def _menu_move(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        r1, c1, r2, c2 = grid.selection_range
-        source_range = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-        self._pending_source_range = (r1, c1, r2, c2)
-        self.push_screen(
-            CommandInput(f"Move {source_range} TO (e.g., D1):"), self._do_menu_move
-        )
-
-    def _do_menu_move(self, result: str | None) -> None:
-        if not result:
-            return
-        try:
-            dest_row, dest_col = parse_cell_ref(result.upper())
-            r1, c1, r2, c2 = self._pending_source_range
-            changes = []
-            for r_offset in range(r2 - r1 + 1):
-                for c_offset in range(c2 - c1 + 1):
-                    src_row, src_col = r1 + r_offset, c1 + c_offset
-                    target_row, target_col = dest_row + r_offset, dest_col + c_offset
-                    if (
-                        target_row >= self.spreadsheet.rows
-                        or target_col >= self.spreadsheet.cols
-                    ):
-                        continue
-                    src_cell = self.spreadsheet.get_cell(src_row, src_col)
-                    target_cell = self.spreadsheet.get_cell(target_row, target_col)
-                    old_value = target_cell.raw_value
-                    new_value = src_cell.raw_value
-                    if new_value and (
-                        new_value.startswith("=") or new_value.startswith("@")
-                    ):
-                        row_delta = target_row - src_row
-                        col_delta = target_col - src_col
-                        new_value = new_value[0] + adjust_formula_references(
-                            new_value[1:], row_delta, col_delta
-                        )
-                    if new_value != old_value:
-                        changes.append((target_row, target_col, new_value, old_value))
-            for r_offset in range(r2 - r1 + 1):
-                for c_offset in range(c2 - c1 + 1):
-                    src_row, src_col = r1 + r_offset, c1 + c_offset
-                    target_row, target_col = dest_row + r_offset, dest_col + c_offset
-                    if src_row == target_row and src_col == target_col:
-                        continue
-                    src_cell = self.spreadsheet.get_cell(src_row, src_col)
-                    if src_cell.raw_value:
-                        changes.append((src_row, src_col, "", src_cell.raw_value))
-            if changes:
-                cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
-                self.undo_manager.execute(cmd)
-                grid = self.query_one("#grid", SpreadsheetGrid)
-                grid.clear_selection()
-                grid.cursor_row = dest_row
-                grid.cursor_col = dest_col
-                grid.refresh_grid()
-                self._update_status()
-                self._mark_dirty()
-                self.notify(f"Moved cells to {make_cell_ref(dest_row, dest_col)}")
-        except ValueError as e:
-            self.notify(f"Invalid destination: {e}", severity="error")
-
-    def _copy_cells(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        r1, c1, r2, c2 = grid.selection_range
-        self._range_clipboard = []
-        self._clipboard_origin = (r1, c1)
-        for r in range(r1, r2 + 1):
-            row_data = []
-            for c in range(c1, c2 + 1):
-                cell = self.spreadsheet.get_cell(r, c)
-                row_data.append(cell.raw_value)
-            self._range_clipboard.append(row_data)
-        self._clipboard_is_cut = False
-        cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
-        self._cell_clipboard = (grid.cursor_row, grid.cursor_col, cell.raw_value)
-        cells_count = (r2 - r1 + 1) * (c2 - c1 + 1)
-        self.notify(f"Copied {cells_count} cell(s)")
-
-    def _cut_cells(self) -> None:
-        self._copy_cells()
-        self._clipboard_is_cut = True
-        self.notify("Cut to clipboard")
-
-    def _paste_cells(self) -> None:
-        if not self._range_clipboard:
-            if self._cell_clipboard:
-                grid = self.query_one("#grid", SpreadsheetGrid)
-                cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
-                old_value = cell.raw_value
-                new_value = self._cell_clipboard[2]
-                if new_value.startswith("=") or new_value.startswith("@"):
-                    row_delta = grid.cursor_row - self._cell_clipboard[0]
-                    col_delta = grid.cursor_col - self._cell_clipboard[1]
-                    new_value = new_value[0] + adjust_formula_references(
-                        new_value[1:], row_delta, col_delta
-                    )
-                cmd = CellChangeCommand(
-                    spreadsheet=self.spreadsheet,
-                    row=grid.cursor_row,
-                    col=grid.cursor_col,
-                    new_value=new_value,
-                    old_value=old_value,
-                )
-                self.undo_manager.execute(cmd)
-                grid.refresh_grid()
-                self._update_status()
-                self._mark_dirty()
-                self.notify("Pasted")
-            return
-
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        dest_row, dest_col = grid.cursor_row, grid.cursor_col
-        src_row, src_col = getattr(self, "_clipboard_origin", (0, 0))
-        changes = []
-        for r_offset, row_data in enumerate(self._range_clipboard):
-            for c_offset, value in enumerate(row_data):
-                target_row = dest_row + r_offset
-                target_col = dest_col + c_offset
-                if (
-                    target_row >= self.spreadsheet.rows
-                    or target_col >= self.spreadsheet.cols
-                ):
-                    continue
-                cell = self.spreadsheet.get_cell(target_row, target_col)
-                old_value = cell.raw_value
-                new_value = value
-                if new_value and (
-                    new_value.startswith("=") or new_value.startswith("@")
-                ):
-                    row_delta = target_row - (src_row + r_offset)
-                    col_delta = target_col - (src_col + c_offset)
-                    new_value = new_value[0] + adjust_formula_references(
-                        new_value[1:], row_delta, col_delta
-                    )
-                if new_value != old_value:
-                    changes.append((target_row, target_col, new_value, old_value))
-        if changes:
-            range_cmd = RangeChangeCommand(
-                spreadsheet=self.spreadsheet, changes=changes
-            )
-            self.undo_manager.execute(range_cmd)
-        was_cut = self._clipboard_is_cut
-        if self._clipboard_is_cut:
-            clear_changes = []
-            for r_offset, row_data in enumerate(self._range_clipboard):
-                for c_offset, value in enumerate(row_data):
-                    if value:
-                        clear_changes.append(
-                            (src_row + r_offset, src_col + c_offset, "", value)
-                        )
-            if clear_changes:
-                clear_cmd = RangeChangeCommand(
-                    spreadsheet=self.spreadsheet, changes=clear_changes
-                )
-                self.undo_manager.execute(clear_cmd)
-            self._clipboard_is_cut = False
-        grid.refresh_grid()
-        self._update_status()
-        if changes or was_cut:
-            self._mark_dirty()
-        cells_count = (
-            len(self._range_clipboard) * len(self._range_clipboard[0])
-            if self._range_clipboard
-            else 0
-        )
-        self.notify(f"Pasted {cells_count} cell(s)")
-
-    def _insert_row(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        cmd = InsertRowCommand(spreadsheet=self.spreadsheet, row=grid.cursor_row)
-        self.undo_manager.execute(cmd)
-        grid.refresh_grid()
-        self._mark_dirty()
-        self.notify(f"Row {grid.cursor_row + 1} inserted")
-
-    def _delete_row(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        cmd = DeleteRowCommand(spreadsheet=self.spreadsheet, row=grid.cursor_row)
-        self.undo_manager.execute(cmd)
-        grid.refresh_grid()
-        self._update_status()
-        self._mark_dirty()
-        self.notify(f"Row {grid.cursor_row + 1} deleted")
-
-    # Chart methods
-    def _set_chart_type(self, chart_type: ChartType) -> None:
-        self.chart.set_type(chart_type)
-        type_names = {
-            ChartType.LINE: "Line",
-            ChartType.BAR: "Bar",
-            ChartType.XY_SCATTER: "XY Scatter",
-            ChartType.STACKED_BAR: "Stacked Bar",
-            ChartType.PIE: "Pie",
-        }
-        self.notify(f"Chart type set to {type_names.get(chart_type, 'Unknown')}")
-
-    def _set_chart_x_range(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self.chart.set_x_range(range_str)
-            self.notify(f"X-Range set to {range_str}")
-        else:
-            self.push_screen(
-                CommandInput("X-Range (e.g., A1:A10):"), self._do_set_x_range
-            )
-
-    def _do_set_x_range(self, result: str | None) -> None:
-        if result:
-            self.chart.set_x_range(result.upper())
-            self.notify(f"X-Range set to {result.upper()}")
-
-    def _set_chart_a_range(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(0, "A", range_str)
-        else:
-            self.push_screen(
-                CommandInput("A-Range (e.g., B1:B10):"), self._do_set_a_range
-            )
-
-    def _do_set_a_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(0, "A", result.upper())
-
-    def _set_chart_b_range(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(1, "B", range_str)
-        else:
-            self.push_screen(
-                CommandInput("B-Range (e.g., C1:C10):"), self._do_set_b_range
-            )
-
-    def _do_set_b_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(1, "B", result.upper())
-
-    def _set_chart_c_range(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(2, "C", range_str)
-        else:
-            self.push_screen(
-                CommandInput("C-Range (e.g., D1:D10):"), self._do_set_c_range
-            )
-
-    def _do_set_c_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(2, "C", result.upper())
-
-    def _set_chart_d_range(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(3, "D", range_str)
-        else:
-            self.push_screen(
-                CommandInput("D-Range (e.g., E1:E10):"), self._do_set_d_range
-            )
-
-    def _do_set_d_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(3, "D", result.upper())
-
-    def _set_chart_e_range(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(4, "E", range_str)
-        else:
-            self.push_screen(
-                CommandInput("E-Range (e.g., F1:F10):"), self._do_set_e_range
-            )
-
-    def _do_set_e_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(4, "E", result.upper())
-
-    def _set_chart_f_range(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(5, "F", range_str)
-        else:
-            self.push_screen(
-                CommandInput("F-Range (e.g., G1:G10):"), self._do_set_f_range
-            )
-
-    def _do_set_f_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(5, "F", result.upper())
-
-    def _add_or_update_series(self, index: int, name: str, range_str: str) -> None:
-        while len(self.chart.series) <= index:
-            self.chart.add_series(f"Series {len(self.chart.series) + 1}")
-        self.chart.series[index].name = name
-        self.chart.series[index].data_range = range_str
-        self.notify(f"{name}-Range set to {range_str}")
-
-    def _view_chart(self) -> None:
-        if not self.chart.series:
-            self.notify("No data series defined. Use A-Range to set data.")
-            return
-        self._chart_renderer.spreadsheet = self.spreadsheet
-        # Use ~75% of terminal size for the chart (dialog is 80%, minus padding/border)
-        chart_width = int(self.size.width * 0.75)
-        chart_height = int(self.size.height * 0.70)
-        chart_lines = self._chart_renderer.render(
-            self.chart, width=chart_width, height=chart_height
-        )
-        self.push_screen(ChartViewScreen(chart_lines))
-
-    def _reset_chart(self) -> None:
-        self.chart.reset()
-        self.notify("Chart reset")
-
-    # Range menu methods
-    def _range_format(self) -> None:
-        self.push_screen(
-            CommandInput(
-                "Format (F=Fixed, S=Scientific, C=Currency, P=Percent, G=General):"
-            ),
-            self._do_range_format,
-        )
-
-    def _do_range_format(self, result: str | None) -> None:
-        if not result:
-            return
-        format_char = result.upper()[0] if result else "G"
-        format_map = {"F": "F2", "S": "S", "C": "C2", "P": "P2", "G": "G", ",": ",2"}
-        format_code = format_map.get(format_char, "G")
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        r1, c1, r2, c2 = grid.selection_range
-        for r in range(r1, r2 + 1):
-            for c in range(c1, c2 + 1):
-                cell = self.spreadsheet.get_cell(r, c)
-                cell.format_code = format_code
-        grid.refresh_grid()
-        self._update_status()
-        self._mark_dirty()
-        self.notify(f"Format set to {format_code}")
-
-    def _range_label(self) -> None:
-        self.push_screen(
-            CommandInput("Label alignment (L=Left, R=Right, C=Center):"),
-            self._do_range_label,
-        )
-
-    def _do_range_label(self, result: str | None) -> None:
-        if not result:
-            return
-        align_char = result.upper()[0] if result else "L"
-        prefix_map = {"L": "'", "R": '"', "C": "^"}
-        prefix = prefix_map.get(align_char, "'")
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        r1, c1, r2, c2 = grid.selection_range
-        changes = []
-        for r in range(r1, r2 + 1):
-            for c in range(c1, c2 + 1):
-                cell = self.spreadsheet.get_cell(r, c)
-                old_value = cell.raw_value
-                if old_value and not cell.is_formula:
-                    display = cell.display_value
-                    new_value = prefix + display
-                    if new_value != old_value:
-                        changes.append((r, c, new_value, old_value))
-        if changes:
-            cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
-            self.undo_manager.execute(cmd)
-            grid.refresh_grid()
-            self._update_status()
-            self._mark_dirty()
-        align_names = {"L": "Left", "R": "Right", "C": "Center"}
-        self.notify(f"Label alignment set to {align_names.get(align_char, 'Left')}")
-
-    def _range_name(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        r1, c1, r2, c2 = grid.selection_range
-        range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-        self._pending_range = range_str
-        self.push_screen(
-            CommandInput(f"Name for range {range_str}:"), self._do_range_name
-        )
-
-    def _do_range_name(self, result: str | None) -> None:
-        if not result:
-            return
-        name = result.strip().upper()
-        if not name:
-            return
-        self.spreadsheet.named_ranges.add_from_string(name, self._pending_range)
-        self._mark_dirty()
-        self.notify(f"Named range '{name}' created for {self._pending_range}")
-
-    def _range_protect(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        r1, c1, r2, c2 = grid.selection_range
-        protected_count = 0
-        for r in range(r1, r2 + 1):
-            for c in range(c1, c2 + 1):
-                cell = self.spreadsheet.get_cell(r, c)
-                cell.is_protected = not cell.is_protected
-                if cell.is_protected:
-                    protected_count += 1
-        total_cells = (r2 - r1 + 1) * (c2 - c1 + 1)
-        self._mark_dirty()
-        if protected_count > 0:
-            self.notify(f"Protected {protected_count} cell(s)")
-        else:
-            self.notify(f"Unprotected {total_cells} cell(s)")
-
-    # Data menu methods
-    def _data_fill(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if not grid.has_selection:
-            self.notify("Select a range first")
-            return
-        self.push_screen(
-            CommandInput("Fill with (start,step,stop) or value:"), self._do_data_fill
-        )
-
-    def _do_data_fill(self, result: str | None) -> None:
-        if not result:
-            return
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        r1, c1, r2, c2 = grid.selection_range
-        changes = []
-        try:
-            if "," in result:
-                parts = [p.strip() for p in result.split(",")]
-                start = float(parts[0])
-                step = float(parts[1]) if len(parts) > 1 else 1
-                val = start
-                for r in range(r1, r2 + 1):
-                    for c in range(c1, c2 + 1):
-                        cell = self.spreadsheet.get_cell(r, c)
-                        old_value = cell.raw_value
-                        new_value = str(int(val) if val == int(val) else val)
-                        changes.append((r, c, new_value, old_value))
-                        val += step
-            else:
-                fill_value = result
-                for r in range(r1, r2 + 1):
-                    for c in range(c1, c2 + 1):
-                        cell = self.spreadsheet.get_cell(r, c)
-                        old_value = cell.raw_value
-                        changes.append((r, c, fill_value, old_value))
-            if changes:
-                cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
-                self.undo_manager.execute(cmd)
-                grid.refresh_grid()
-                self._update_status()
-                self._mark_dirty()
-                self.notify(f"Filled {len(changes)} cell(s)")
-        except ValueError as e:
-            self.notify(f"Invalid fill value: {e}", severity="error")
-
-    def _data_sort(self) -> None:
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        r1, c1, r2, c2 = grid.selection_range
-        first_col = index_to_col(c1)
-        last_col = index_to_col(c2)
-        col_range = first_col if c1 == c2 else f"{first_col}-{last_col}"
-        self.push_screen(
-            CommandInput(
-                f"Sort column [{col_range}] (add D for descending, e.g., 'A' or 'AD'):"
-            ),
-            self._do_data_sort,
-        )
-
-    def _do_data_sort(self, result: str | None) -> None:
-        if not result:
-            return
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        r1, c1, r2, c2 = grid.selection_range
-        try:
-            result = result.strip().upper()
-            reverse = result.endswith("D")
-            sort_col_letter = result.rstrip("D").rstrip("A") or result[0]
-            sort_col_abs = col_to_index(sort_col_letter)
-            if sort_col_abs < c1 or sort_col_abs > c2:
-                sort_col_idx = ord(sort_col_letter) - ord("A")
-                sort_col_abs = c1 + sort_col_idx
-            if sort_col_abs < c1 or sort_col_abs > c2:
-                self.notify(
-                    f"Sort column must be within selection ({index_to_col(c1)}-{index_to_col(c2)})",
-                    severity="error",
-                )
-                return
-            rows_data = []
-            for r in range(r1, r2 + 1):
-                row_values = []
-                for c in range(c1, c2 + 1):
-                    cell = self.spreadsheet.get_cell(r, c)
-                    row_values.append(cell.raw_value)
-                sort_val = self.spreadsheet.get_value(r, sort_col_abs)
-                sort_key: tuple[int, str | int | float]
-                if sort_val == "" or sort_val is None:
-                    sort_key = (2, "")
-                elif isinstance(sort_val, (int, float)):
-                    sort_key = (0, sort_val)
-                else:
-                    sort_key = (1, str(sort_val).lower())
-                rows_data.append((sort_key, row_values))
-            rows_data.sort(key=lambda x: x[0], reverse=reverse)
-            changes = []
-            for row_idx, (_, row_values) in enumerate(rows_data):
-                target_row = r1 + row_idx
-                for col_idx, value in enumerate(row_values):
-                    target_col = c1 + col_idx
-                    cell = self.spreadsheet.get_cell(target_row, target_col)
-                    old_value = cell.raw_value
-                    if value != old_value:
-                        changes.append((target_row, target_col, value, old_value))
-            if changes:
-                cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
-                self.undo_manager.execute(cmd)
-                grid.refresh_grid()
-                self._update_status()
-                self._mark_dirty()
-                order_name = "descending" if reverse else "ascending"
-                self.notify(
-                    f"Sorted {len(rows_data)} rows by column {sort_col_letter} ({order_name})"
-                )
-            else:
-                self.notify("Data already sorted")
-        except Exception as e:
-            self.notify(f"Sort error: {e}", severity="error")
-
-    # Data Query methods
-    def _query_set_input(self) -> None:
-        """Set the input (database) range for queries."""
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            self._query_input_range = (r1, c1, r2, c2)
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self.notify(f"Query Input range set to {range_str}")
-        else:
-            self.push_screen(
-                CommandInput("Input range (e.g., A1:D100):"), self._do_query_set_input
-            )
-
-    def _do_query_set_input(self, result: str | None) -> None:
-        if not result:
-            return
-        try:
-            parts = result.upper().split(":")
-            if len(parts) == 2:
-                r1, c1 = parse_cell_ref(parts[0])
-                r2, c2 = parse_cell_ref(parts[1])
-                self._query_input_range = (r1, c1, r2, c2)
-                self.notify(f"Query Input range set to {result.upper()}")
-            else:
-                self.notify("Invalid range format", severity="error")
-        except ValueError as e:
-            self.notify(f"Invalid range: {e}", severity="error")
-
-    def _query_set_criteria(self) -> None:
-        """Set the criteria range for queries."""
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            self._query_criteria_range = (r1, c1, r2, c2)
-            self._query_find_results = None  # Clear previous results to force new search
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self.notify(f"Query Criteria range set to {range_str}")
-        else:
-            self.push_screen(
-                CommandInput("Criteria range (e.g., F1:G2):"),
-                self._do_query_set_criteria,
-            )
-
-    def _do_query_set_criteria(self, result: str | None) -> None:
-        if not result:
-            return
-        try:
-            parts = result.upper().split(":")
-            if len(parts) == 2:
-                r1, c1 = parse_cell_ref(parts[0])
-                r2, c2 = parse_cell_ref(parts[1])
-                self._query_criteria_range = (r1, c1, r2, c2)
-                self._query_find_results = None  # Clear previous results to force new search
-                self.notify(f"Query Criteria range set to {result.upper()}")
-            else:
-                self.notify("Invalid range format", severity="error")
-        except ValueError as e:
-            self.notify(f"Invalid range: {e}", severity="error")
-
-    def _query_set_output(self) -> None:
-        """Set the output range for query extraction."""
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        if grid.has_selection:
-            r1, c1, _, _ = grid.selection_range
-            self._query_output_range = (r1, c1)
-            self.notify(f"Query Output range set to {make_cell_ref(r1, c1)}")
-        else:
-            self.push_screen(
-                CommandInput("Output start cell (e.g., H1):"), self._do_query_set_output
-            )
-
-    def _do_query_set_output(self, result: str | None) -> None:
-        if not result:
-            return
-        try:
-            row, col = parse_cell_ref(result.upper())
-            self._query_output_range = (row, col)
-            self.notify(f"Query Output range set to {result.upper()}")
-        except ValueError as e:
-            self.notify(f"Invalid cell reference: {e}", severity="error")
-
-    def _build_criteria_filter(self) -> Callable[[list], bool] | None:
-        """Build a filter function from the criteria range."""
-        if not self._query_criteria_range or not self._query_input_range:
-            return None
-
-        from .data.criteria import CriteriaParser
-
-        cr1, cc1, cr2, cc2 = self._query_criteria_range
-        ir1, ic1, ir2, ic2 = self._query_input_range
-
-        # Get input headers
-        input_headers = []
-        for c in range(ic1, ic2 + 1):
-            val = self.spreadsheet.get_value(ir1, c)
-            input_headers.append(str(val).strip().upper() if val else "")
-
-        # Get criteria headers and map to input column indices
-        criteria_headers = []
-        for c in range(cc1, cc2 + 1):
-            val = self.spreadsheet.get_value(cr1, c)
-            criteria_headers.append(str(val).strip().upper() if val else "")
-
-        # Build column mapping: criteria col index -> input col index
-        col_mapping: dict[int, int] = {}
-        for ci, ch in enumerate(criteria_headers):
-            if ch:
-                for ii, ih in enumerate(input_headers):
-                    if ch == ih:
-                        col_mapping[ci] = ii
-                        break
-
-        # Get criteria values (rows after header)
-        criteria_rows = []
-        for r in range(cr1 + 1, cr2 + 1):
-            row_vals = []
-            for c in range(cc1, cc2 + 1):
-                row_vals.append(self.spreadsheet.get_value(r, c))
-            criteria_rows.append(row_vals)
-
-        # Parse criteria with remapped columns
-        parser = CriteriaParser()
-        parser.parse_range(criteria_headers, criteria_rows)
-
-        # Create filter that maps input row values to criteria columns
-        def criteria_filter(row_values: list) -> bool:
-            # Remap row values to match criteria column order
-            mapped_values = [""] * len(criteria_headers)
-            for ci, ii in col_mapping.items():
-                if ii < len(row_values):
-                    mapped_values[ci] = row_values[ii]
-            return parser.matches(mapped_values)
-
-        return criteria_filter
-
-    def _query_find(self) -> None:
-        """Find records matching the criteria."""
-        if not self._query_input_range:
-            self.notify("Set Input range first (Data:Query:Input)", severity="warning")
-            return
-
-        grid = self.query_one("#grid", SpreadsheetGrid)
-
-        # If we already have results, cycle to the next one
-        if self._query_find_results:
-            self._query_find_index = (self._query_find_index + 1) % len(self._query_find_results)
-            target_row = self._query_find_results[self._query_find_index]
-            grid.cursor_row = target_row
-            # Navigate to the first criteria column in the input range
-            grid.cursor_col = self._get_first_criteria_col()
-            pos = self._query_find_index + 1
-            total = len(self._query_find_results)
-            self.notify(f"Record {pos} of {total}")
-            return
-
-        # Run a new query
-        from .data.database import DatabaseOperations
-
-        db = DatabaseOperations(self.spreadsheet)
-        criteria_filter = self._build_criteria_filter()
-
-        matching_rows = db.query(self._query_input_range, criteria_func=criteria_filter)
-
-        if not matching_rows:
-            self.notify("No matching records found")
-            self._query_find_results = None
-            return
-
-        self._query_find_results = matching_rows
-        self._query_find_index = 0
-
-        # Navigate to first match
-        first_row = matching_rows[0]
-        grid.cursor_row = first_row
-        # Navigate to the first criteria column in the input range
-        grid.cursor_col = self._get_first_criteria_col()
-        # Scrolling happens automatically via watch_cursor_row/watch_cursor_col
-
-        self.notify(
-            f"Found {len(matching_rows)} matching record(s). Press Find again for next."
-        )
-
-    def _get_first_criteria_col(self) -> int:
-        """Get the column index in the input range that matches the first criteria header."""
-        if not self._query_criteria_range or not self._query_input_range:
-            return self._query_input_range[1] if self._query_input_range else 0
-
-        crit_start_row, crit_start_col, _, crit_end_col = self._query_criteria_range
-        input_start_row, input_start_col, _, input_end_col = self._query_input_range
-
-        # Get input headers
-        input_headers: dict[str, int] = {}
-        for col in range(input_start_col, input_end_col + 1):
-            header = str(self.spreadsheet.get_value(input_start_row, col)).strip().upper()
-            input_headers[header] = col
-
-        # Find the first criteria header that matches an input header
-        for col in range(crit_start_col, crit_end_col + 1):
-            crit_header = str(self.spreadsheet.get_value(crit_start_row, col)).strip().upper()
-            if crit_header in input_headers:
-                return input_headers[crit_header]
-
-        # Default to start of input range
-        return input_start_col
-
-    def _query_extract(self) -> None:
-        """Extract matching records to the output range."""
-        if not self._query_input_range:
-            self.notify("Set Input range first (Data:Query:Input)", severity="warning")
-            return
-        if not self._query_output_range:
-            self.notify(
-                "Set Output range first (Data:Query:Output)", severity="warning"
-            )
-            return
-
-        from .data.database import DatabaseOperations
-
-        db = DatabaseOperations(self.spreadsheet)
-        criteria_filter = self._build_criteria_filter()
-
-        matching_rows = db.query(self._query_input_range, criteria_func=criteria_filter)
-
-        if not matching_rows:
-            self.notify("No matching records to extract")
-            return
-
-        count = db.extract(
-            self._query_input_range, self._query_output_range, matching_rows
-        )
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        grid.refresh_grid()
-        self._mark_dirty()
-        self.notify(f"Extracted {count} record(s)")
-
-    def _query_unique(self) -> None:
-        """Extract unique matching records to the output range."""
-        if not self._query_input_range:
-            self.notify("Set Input range first (Data:Query:Input)", severity="warning")
-            return
-        if not self._query_output_range:
-            self.notify(
-                "Set Output range first (Data:Query:Output)", severity="warning"
-            )
-            return
-
-        from .data.database import DatabaseOperations
-
-        db = DatabaseOperations(self.spreadsheet)
-        criteria_filter = self._build_criteria_filter()
-
-        # First query matching rows
-        matching_rows = db.query(self._query_input_range, criteria_func=criteria_filter)
-
-        if not matching_rows:
-            self.notify("No matching records found")
-            return
-
-        # Then find unique among matching
-        ir1, ic1, ir2, ic2 = self._query_input_range
-        all_columns = list(range(ic2 - ic1 + 1))
-        unique_rows = db.unique(self._query_input_range, all_columns)
-
-        # Intersect with matching
-        unique_matching = [r for r in unique_rows if r in matching_rows]
-
-        count = db.extract(
-            self._query_input_range, self._query_output_range, unique_matching
-        )
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        grid.refresh_grid()
-        self._mark_dirty()
-        self.notify(f"Extracted {count} unique record(s)")
-
-    def _query_delete(self) -> None:
-        """Delete records matching the criteria."""
-        if not self._query_input_range:
-            self.notify("Set Input range first (Data:Query:Input)", severity="warning")
-            return
-
-        from .data.database import DatabaseOperations
-
-        db = DatabaseOperations(self.spreadsheet)
-        criteria_filter = self._build_criteria_filter()
-
-        matching_rows = db.query(self._query_input_range, criteria_func=criteria_filter)
-
-        if not matching_rows:
-            self.notify("No matching records to delete")
-            return
-
-        count = db.delete_matching(self._query_input_range, matching_rows)
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        grid.refresh_grid()
-        self._mark_dirty()
-        self.notify(f"Deleted {count} record(s)")
-
-    def _query_reset(self) -> None:
-        """Reset all query settings."""
-        self._query_input_range = None
-        self._query_criteria_range = None
-        self._query_output_range = None
-        self._query_find_results = None
-        self._query_find_index = 0
-        self.notify("Query settings reset")
-
-    # Worksheet global methods
-    def _global_format(self) -> None:
-        self.push_screen(
-            CommandInput(
-                f"Default format (F=Fixed, S=Scientific, C=Currency, P=Percent, G=General) [{self._global_format_code}]:"
-            ),
-            self._do_global_format,
-        )
-
-    def _do_global_format(self, result: str | None) -> None:
-        if not result:
-            return
-        format_char = result.upper()[0] if result else "G"
-        format_map = {"F": "F2", "S": "S", "C": "C2", "P": "P2", "G": "G", ",": ",2"}
-        self._global_format_code = format_map.get(format_char, "G")
-        self.notify(f"Default format set to {self._global_format_code}")
-
-    def _global_label_prefix_action(self) -> None:
-        self.push_screen(
-            CommandInput("Default label alignment (L=Left, R=Right, C=Center):"),
-            self._do_global_label_prefix,
-        )
-
-    def _do_global_label_prefix(self, result: str | None) -> None:
-        if not result:
-            return
-        align_char = result.upper()[0] if result else "L"
-        prefix_map = {"L": "'", "R": '"', "C": "^"}
-        self._global_label_prefix = prefix_map.get(align_char, "'")
-        align_names = {"'": "Left", '"': "Right", "^": "Center"}
-        self.notify(
-            f"Default label alignment set to {align_names.get(self._global_label_prefix, 'Left')}"
-        )
-
-    def _global_column_width(self) -> None:
-        self.push_screen(
-            CommandInput(f"Default column width (3-50) [{self._global_col_width}]:"),
-            self._do_global_column_width,
-        )
-
-    def _do_global_column_width(self, result: str | None) -> None:
-        if not result:
-            return
-        try:
-            width = int(result)
-            width = max(3, min(50, width))
-            self._global_col_width = width
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            grid.default_col_width = width
-            grid.recalculate_visible_area()
-            grid.refresh_grid()
-            self.notify(f"Default column width set to {width}")
-        except ValueError:
-            self.notify("Invalid width", severity="error")
-
-    def _global_recalculation(self) -> None:
-        if self._recalc_mode == "auto":
-            self._recalc_mode = "manual"
-            self.notify("Recalculation: Manual (press F9 to recalculate)")
-        else:
-            self._recalc_mode = "auto"
-            self.spreadsheet._invalidate_cache()
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            grid.refresh_grid()
-            self.notify("Recalculation: Automatic")
-
-    def _global_protection_action(self) -> None:
-        self._global_protection = not self._global_protection
-        if self._global_protection:
-            self.notify(
-                "Worksheet protection ENABLED - protected cells cannot be edited"
-            )
-        else:
-            self.notify("Worksheet protection DISABLED")
-
-    def _global_zero(self) -> None:
-        self._global_zero_display = not self._global_zero_display
-        grid = self.query_one("#grid", SpreadsheetGrid)
-        grid.show_zero = self._global_zero_display
-        grid.refresh_grid()
-        if self._global_zero_display:
-            self.notify("Zero values: Displayed")
-        else:
-            self.notify("Zero values: Hidden (blank)")
-
-    def _worksheet_erase(self) -> None:
-        self.push_screen(
-            CommandInput("Erase entire worksheet? (Y/N):"), self._do_worksheet_erase
-        )
-
-    def _do_worksheet_erase(self, result: str | None) -> None:
-        if result and result.upper().startswith("Y"):
-            self.spreadsheet.clear()
-            self.undo_manager.clear()
-            grid = self.query_one("#grid", SpreadsheetGrid)
-            grid.refresh_grid()
-            self._update_status()
-            self._mark_dirty()
-            self.notify("Worksheet erased")
+            self._chart_handler.reset_chart()
 
     def on_key(self, event: events.Key) -> None:
         """Handle key presses for navigation and direct cell input."""
@@ -1882,7 +723,6 @@ class LotusApp(App[None]):
             grid.move_cursor(0, 1)
             event.prevent_default()
             return
-        # pageup, pagedown, ctrl+d, ctrl+u, home, end are handled by BINDINGS
         elif event.key == "enter":
             self.action_edit_cell()
             event.prevent_default()
@@ -1899,7 +739,6 @@ class LotusApp(App[None]):
             cell_input.value = ""
             cell_input.focus()
             self.editing = True
-            # Determine mode based on first character (Lotus 1-2-3 style)
             if event.character in "0123456789.+-@#(":
                 self.query_one("#status-bar", StatusBarWidget).set_mode(Mode.VALUE)
             elif event.character == "=":

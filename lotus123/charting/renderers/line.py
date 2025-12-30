@@ -194,9 +194,10 @@ class LineChartRenderer(ChartTypeRenderer):
         x_inc = dx / steps
         y_inc = dy / steps
 
-        x, y = float(x1), float(y1)
+        pos_x = float(x1)
+        pos_y = float(y1)
         for _ in range(steps + 1):
-            ix, iy = int(round(x)), int(round(y))
+            ix, iy = int(round(pos_x)), int(round(pos_y))
             if 0 <= ix < ctx.plot_width and 0 <= iy < ctx.plot_height:
                 if plot[iy][ix] == " ":
                     # Choose character based on line direction
@@ -209,8 +210,8 @@ class LineChartRenderer(ChartTypeRenderer):
                     else:
                         # Going down
                         plot[iy][ix] = "\\"
-            x += x_inc
-            y += y_inc
+            pos_x += x_inc
+            pos_y += y_inc
 
     def _build_plot_output(
         self, plot: list[list[str]], ctx: RenderContext, y_label_width: int
