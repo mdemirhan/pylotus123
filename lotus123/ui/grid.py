@@ -190,6 +190,13 @@ class SpreadsheetGrid(Static, can_focus=True):
         self._col_positions = []
         self._row_positions = []
 
+        # Optimization: Pre-calculate column widths for visible columns
+        col_widths = {}
+        for c in range(self.scroll_col, self.scroll_col + self._visible_cols):
+            if c >= self.spreadsheet.cols:
+                break
+            col_widths[c] = self.spreadsheet.get_col_width(c)
+
         # Header row
         header = Text()
         header.append("    ", header_style)
@@ -199,7 +206,7 @@ class SpreadsheetGrid(Static, can_focus=True):
         for c in range(self.scroll_col, self.scroll_col + self._visible_cols):
             if c >= self.spreadsheet.cols:
                 break
-            col_width = self.spreadsheet.get_col_width(c)
+            col_width = col_widths[c]
             col_name = index_to_col(c)
             header.append(col_name.center(col_width), header_style)
             header.append("\u2502", border_style)
@@ -214,7 +221,7 @@ class SpreadsheetGrid(Static, can_focus=True):
         for c in range(self.scroll_col, self.scroll_col + self._visible_cols):
             if c >= self.spreadsheet.cols:
                 break
-            col_width = self.spreadsheet.get_col_width(c)
+            col_width = col_widths[c]
             sep.append("\u2500" * col_width, border_style)
             sep.append("\u253c", border_style)
         lines.append(sep)
@@ -233,7 +240,7 @@ class SpreadsheetGrid(Static, can_focus=True):
             for c in range(self.scroll_col, self.scroll_col + self._visible_cols):
                 if c >= self.spreadsheet.cols:
                     break
-                col_width = self.spreadsheet.get_col_width(c)
+                col_width = col_widths[c]
                 value = self.spreadsheet.get_display_value(r, c)
                 # Hide zero values if show_zero is False
                 if not self.show_zero and value in ("0", "0.0", "0.00"):

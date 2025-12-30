@@ -289,3 +289,60 @@ def adjust_formula_references(
     # Match cell references but not function names
     pattern = r"\$?[A-Za-z]+\$?\d+"
     return re.sub(pattern, replace_ref, formula)
+
+
+def adjust_for_structural_change(
+    formula: str,
+    axis: str,
+    boundary: int,
+    shift: int,
+    max_row: int = 8191,
+    max_col: int = 255,
+) -> str:
+    """Adjust references based on row/column insertion/deletion.
+    
+    Handles both relative and absolute references equally (they all point to specific cells).
+    
+    Args:
+        formula: Formula string
+        axis: 'row' or 'col'
+        boundary: Index where shift occurs
+        shift: Amount to shift (+1 or -1)
+        max_row: Max row index
+        max_col: Max col index
+        
+    Returns:
+        Adjusted formula string
+    """
+    def replace_ref(match: re.Match[str]) -> str:
+        ref_str = match.group(0)
+        try:
+            ref = CellReference.parse(ref_str)
+            
+            if axis == 'row':
+                if shift < 0 and ref.row == boundary:
+                    # Pointing to deleted row
+                    return "#REF!"
+                if ref.row >= boundary:
+                    new_row = ref.row + shift
+                    if 0 <= new_row <= max_row:
+                        ref.row = new_row
+                    else:
+                        return "#REF!"
+            elif axis == 'col':
+                if shift < 0 and ref.col == boundary:
+                    # Pointing to deleted col
+                    return "#REF!"
+                if ref.col >= boundary:
+                    new_col = ref.col + shift
+                    if 0 <= new_col <= max_col:
+                        ref.col = new_col
+                    else:
+                        return "#REF!"
+                        
+            return ref.to_string()
+        except ValueError:
+            return str(ref_str)
+
+    pattern = r"\$?[A-Za-z]+\$?\d+"
+    return re.sub(pattern, replace_ref, formula)

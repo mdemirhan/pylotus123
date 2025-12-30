@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
+import re
 from typing import Any
 
 
@@ -99,11 +100,21 @@ class Cell:
         # + or - are formulas only if followed by non-numeric content
         if first in "+-" and len(self.raw_value) > 1:
             rest = self.raw_value[1:]
-            try:
-                float(rest)
+            # Check if it looks like a number:
+            # - Optional digits
+            # - Optional decimal point followed by digits or digits followed by optional decimal
+            # - Optional exponent
+            # Simple check: can we match the whole string as a number?
+            # Using a regex that mimics float() acceptance roughly but stricter on partial inputs
+            # actually we want to return TRUE if it is NOT a number.
+            
+            # This regex matches standard float formats
+            number_pattern = re.compile(r'^\d*\.?\d+(?:[eE][+-]?\d+)?$')
+            if number_pattern.match(rest):
                 return False
-            except ValueError:
-                return True
+                
+            # If it's not a standard number, it's a formula (e.g. +A1 or +1.2.3)
+            return True
         return False
 
     @property

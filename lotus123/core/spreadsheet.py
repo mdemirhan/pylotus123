@@ -9,10 +9,11 @@ from .cell import Cell
 from .formatting import format_value, parse_format_code
 from .named_ranges import NamedRangeManager
 from .protection import ProtectionManager
-from .reference import adjust_formula_references, parse_cell_ref
+from .reference import adjust_for_structural_change, adjust_formula_references, parse_cell_ref
 
 if TYPE_CHECKING:
     from ..formula.recalc import RecalcEngine
+    from ..formula.evaluator import EvaluationContext
 
 
 # Lotus 1-2-3 dimensions
@@ -132,6 +133,13 @@ class Spreadsheet:
 
         cell = self.get_cell(row, col)
         cell.set_value(value)
+        
+        # Update dependency graph incrementally
+        if self._recalc_engine:
+            self._recalc_engine.mark_dirty(row, col)
+            new_formula = cell.formula if cell.is_formula else None
+            self._recalc_engine.update_cell_dependency(row, col, new_formula)
+
         self.modified = True
         self._invalidate_cache()
 
@@ -149,6 +157,12 @@ class Spreadsheet:
         """Delete a cell (remove from sparse storage)."""
         if (row, col) in self._cells:
             del self._cells[(row, col)]
+            
+            # Update dependency graph incrementally (remove dependencies)
+            if self._recalc_engine:
+                self._recalc_engine.mark_dirty(row, col)
+                self._recalc_engine.update_cell_dependency(row, col, None)
+                
             self.modified = True
             self._invalidate_cache()
 
@@ -161,12 +175,13 @@ class Spreadsheet:
     # Value Computation
     # -------------------------------------------------------------------------
 
-    def get_value(self, row: int, col: int) -> Any:
+    def get_value(self, row: int, col: int, context: "EvaluationContext | None" = None) -> Any:
         """Get computed value of cell.
 
         Args:
             row: 0-based row index
             col: 0-based column index
+            context: Optional evaluation context for cycle detection
 
         Returns:
             Computed value (number, string, or error)
@@ -179,17 +194,18 @@ class Spreadsheet:
             return ""
 
         if cell.is_formula:
-            value = self._evaluate_formula(row, col)
+            # Pass context if provided
+            value = self._evaluate_formula(row, col, context)
         else:
             value = self._parse_literal(cell.display_value)
 
         self._cache[(row, col)] = value
         return value
 
-    def get_value_by_ref(self, ref: str) -> Any:
+    def get_value_by_ref(self, ref: str, context: "EvaluationContext | None" = None) -> Any:
         """Get computed value by reference string."""
         row, col = parse_cell_ref(ref)
-        return self.get_value(row, col)
+        return self.get_value(row, col, context)
 
     def _parse_literal(self, value: str) -> Any:
         """Parse a literal value (number or string)."""
@@ -203,11 +219,21 @@ class Spreadsheet:
         except ValueError:
             return value
 
-    def _evaluate_formula(self, row: int, col: int) -> Any:
+    def _evaluate_formula(
+        self, row: int, col: int, context: "EvaluationContext | None" = None
+    ) -> Any:
         """Evaluate a formula at the given cell position."""
         # Import here to avoid circular dependency
         from ..formula import FormulaParser
+        from ..formula.evaluator import FormulaEvaluator
 
+        # Use shared context if provided, else rely on simple self._computing set
+        # (though ideally we should switch to full context threading)
+        if context:
+            evaluator = FormulaEvaluator(self, context=context)
+            return evaluator.evaluate_cell(row, col)
+
+        # Fallback for legacy/simple calls (like from RecalcEngine using topological sort order)
         if (row, col) in self._computing:
             self._circular_refs.add((row, col))
             return "#CIRC!"
@@ -309,12 +335,15 @@ class Spreadsheet:
     # Range Operations
     # -------------------------------------------------------------------------
 
-    def get_range(self, start_ref: str, end_ref: str) -> list[list[Any]]:
+    def get_range(
+        self, start_ref: str, end_ref: str, context: "EvaluationContext | None" = None
+    ) -> list[list[Any]]:
         """Get values in a range as 2D list.
 
         Args:
             start_ref: Start cell reference (e.g., 'A1')
             end_ref: End cell reference (e.g., 'B10')
+            context: Optional evaluation context for cycle detection
 
         Returns:
             2D list of values
@@ -332,13 +361,15 @@ class Spreadsheet:
         for r in range(start_row, end_row + 1):
             row_vals = []
             for c in range(start_col, end_col + 1):
-                row_vals.append(self.get_value(r, c))
+                row_vals.append(self.get_value(r, c, context))
             result.append(row_vals)
         return result
 
-    def get_range_flat(self, start_ref: str, end_ref: str) -> list[Any]:
+    def get_range_flat(
+        self, start_ref: str, end_ref: str, context: "EvaluationContext | None" = None
+    ) -> list[Any]:
         """Get values in a range as flat list."""
-        rows = self.get_range(start_ref, end_ref)
+        rows = self.get_range(start_ref, end_ref, context)
         return [val for row in rows for val in row]
 
     def set_range_format(
@@ -362,15 +393,19 @@ class Spreadsheet:
 
         new_cells = {}
         for (r, c), cell in self._cells.items():
+            if r == row:
+                continue
+                
+            # Adjust formula references for ALL remaining cells
+            if cell.is_formula:
+                adjusted = adjust_for_structural_change(
+                    cell.raw_value, "row", row, -1, self.rows - 1, self.cols - 1
+                )
+                cell.set_value(adjusted)
+
             if r < row:
                 new_cells[(r, c)] = cell
             elif r > row:
-                # Adjust formula references
-                if cell.is_formula:
-                    adjusted = adjust_formula_references(
-                        cell.raw_value, -1, 0, self.rows - 1, self.cols - 1
-                    )
-                    cell.set_value(adjusted)
                 new_cells[(r - 1, c)] = cell
         self._cells = new_cells
 
@@ -389,6 +424,8 @@ class Spreadsheet:
 
         self.modified = True
         self._invalidate_cache()
+        if self._recalc_engine:
+            self._recalc_engine._rebuild_dependency_graph()
 
     def insert_row(self, row: int) -> None:
         """Insert a row and shift cells down."""
@@ -397,15 +434,16 @@ class Spreadsheet:
 
         new_cells = {}
         for (r, c), cell in self._cells.items():
+            # Adjust formula references for ALL cells
+            if cell.is_formula:
+                adjusted = adjust_for_structural_change(
+                    cell.raw_value, "row", row, 1, self.rows - 1, self.cols - 1
+                )
+                cell.set_value(adjusted)
+
             if r < row:
                 new_cells[(r, c)] = cell
             else:
-                # Adjust formula references
-                if cell.is_formula:
-                    adjusted = adjust_formula_references(
-                        cell.raw_value, 1, 0, self.rows - 1, self.cols - 1
-                    )
-                    cell.set_value(adjusted)
                 new_cells[(r + 1, c)] = cell
         self._cells = new_cells
 
@@ -424,6 +462,8 @@ class Spreadsheet:
 
         self.modified = True
         self._invalidate_cache()
+        if self._recalc_engine:
+            self._recalc_engine._rebuild_dependency_graph()
 
     def delete_col(self, col: int) -> None:
         """Delete a column and shift cells left."""
@@ -432,15 +472,19 @@ class Spreadsheet:
 
         new_cells = {}
         for (r, c), cell in self._cells.items():
+            if c == col:
+                continue
+
+            # Adjust formula references for ALL remaining cells
+            if cell.is_formula:
+                adjusted = adjust_for_structural_change(
+                    cell.raw_value, "col", col, -1, self.rows - 1, self.cols - 1
+                )
+                cell.set_value(adjusted)
+
             if c < col:
                 new_cells[(r, c)] = cell
             elif c > col:
-                # Adjust formula references
-                if cell.is_formula:
-                    adjusted = adjust_formula_references(
-                        cell.raw_value, 0, -1, self.rows - 1, self.cols - 1
-                    )
-                    cell.set_value(adjusted)
                 new_cells[(r, c - 1)] = cell
         self._cells = new_cells
 
@@ -459,6 +503,8 @@ class Spreadsheet:
 
         self.modified = True
         self._invalidate_cache()
+        if self._recalc_engine:
+            self._recalc_engine._rebuild_dependency_graph()
 
     def insert_col(self, col: int) -> None:
         """Insert a column and shift cells right."""
@@ -467,15 +513,16 @@ class Spreadsheet:
 
         new_cells = {}
         for (r, c), cell in self._cells.items():
+            # Adjust formula references for ALL cells
+            if cell.is_formula:
+                adjusted = adjust_for_structural_change(
+                    cell.raw_value, "col", col, 1, self.rows - 1, self.cols - 1
+                )
+                cell.set_value(adjusted)
+
             if c < col:
                 new_cells[(r, c)] = cell
             else:
-                # Adjust formula references
-                if cell.is_formula:
-                    adjusted = adjust_formula_references(
-                        cell.raw_value, 0, 1, self.rows - 1, self.cols - 1
-                    )
-                    cell.set_value(adjusted)
                 new_cells[(r, c + 1)] = cell
         self._cells = new_cells
 
@@ -494,6 +541,8 @@ class Spreadsheet:
 
         self.modified = True
         self._invalidate_cache()
+        if self._recalc_engine:
+            self._recalc_engine._rebuild_dependency_graph()
 
     # -------------------------------------------------------------------------
     # Copy Operations
@@ -527,6 +576,12 @@ class Spreadsheet:
         dest = self.get_cell(to_row, to_col)
         dest.set_value(value)
         dest.format_code = src.format_code
+
+        # Update dependency graph incrementally
+        if self._recalc_engine:
+            self._recalc_engine.mark_dirty(to_row, to_col)
+            new_formula = dest.formula if dest.is_formula else None
+            self._recalc_engine.update_cell_dependency(to_row, to_col, new_formula)
 
         self.modified = True
         self._invalidate_cache()
@@ -562,52 +617,18 @@ class Spreadsheet:
 
     def save(self, filename: str) -> None:
         """Save spreadsheet to JSON file."""
-        data = {
-            "version": 2,
-            "rows": self.rows,
-            "cols": self.cols,
-            "col_widths": self._col_widths,
-            "row_heights": self._row_heights,
-            "cells": {
-                f"{r},{c}": cell.to_dict()
-                for (r, c), cell in self._cells.items()
-                if not cell.is_empty
-            },
-            "named_ranges": self.named_ranges.to_dict(),
-            "protection": self.protection.to_dict(),
-            "frozen_rows": self.frozen_rows,
-            "frozen_cols": self.frozen_cols,
-        }
-        with open(filename, "w") as f:
-            json.dump(data, f, indent=2)
+        from ..io.lotus_json import LotusJsonSerializer
+        
+        LotusJsonSerializer.save(self, filename)
         self.filename = filename
         self.modified = False
 
     def load(self, filename: str) -> None:
         """Load spreadsheet from JSON file."""
-        with open(filename, "r") as f:
-            data = json.load(f)
+        from ..io.lotus_json import LotusJsonSerializer
 
-        self.clear()
-
-        self.rows = data.get("rows", MAX_ROWS)
-        self.cols = data.get("cols", MAX_COLS)
-        self._col_widths = {int(k): v for k, v in data.get("col_widths", {}).items()}
-        self._row_heights = {int(k): v for k, v in data.get("row_heights", {}).items()}
-
-        for key, cell_data in data.get("cells", {}).items():
-            r, c = map(int, key.split(","))
-            self._cells[(r, c)] = Cell.from_dict(cell_data)
-
-        if "named_ranges" in data:
-            self.named_ranges.from_dict(data["named_ranges"])
-
-        if "protection" in data:
-            self.protection.from_dict(data["protection"])
-
-        self.frozen_rows = data.get("frozen_rows", 0)
-        self.frozen_cols = data.get("frozen_cols", 0)
-
+        LotusJsonSerializer.load(self, filename)
+        
         self.filename = filename
         self.modified = False
         self._invalidate_cache()

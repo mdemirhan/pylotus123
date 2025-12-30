@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 from dataclasses import dataclass
 from enum import Enum
+from functools import lru_cache
 from typing import Any
 
 
@@ -74,6 +75,7 @@ class FormatSpec:
     negative_format: str = "-"  # "-", "()", or "red"
 
 
+@lru_cache(maxsize=1024)
 def parse_format_code(code: str) -> FormatSpec:
     """Parse a format code string into a FormatSpec.
 

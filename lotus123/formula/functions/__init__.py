@@ -86,4 +86,8 @@ __all__ = [
     "INFO_FUNCTIONS",
     "FINANCIAL_FUNCTIONS",
     "DATABASE_FUNCTIONS",
+    "REGISTRY",
 ]
+
+# Global singleton registry
+REGISTRY = FunctionRegistry()

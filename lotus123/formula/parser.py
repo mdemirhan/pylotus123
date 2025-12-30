@@ -8,10 +8,11 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any
 
-from .functions import FunctionRegistry
+from .functions import REGISTRY, FunctionRegistry
 
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
+    from .evaluator import EvaluationContext
 
 
 class TokenType(Enum):
@@ -76,11 +77,15 @@ class FormulaParser:
     CELL_PATTERN = re.compile(r"\$?[A-Za-z]+\$?\d+")
     NUMBER_PATTERN = re.compile(r"\d+\.?\d*([eE][+-]?\d+)?")
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(
+        self, spreadsheet: Spreadsheet, context: "EvaluationContext | None" = None
+    ) -> None:
         self.spreadsheet = spreadsheet
-        self.functions = FunctionRegistry()
+        # Use singleton registry to avoid expensive re-initialization
+        self.functions = REGISTRY
         self._tokens: list[Token] = []
         self._pos: int = 0
+        self.context = context
 
     def evaluate(self, formula: str) -> Any:
         """Evaluate a formula string and return the result.
@@ -107,6 +112,8 @@ class FormulaParser:
             return result
         except ZeroDivisionError:
             return "#DIV/0!"
+        except RecursionError:
+            return "#REF!"
         except Exception:
             return "#ERR!"
 
@@ -416,7 +423,7 @@ class FormulaParser:
         try:
             # Strip $ signs for lookup
             clean_ref = ref.replace("$", "")
-            return self.spreadsheet.get_value_by_ref(clean_ref)
+            return self.spreadsheet.get_value_by_ref(clean_ref, context=self.context)
         except ValueError:
             return "#REF!"
 
@@ -425,6 +432,6 @@ class FormulaParser:
         try:
             start = start_ref.replace("$", "")
             end = end_ref.replace("$", "")
-            return self.spreadsheet.get_range_flat(start, end)
+            return self.spreadsheet.get_range_flat(start, end, context=self.context)
         except ValueError:
             return ["#REF!"]

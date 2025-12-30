@@ -83,6 +83,42 @@ class RecalcEngine:
         if self.mode == RecalcMode.AUTOMATIC:
             self.recalculate()
 
+    def update_cell_dependency(self, row: int, col: int, new_formula: str | None) -> None:
+        """Update dependency graph for a single cell.
+
+        Args:
+            row: Cell row
+            col: Cell column
+            new_formula: New formula string (None/empty if not a formula)
+        """
+        # If it was a formula, remove old dependencies
+        old_deps = self._dependency_graph.pop((row, col), set())
+        for old_dep in old_deps:
+            if old_dep in self._dependents:
+                self._dependents[old_dep].discard((row, col))
+                if not self._dependents[old_dep]:
+                    del self._dependents[old_dep]
+
+        if not new_formula:
+            return
+
+        # Calculate new dependencies
+        # Import list here to avoid circular dependency
+        from .evaluator import FormulaEvaluator
+
+        # We can create a temporary evaluator just for parsing dependencies
+        # This is lightweight as it doesn't need to actually evaluate
+        evaluator = FormulaEvaluator(self.spreadsheet)
+        new_deps = evaluator.get_dependencies(new_formula)
+
+        self._dependency_graph[(row, col)] = new_deps
+
+        # Update dependents (reverse graph)
+        for dep in new_deps:
+            if dep not in self._dependents:
+                self._dependents[dep] = set()
+            self._dependents[dep].add((row, col))
+
     def recalculate(self, full: bool = False) -> RecalcStats:
         """Perform recalculation.
 
@@ -100,7 +136,10 @@ class RecalcEngine:
         stats = RecalcStats()
 
         if full:
-            self._rebuild_dependency_graph()
+            # Only rebuild graph if explicitly requested (e.g. on load)
+            # Otherwise assume graph is maintained incrementally
+            if not self._dependency_graph:
+                self._rebuild_dependency_graph()
             cells_to_calc = self._get_all_formula_cells()
         else:
             cells_to_calc = self._dirty_cells.copy()

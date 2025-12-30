@@ -1755,6 +1755,9 @@ class MenuSystem:
         return "Automatic recalculation"
 
     def _cmd_recalc_manual(self) -> str:
+        if self.spreadsheet and self.spreadsheet._recalc_engine:
+            from ...formula.recalc import RecalcMode
+            self.spreadsheet._recalc_engine.set_mode(RecalcMode.MANUAL)
         return "Manual recalculation"
 
     def _cmd_recalc_iteration(self, count: str) -> str:

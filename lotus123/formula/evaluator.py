@@ -36,9 +36,9 @@ class FormulaEvaluator:
     CELL_REF_PATTERN = re.compile(r"\$?([A-Za-z]+)\$?(\d+)")
     RANGE_PATTERN = re.compile(r"(\$?[A-Za-z]+\$?\d+):(\$?[A-Za-z]+\$?\d+)")
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(self, spreadsheet: Spreadsheet, context: EvaluationContext | None = None) -> None:
         self.spreadsheet = spreadsheet
-        self._context = EvaluationContext()
+        self._context = context or EvaluationContext()
 
     def evaluate_cell(self, row: int, col: int) -> Any:
         """Evaluate the formula in a cell.
@@ -69,7 +69,7 @@ class FormulaEvaluator:
         try:
             from .parser import FormulaParser
 
-            parser = FormulaParser(self.spreadsheet)
+            parser = FormulaParser(self.spreadsheet, context=self._context)
             result = parser.evaluate(cell.formula)
             return result
         finally:
@@ -220,51 +220,4 @@ def find_circular_references(
     return circular
 
 
-def topological_sort(
-    dependency_graph: dict[tuple[int, int], set[tuple[int, int]]],
-) -> list[tuple[int, int]]:
-    """Sort cells in dependency order for recalculation.
 
-    Args:
-        dependency_graph: Graph from build_dependency_graph
-
-    Returns:
-        List of cells in order (dependencies first)
-    """
-    # Kahn's algorithm
-    in_degree = {node: 0 for node in dependency_graph}
-
-    # Build reverse graph and count in-degrees
-    for node, deps in dependency_graph.items():
-        for dep in deps:
-            if dep in in_degree:
-                # This node depends on dep, so dep must come first
-                pass
-
-    # Actually we need dependents, not dependencies
-    dependents: dict[tuple[int, int], set[tuple[int, int]]] = {
-        node: set() for node in dependency_graph
-    }
-    for node, deps in dependency_graph.items():
-        for dep in deps:
-            if dep in dependents:
-                dependents[dep].add(node)
-            in_degree[node] = in_degree.get(node, 0)
-
-    # Recalculate in-degrees based on dependencies
-    in_degree = {node: len(deps) for node, deps in dependency_graph.items()}
-
-    # Start with nodes that have no dependencies
-    queue = [node for node, degree in in_degree.items() if degree == 0]
-    result = []
-
-    while queue:
-        node = queue.pop(0)
-        result.append(node)
-
-        for dependent in dependents.get(node, set()):
-            in_degree[dependent] -= 1
-            if in_degree[dependent] == 0:
-                queue.append(dependent)
-
-    return result

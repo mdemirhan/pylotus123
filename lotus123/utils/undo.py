@@ -55,6 +55,12 @@ class CellChangeCommand(Command):
         cell.set_value(self.new_value)
         if self.new_format:
             cell.format_code = self.new_format
+        
+        # Update dependencies
+        if self.spreadsheet._recalc_engine:
+            formula = cell.formula if cell.is_formula else None
+            self.spreadsheet._recalc_engine.update_cell_dependency(self.row, self.col, formula)
+            
         self.spreadsheet._invalidate_cache()
 
     def undo(self) -> None:
@@ -62,6 +68,12 @@ class CellChangeCommand(Command):
         cell = self.spreadsheet.get_cell(self.row, self.col)
         cell.set_value(self.old_value)
         cell.format_code = self.old_format
+        
+        # Update dependencies
+        if self.spreadsheet._recalc_engine:
+            formula = cell.formula if cell.is_formula else None
+            self.spreadsheet._recalc_engine.update_cell_dependency(self.row, self.col, formula)
+            
         self.spreadsheet._invalidate_cache()
 
     def redo(self) -> None:
@@ -70,6 +82,12 @@ class CellChangeCommand(Command):
         cell.set_value(self.new_value)
         if self.new_format:
             cell.format_code = self.new_format
+            
+        # Update dependencies
+        if self.spreadsheet._recalc_engine:
+            formula = cell.formula if cell.is_formula else None
+            self.spreadsheet._recalc_engine.update_cell_dependency(self.row, self.col, formula)
+            
         self.spreadsheet._invalidate_cache()
 
     @property
@@ -92,6 +110,10 @@ class RangeChangeCommand(Command):
         for row, col, new_val, _ in self.changes:
             cell = self.spreadsheet.get_cell(row, col)
             cell.set_value(new_val)
+            # Update dependencies
+            if self.spreadsheet._recalc_engine:
+                formula = cell.formula if cell.is_formula else None
+                self.spreadsheet._recalc_engine.update_cell_dependency(row, col, formula)
         self.spreadsheet._invalidate_cache()
 
     def undo(self) -> None:
@@ -99,6 +121,10 @@ class RangeChangeCommand(Command):
         for row, col, _, old_val in self.changes:
             cell = self.spreadsheet.get_cell(row, col)
             cell.set_value(old_val)
+            # Update dependencies
+            if self.spreadsheet._recalc_engine:
+                formula = cell.formula if cell.is_formula else None
+                self.spreadsheet._recalc_engine.update_cell_dependency(row, col, formula)
         self.spreadsheet._invalidate_cache()
 
     def redo(self) -> None:
@@ -165,6 +191,8 @@ class DeleteRowCommand(Command):
             self.spreadsheet._cells[(self.row, col)] = Cell.from_dict(cell_data)
 
         self.spreadsheet._invalidate_cache()
+        if self.spreadsheet._recalc_engine:
+            self.spreadsheet._recalc_engine._rebuild_dependency_graph()
 
     def redo(self) -> None:
         """Delete the row again."""
@@ -239,6 +267,8 @@ class DeleteColCommand(Command):
             self.spreadsheet.set_col_width(self.col, self.saved_width)
 
         self.spreadsheet._invalidate_cache()
+        if self.spreadsheet._recalc_engine:
+            self.spreadsheet._recalc_engine._rebuild_dependency_graph()
 
     def redo(self) -> None:
         """Delete the column again."""
@@ -271,6 +301,9 @@ class ClearRangeCommand(Command):
                 if cell and not cell.is_empty:
                     self.saved_data[(r, c)] = cell.to_dict()
                     cell.set_value("")
+                    # Update dependencies (remove)
+                    if self.spreadsheet._recalc_engine:
+                        self.spreadsheet._recalc_engine.update_cell_dependency(r, c, None)
 
         self.spreadsheet._invalidate_cache()
 
@@ -279,7 +312,11 @@ class ClearRangeCommand(Command):
         from ..core.cell import Cell
 
         for (r, c), cell_data in self.saved_data.items():
-            self.spreadsheet._cells[(r, c)] = Cell.from_dict(cell_data)
+            self.spreadsheet._cells[(r, c)] = cell = Cell.from_dict(cell_data)
+            # Update dependencies
+            if self.spreadsheet._recalc_engine:
+                formula = cell.formula if cell.is_formula else None
+                self.spreadsheet._recalc_engine.update_cell_dependency(r, c, formula)
 
         self.spreadsheet._invalidate_cache()
 
@@ -290,6 +327,9 @@ class ClearRangeCommand(Command):
                 cell = self.spreadsheet.get_cell_if_exists(r, c)
                 if cell:
                     cell.set_value("")
+                    # Update dependencies (remove)
+                    if self.spreadsheet._recalc_engine:
+                        self.spreadsheet._recalc_engine.update_cell_dependency(r, c, None)
 
         self.spreadsheet._invalidate_cache()
 
