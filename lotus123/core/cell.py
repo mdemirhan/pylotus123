@@ -66,6 +66,10 @@ class Cell:
         _cached_display: Cached display string
     """
 
+    # Pre-compiled regex for number detection in is_formula
+    # Using a regex that mimics float() acceptance roughly but stricter on partial inputs
+    _NUMBER_PATTERN = re.compile(r'^\d*\.?\d+(?:[eE][+-]?\d+)?$')
+
     raw_value: str = ""
     format_code: str = "G"  # General format by default
     is_protected: bool = False
@@ -100,19 +104,10 @@ class Cell:
         # + or - are formulas only if followed by non-numeric content
         if first in "+-" and len(self.raw_value) > 1:
             rest = self.raw_value[1:]
-            # Check if it looks like a number:
-            # - Optional digits
-            # - Optional decimal point followed by digits or digits followed by optional decimal
-            # - Optional exponent
-            # Simple check: can we match the whole string as a number?
-            # Using a regex that mimics float() acceptance roughly but stricter on partial inputs
-            # actually we want to return TRUE if it is NOT a number.
-            
-            # This regex matches standard float formats
-            number_pattern = re.compile(r'^\d*\.?\d+(?:[eE][+-]?\d+)?$')
-            if number_pattern.match(rest):
+            # Return TRUE if it is NOT a number, False otherwise.
+            if self._NUMBER_PATTERN.match(rest):
                 return False
-                
+            
             # If it's not a standard number, it's a formula (e.g. +A1 or +1.2.3)
             return True
         return False

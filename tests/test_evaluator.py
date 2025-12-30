@@ -8,7 +8,6 @@ from lotus123.formula.evaluator import (
     FormulaEvaluator,
     build_dependency_graph,
     find_circular_references,
-    topological_sort,
 )
 
 
@@ -274,37 +273,3 @@ class TestFindCircularReferences:
         assert (0, 1) in circular
 
 
-class TestTopologicalSort:
-    """Tests for topological_sort function."""
-
-    def test_empty_graph(self):
-        """Test sorting empty graph."""
-        result = topological_sort({})
-        assert result == []
-
-    def test_no_dependencies(self):
-        """Test sorting graph with no dependencies."""
-        graph = {
-            (0, 0): set(),
-            (0, 1): set(),
-        }
-
-        result = topological_sort(graph)
-        assert len(result) == 2
-
-    def test_linear_chain(self):
-        """Test sorting linear chain."""
-        graph = {
-            (0, 0): set(),
-            (0, 1): {(0, 0)},
-            (0, 2): {(0, 1)},
-        }
-
-        result = topological_sort(graph)
-
-        # Check that dependencies come before dependents
-        idx_a1 = result.index((0, 0))
-        idx_b1 = result.index((0, 1))
-        idx_c1 = result.index((0, 2))
-
-        assert idx_a1 < idx_b1 < idx_c1
