@@ -256,9 +256,17 @@ class FormulaParser:
         self._pos += 1
         return token
 
+    def _is_error(self, value: Any) -> bool:
+        """Check if a value is an error string."""
+        return isinstance(value, str) and value.startswith("#") and value.endswith("!")
+
     def _parse_expression(self, min_prec: int = 0) -> Any:
         """Parse expression with operator precedence."""
         left = self._parse_comparison()
+
+        # Propagate errors immediately
+        if self._is_error(left):
+            return left
 
         while True:
             token = self._current()
@@ -276,6 +284,10 @@ class FormulaParser:
             self._advance()
             right = self._parse_expression(prec + 1)
 
+            # Propagate errors from right operand
+            if self._is_error(right):
+                return right
+
             try:
                 left = op_fn(left, right)
             except ZeroDivisionError:
@@ -283,15 +295,27 @@ class FormulaParser:
             except Exception:
                 left = "#ERR!"
 
+            # Propagate errors from operation result
+            if self._is_error(left):
+                return left
+
         return left
 
     def _parse_comparison(self) -> Any:
         """Parse comparison operators."""
         left = self._parse_atom()
 
+        # Propagate errors
+        if self._is_error(left):
+            return left
+
         while self._current().type == TokenType.COMPARISON:
             op_str = self._advance().value
             right = self._parse_atom()
+
+            # Propagate errors from right operand
+            if self._is_error(right):
+                return right
 
             cmp_fn = self.COMPARISONS.get(op_str)
             if cmp_fn:
@@ -307,12 +331,17 @@ class FormulaParser:
         if token.type == TokenType.OPERATOR and token.value == "-":
             self._advance()
             val = self._parse_atom()
+            if self._is_error(val):
+                return val
             return -val if isinstance(val, (int, float)) else val
 
         # Unary plus
         if token.type == TokenType.OPERATOR and token.value == "+":
             self._advance()
-            return self._parse_atom()
+            val = self._parse_atom()
+            if self._is_error(val):
+                return val
+            return val
 
         # Number
         if token.type == TokenType.NUMBER:

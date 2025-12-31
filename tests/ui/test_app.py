@@ -66,7 +66,6 @@ class TestLotusAppProperties:
         assert app._global_format_code == "G"
         assert app._global_label_prefix == "'"
         assert app._global_col_width == 10
-        assert app._global_protection is False
         assert app._global_zero_display is True
 
 
@@ -608,19 +607,37 @@ class TestLotusAppChartHandling:
 class TestLotusAppWorksheetHandling:
     """Tests for worksheet handling."""
 
+    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
-    async def test_handle_menu_worksheet_insert(self):
-        """Test _handle_menu with Worksheet:Insert."""
+    async def test_handle_menu_worksheet_insert_rows(self):
+        """Test _handle_menu with Worksheet:Insert:Rows opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
-            app._handle_menu("Worksheet:Insert")
+            app._handle_menu("Worksheet:Insert:Rows")
 
+    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
-    async def test_handle_menu_worksheet_delete(self):
-        """Test _handle_menu with Worksheet:Delete."""
+    async def test_handle_menu_worksheet_insert_columns(self):
+        """Test _handle_menu with Worksheet:Insert:Columns opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
-            app._handle_menu("Worksheet:Delete")
+            app._handle_menu("Worksheet:Insert:Columns")
+
+    @pytest.mark.skip(reason="Dialog interactions require complex setup")
+    @pytest.mark.asyncio
+    async def test_handle_menu_worksheet_delete_rows(self):
+        """Test _handle_menu with Worksheet:Delete:Rows opens dialog."""
+        app = LotusApp()
+        async with app.run_test() as pilot:
+            app._handle_menu("Worksheet:Delete:Rows")
+
+    @pytest.mark.skip(reason="Dialog interactions require complex setup")
+    @pytest.mark.asyncio
+    async def test_handle_menu_worksheet_delete_columns(self):
+        """Test _handle_menu with Worksheet:Delete:Columns opens dialog."""
+        app = LotusApp()
+        async with app.run_test() as pilot:
+            app._handle_menu("Worksheet:Delete:Columns")
 
     @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
@@ -752,13 +769,6 @@ class TestLotusAppGlobalSettings:
             app._handle_menu("Worksheet:Global:Recalculation")
 
     @pytest.mark.asyncio
-    async def test_handle_menu_global_protection(self):
-        """Test _handle_menu with Worksheet:Global:Protection."""
-        app = LotusApp()
-        async with app.run_test() as pilot:
-            app._handle_menu("Worksheet:Global:Protection")
-
-    @pytest.mark.asyncio
     async def test_handle_menu_global_zero(self):
         """Test _handle_menu with Worksheet:Global:Zero."""
         app = LotusApp()
@@ -792,10 +802,3 @@ class TestLotusAppRangeHandling:
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Range:Name")
-
-    @pytest.mark.asyncio
-    async def test_handle_menu_range_protect(self):
-        """Test _handle_menu with Range:Protect."""
-        app = LotusApp()
-        async with app.run_test() as pilot:
-            app._handle_menu("Range:Protect")

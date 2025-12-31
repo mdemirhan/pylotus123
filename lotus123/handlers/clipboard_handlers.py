@@ -35,6 +35,7 @@ class ClipboardHandler(BaseHandler):
         try:
             dest_row, dest_col = parse_cell_ref(result.upper())
             r1, c1, r2, c2 = self._app._pending_source_range
+
             changes = []
             for r_offset in range(r2 - r1 + 1):
                 for c_offset in range(c2 - c1 + 1):
@@ -62,10 +63,10 @@ class ClipboardHandler(BaseHandler):
             if changes:
                 cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
                 self.undo_manager.execute(cmd)
+                self._app._mark_dirty()
                 grid = self.get_grid()
                 grid.refresh_grid()
                 self._app._update_status()
-                self._app._mark_dirty()
                 self.notify(f"Copied {len(changes)} cell(s)")
         except ValueError as e:
             self.notify(f"Invalid destination: {e}", severity="error")
@@ -86,6 +87,7 @@ class ClipboardHandler(BaseHandler):
         try:
             dest_row, dest_col = parse_cell_ref(result.upper())
             r1, c1, r2, c2 = self._app._pending_source_range
+
             changes = []
             for r_offset in range(r2 - r1 + 1):
                 for c_offset in range(c2 - c1 + 1):
@@ -122,13 +124,13 @@ class ClipboardHandler(BaseHandler):
             if changes:
                 cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
                 self.undo_manager.execute(cmd)
+                self._app._mark_dirty()
                 grid = self.get_grid()
                 grid.clear_selection()
                 grid.cursor_row = dest_row
                 grid.cursor_col = dest_col
                 grid.refresh_grid()
                 self._app._update_status()
-                self._app._mark_dirty()
                 self.notify(f"Moved cells to {make_cell_ref(dest_row, dest_col)}")
         except ValueError as e:
             self.notify(f"Invalid destination: {e}", severity="error")
@@ -179,14 +181,15 @@ class ClipboardHandler(BaseHandler):
                     old_value=old_value,
                 )
                 self.undo_manager.execute(cmd)
+                self._app._mark_dirty()
                 grid.refresh_grid()
                 self._app._update_status()
-                self._app._mark_dirty()
                 self.notify("Pasted")
             return
 
         grid = self.get_grid()
         dest_row, dest_col = grid.cursor_row, grid.cursor_col
+
         src_row, src_col = getattr(self._app, "_clipboard_origin", (0, 0))
         changes = []
         for r_offset, row_data in enumerate(self._app._range_clipboard):
@@ -216,7 +219,7 @@ class ClipboardHandler(BaseHandler):
                 spreadsheet=self.spreadsheet, changes=changes
             )
             self.undo_manager.execute(range_cmd)
-        was_cut = self._app._clipboard_is_cut
+            self._app._mark_dirty()
         if self._app._clipboard_is_cut:
             clear_changes = []
             for r_offset, row_data in enumerate(self._app._range_clipboard):
@@ -230,11 +233,10 @@ class ClipboardHandler(BaseHandler):
                     spreadsheet=self.spreadsheet, changes=clear_changes
                 )
                 self.undo_manager.execute(clear_cmd)
+                self._app._mark_dirty()
             self._app._clipboard_is_cut = False
         grid.refresh_grid()
         self._app._update_status()
-        if changes or was_cut:
-            self._app._mark_dirty()
         cells_count = (
             len(self._app._range_clipboard) * len(self._app._range_clipboard[0])
             if self._app._range_clipboard

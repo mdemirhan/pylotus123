@@ -317,3 +317,77 @@ class TestNamePattern:
         assert NAME_PATTERN.match("123") is None
         assert NAME_PATTERN.match("_test") is None
         assert NAME_PATTERN.match("test-name") is None
+
+
+class TestNamedRangeErrorHandling:
+    """Tests for error handling in named range operations.
+
+    These tests verify that proper errors are raised for invalid inputs.
+    """
+
+    def test_add_name_with_spaces_raises_error(self):
+        """Test that adding a name with spaces raises ValueError."""
+        mgr = NamedRangeManager()
+        ref = CellReference(0, 0)
+        with pytest.raises(ValueError) as excinfo:
+            mgr.add("HELLO RANGE", ref)
+        assert "Invalid name" in str(excinfo.value)
+
+    def test_add_name_with_special_chars_raises_error(self):
+        """Test that adding a name with special characters raises ValueError."""
+        mgr = NamedRangeManager()
+        ref = CellReference(0, 0)
+        with pytest.raises(ValueError) as excinfo:
+            mgr.add("HELLO-RANGE", ref)
+        assert "Invalid name" in str(excinfo.value)
+
+    def test_add_name_starting_with_number_raises_error(self):
+        """Test that adding a name starting with a number raises ValueError."""
+        mgr = NamedRangeManager()
+        ref = CellReference(0, 0)
+        with pytest.raises(ValueError) as excinfo:
+            mgr.add("123ABC", ref)
+        assert "Invalid name" in str(excinfo.value)
+
+    def test_add_from_string_invalid_name_raises_error(self):
+        """Test that add_from_string with invalid name raises ValueError."""
+        mgr = NamedRangeManager()
+        with pytest.raises(ValueError) as excinfo:
+            mgr.add_from_string("HELLO RANGE", "A1:B10")
+        assert "Invalid name" in str(excinfo.value)
+
+    def test_add_from_string_cell_reference_name_raises_error(self):
+        """Test that using a cell reference as a name raises ValueError."""
+        mgr = NamedRangeManager()
+        with pytest.raises(ValueError) as excinfo:
+            mgr.add_from_string("A1", "B1:C10")
+        assert "Invalid name" in str(excinfo.value) or "cell reference" in str(excinfo.value).lower()
+
+    def test_add_duplicate_name_replaces(self):
+        """Test that adding a duplicate name replaces the old one."""
+        mgr = NamedRangeManager()
+        mgr.add("Test", CellReference(0, 0))
+        mgr.add("Test", CellReference(5, 5))  # Should replace
+        ref = mgr.get_reference("Test")
+        assert isinstance(ref, CellReference)
+        assert ref.row == 5
+        assert ref.col == 5
+
+    def test_error_message_includes_reason(self):
+        """Test that error messages explain why the name is invalid."""
+        mgr = NamedRangeManager()
+        ref = CellReference(0, 0)
+
+        # Name with spaces
+        with pytest.raises(ValueError) as excinfo:
+            mgr.add("MY RANGE", ref)
+        error_msg = str(excinfo.value).lower()
+        # Should mention the name or the invalid pattern
+        assert "my range" in error_msg or "invalid" in error_msg
+
+    def test_empty_name_raises_error(self):
+        """Test that empty name raises ValueError."""
+        mgr = NamedRangeManager()
+        ref = CellReference(0, 0)
+        with pytest.raises(ValueError):
+            mgr.add("", ref)

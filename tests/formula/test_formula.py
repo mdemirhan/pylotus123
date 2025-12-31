@@ -296,3 +296,106 @@ class TestEdgeCases:
 
     def test_string_literal(self):
         assert self.parser.evaluate('"Hello World"') == "Hello World"
+
+
+class TestErrorPropagation:
+    """Tests for error propagation in formulas.
+
+    These tests verify that error values are properly propagated through
+    operations and don't get multiplied/concatenated (e.g., #ERR!#ERR!).
+    """
+
+    def setup_method(self):
+        self.ss = Spreadsheet()
+        self.parser = FormulaParser(self.ss)
+
+    def test_error_not_multiplied(self):
+        """Test that error values in multiplication don't produce repeated strings."""
+        # Set up a cell with an error value (reference to invalid cell in range)
+        self.ss.set_cell(0, 0, "=1/0")  # This creates #DIV/0!
+        result = self.ss.get_value(0, 0)
+        assert result == "#DIV/0!"
+        # Multiplying cell containing error should propagate the error, not multiply it
+        self.ss.set_cell(0, 1, "=A1*100")
+        result = self.ss.get_value(0, 1)
+        # Should be a single error, not "#DIV/0!" repeated
+        assert result.startswith("#")
+        assert result.endswith("!")
+        assert len(result) < 20  # Error strings are short
+
+    def test_error_propagation_in_addition(self):
+        """Test error propagation in addition."""
+        self.ss.set_cell(0, 0, "=1/0")
+        self.ss.set_cell(0, 1, "=A1+10")
+        result = self.ss.get_value(0, 1)
+        assert result.startswith("#")
+        assert result.endswith("!")
+        assert len(result) < 20
+
+    def test_error_propagation_in_subtraction(self):
+        """Test error propagation in subtraction."""
+        self.ss.set_cell(0, 0, "=1/0")
+        self.ss.set_cell(0, 1, "=100-A1")
+        result = self.ss.get_value(0, 1)
+        assert result.startswith("#")
+        assert result.endswith("!")
+        assert len(result) < 20
+
+    def test_error_propagation_in_division(self):
+        """Test error propagation in division."""
+        self.ss.set_cell(0, 0, "=1/0")
+        self.ss.set_cell(0, 1, "=100/A1")
+        result = self.ss.get_value(0, 1)
+        assert result.startswith("#")
+        assert result.endswith("!")
+        assert len(result) < 20
+
+    def test_error_propagation_in_exponentiation(self):
+        """Test error propagation in exponentiation."""
+        self.ss.set_cell(0, 0, "=1/0")
+        self.ss.set_cell(0, 1, "=A1^2")
+        result = self.ss.get_value(0, 1)
+        assert result.startswith("#")
+        assert result.endswith("!")
+        assert len(result) < 20
+
+    def test_error_propagation_chain(self):
+        """Test error propagation through chain of cells."""
+        self.ss.set_cell(0, 0, "=1/0")  # #DIV/0!
+        self.ss.set_cell(0, 1, "=A1*2")
+        self.ss.set_cell(0, 2, "=B1+3")
+        self.ss.set_cell(0, 3, "=C1/4")
+        result = self.ss.get_value(0, 3)
+        assert result.startswith("#")
+        assert result.endswith("!")
+        assert len(result) < 20
+
+    def test_ref_error_propagation(self):
+        """Test #REF! error propagation."""
+        # Create a formula that will produce #REF!
+        self.ss.set_cell(0, 0, "10")
+        self.ss.set_cell(0, 1, "=A1*B1")  # B1 is empty = 0, so result is 0
+        # Now test with explicit ref error in multiplication
+        self.ss.set_cell(0, 2, "=#REF!*100")
+        # This parses as REF + ! * 100, but the key is no string multiplication
+        result = self.ss.get_value(0, 2)
+        # Result should be short, not a long repeated string
+        assert len(str(result)) < 100
+
+    def test_comparison_with_error(self):
+        """Test error propagation in comparisons."""
+        self.ss.set_cell(0, 0, "=1/0")
+        self.ss.set_cell(0, 1, "=A1>5")
+        result = self.ss.get_value(0, 1)
+        assert result.startswith("#")
+        assert result.endswith("!")
+        assert len(result) < 20
+
+    def test_unary_minus_with_error(self):
+        """Test error propagation with unary minus."""
+        self.ss.set_cell(0, 0, "=1/0")
+        self.ss.set_cell(0, 1, "=-A1")
+        result = self.ss.get_value(0, 1)
+        assert result.startswith("#")
+        assert result.endswith("!")
+        assert len(result) < 20

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Iterator
 from .cell import Cell
 from .formatting import format_value, parse_format_code
 from .named_ranges import NamedRangeManager
-from .protection import ProtectionManager
 from .reference import adjust_for_structural_change, adjust_formula_references, parse_cell_ref
 
 if TYPE_CHECKING:
@@ -38,7 +37,6 @@ class Spreadsheet:
     - 256 columns (A through IV) x 65,536 rows
     - Cell formulas with circular reference detection
     - Named ranges
-    - Cell and worksheet protection
     - Multiple recalculation modes
     - Row heights and column widths
 
@@ -73,9 +71,6 @@ class Spreadsheet:
         # Named ranges
         self.named_ranges = NamedRangeManager()
 
-        # Protection
-        self.protection = ProtectionManager(self)
-
         # File info
         self.filename: str = ""
         self.modified: bool = False
@@ -89,6 +84,14 @@ class Spreadsheet:
 
         # Circular references detected
         self._circular_refs: set[tuple[int, int]] = set()
+
+        # Global settings (synced from app for persistence)
+        self.global_settings: dict[str, Any] = {
+            "format_code": "G",
+            "label_prefix": "'",
+            "default_col_width": DEFAULT_COL_WIDTH,
+            "zero_display": True,
+        }
 
     # -------------------------------------------------------------------------
     # Cell Access
@@ -128,9 +131,6 @@ class Spreadsheet:
             col: 0-based column index
             value: Raw value string
         """
-        if self.protection.is_cell_protected(row, col):
-            return  # Cannot edit protected cell
-
         cell = self.get_cell(row, col)
         cell.set_value(value)
         
@@ -388,9 +388,6 @@ class Spreadsheet:
 
     def delete_row(self, row: int) -> None:
         """Delete a row and shift cells up."""
-        if not self.protection.can_delete_row():
-            return
-
         new_cells = {}
         for (r, c), cell in self._cells.items():
             if r == row:
@@ -418,9 +415,8 @@ class Spreadsheet:
                 new_heights[r - 1] = h
         self._row_heights = new_heights
 
-        # Adjust named ranges and protection
+        # Adjust named ranges
         self.named_ranges.adjust_for_delete_row(row)
-        self.protection.adjust_for_delete_row(row)
 
         self.modified = True
         self._invalidate_cache()
@@ -429,9 +425,6 @@ class Spreadsheet:
 
     def insert_row(self, row: int) -> None:
         """Insert a row and shift cells down."""
-        if not self.protection.can_insert_row():
-            return
-
         new_cells = {}
         for (r, c), cell in self._cells.items():
             # Adjust formula references for ALL cells
@@ -456,9 +449,8 @@ class Spreadsheet:
                 new_heights[r + 1] = h
         self._row_heights = new_heights
 
-        # Adjust named ranges and protection
+        # Adjust named ranges
         self.named_ranges.adjust_for_insert_row(row)
-        self.protection.adjust_for_insert_row(row)
 
         self.modified = True
         self._invalidate_cache()
@@ -467,9 +459,6 @@ class Spreadsheet:
 
     def delete_col(self, col: int) -> None:
         """Delete a column and shift cells left."""
-        if not self.protection.can_delete_col():
-            return
-
         new_cells = {}
         for (r, c), cell in self._cells.items():
             if c == col:
@@ -497,9 +486,8 @@ class Spreadsheet:
                 new_widths[c - 1] = w
         self._col_widths = new_widths
 
-        # Adjust named ranges and protection
+        # Adjust named ranges
         self.named_ranges.adjust_for_delete_col(col)
-        self.protection.adjust_for_delete_col(col)
 
         self.modified = True
         self._invalidate_cache()
@@ -508,9 +496,6 @@ class Spreadsheet:
 
     def insert_col(self, col: int) -> None:
         """Insert a column and shift cells right."""
-        if not self.protection.can_insert_col():
-            return
-
         new_cells = {}
         for (r, c), cell in self._cells.items():
             # Adjust formula references for ALL cells
@@ -535,9 +520,8 @@ class Spreadsheet:
                 new_widths[c + 1] = w
         self._col_widths = new_widths
 
-        # Adjust named ranges and protection
+        # Adjust named ranges
         self.named_ranges.adjust_for_insert_col(col)
-        self.protection.adjust_for_insert_col(col)
 
         self.modified = True
         self._invalidate_cache()
@@ -560,9 +544,6 @@ class Spreadsheet:
         """
         src = self._cells.get((from_row, from_col))
         if not src:
-            return
-
-        if self.protection.is_cell_protected(to_row, to_col):
             return
 
         value = src.raw_value
@@ -640,11 +621,16 @@ class Spreadsheet:
         self._col_widths.clear()
         self._row_heights.clear()
         self.named_ranges.clear()
-        self.protection.clear()
         self.frozen_rows = 0
         self.frozen_cols = 0
         self.modified = False
         self._circular_refs.clear()
+        self.global_settings = {
+            "format_code": "G",
+            "label_prefix": "'",
+            "default_col_width": DEFAULT_COL_WIDTH,
+            "zero_display": True,
+        }
 
     # -------------------------------------------------------------------------
     # Iteration

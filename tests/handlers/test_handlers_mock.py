@@ -14,11 +14,18 @@ class MockApp:
         self.spreadsheet.cols = 26
         self.spreadsheet.get_cell.return_value = MagicMock(spec=Cell, raw_value="123")
         self.spreadsheet.get_cell_if_exists.return_value = MagicMock(spec=Cell, raw_value="123")
+        # Global settings mock
+        self.spreadsheet.global_settings = {
+            "format_code": "G",
+            "label_prefix": "'",
+            "default_col_width": 10,
+            "zero_display": True,
+        }
         self.undo_manager = MagicMock()
         self.push_screen = MagicMock()
         self.notify = MagicMock()
         self.query_one = MagicMock()
-        
+
         # Grid mock
         self.grid = MagicMock(spec=SpreadsheetGrid)
         self.grid.selection_range = (0, 0, 2, 2) # A1:C3
@@ -26,14 +33,14 @@ class MockApp:
         self.grid.cursor_col = 0
         self.grid.has_selection = True
         self.query_one.return_value = self.grid
-        
+
         # App state
         self._pending_source_range = None
         self._range_clipboard = []
         self._cell_clipboard = None
         self._clipboard_is_cut = False
         self._clipboard_origin = (0, 0)
-        
+
         # Query state
         self._query_input_range = None
         self._query_criteria_range = None
@@ -46,7 +53,6 @@ class MockApp:
         self._global_label_prefix = "'"
         self._global_col_width = 9
         self._recalc_mode = "auto"
-        self._global_protection = False
         self._global_zero_display = True
         self._dirty = False
 
@@ -70,7 +76,7 @@ class TestClipboardHandler:
         cell_dst = MagicMock(spec=Cell, raw_value="DST")
         # get_cell called for src then target
         self.app.spreadsheet.get_cell.side_effect = [cell_src, cell_dst]
-        
+
         self.app._pending_source_range = (0, 0, 0, 0) # A1:A1
         self.handler._do_menu_copy("B1") # Copy A1 to B1
         self.app.undo_manager.execute.assert_called()
@@ -174,13 +180,21 @@ class TestWorksheetHandler:
         self.handler.global_format()
         self.app.push_screen.assert_called()
 
-    def test_insert_row(self):
-        self.handler.insert_row()
-        self.app.undo_manager.execute.assert_called()
-        
-    def test_delete_row(self):
-        self.handler.delete_row()
-        self.app.undo_manager.execute.assert_called()
+    def test_insert_rows(self):
+        self.handler.insert_rows()
+        self.app.push_screen.assert_called()
+
+    def test_insert_columns(self):
+        self.handler.insert_columns()
+        self.app.push_screen.assert_called()
+
+    def test_delete_rows(self):
+        self.handler.delete_rows()
+        self.app.push_screen.assert_called()
+
+    def test_delete_columns(self):
+        self.handler.delete_columns()
+        self.app.push_screen.assert_called()
 
     def test_col_width(self):
         self.handler.set_column_width()
@@ -237,14 +251,6 @@ class TestRangeHandler:
         self.app._pending_range = ""
         self.handler.range_name()
         self.app.push_screen.assert_called() # Prompt for name
-
-    def test_range_protect(self):
-        # Range is A1:C3
-        self.handler.range_protect()
-        # Should toggle protection
-        # We can assert notify was called with "Protected" or "Unprotected"
-        # self.app.notify.filter_args?
-        pass
 
 class TestChartHandler:
     def setup_method(self):

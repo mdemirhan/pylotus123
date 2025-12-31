@@ -52,7 +52,6 @@ class AppProtocol(Protocol):
     _global_format_code: str
     _global_label_prefix: str
     _global_col_width: int
-    _global_protection: bool
     _global_zero_display: bool
 
     # Pending operation state

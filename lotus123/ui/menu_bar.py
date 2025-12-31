@@ -57,8 +57,8 @@ class LotusMenu(Static, can_focus=True):
                         ("Z", "Zero"),
                     ],
                 ),
-                ("I", "Insert"),
-                ("D", "Delete"),
+                ("I", "Insert", [("R", "Rows"), ("C", "Columns")]),
+                ("D", "Delete", [("R", "Rows"), ("C", "Columns")]),
                 ("C", "Column"),
                 ("E", "Erase"),
             ],
@@ -103,6 +103,7 @@ class LotusMenu(Static, can_focus=True):
                 ("V", "View"),
                 ("R", "Reset"),
                 ("S", "Save"),
+                ("L", "Load"),
             ],
         },
         "Data": {

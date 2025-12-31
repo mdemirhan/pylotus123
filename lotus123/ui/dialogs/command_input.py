@@ -42,14 +42,15 @@ class CommandInput(ModalScreen[str | None]):
     }
     """
 
-    def __init__(self, prompt: str, **kwargs: Any) -> None:
+    def __init__(self, prompt: str, default: str = "", **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.prompt = prompt
+        self.default = default
 
     def compose(self) -> ComposeResult:
         with Container(id="cmd-dialog-container"):
             yield Label(self.prompt, id="cmd-prompt")
-            yield Input(id="cmd-input")
+            yield Input(value=self.default, id="cmd-input")
 
     def on_mount(self) -> None:
         # Get theme fresh from the app's current setting
@@ -60,7 +61,11 @@ class CommandInput(ModalScreen[str | None]):
         container = self.query_one("#cmd-dialog-container")
         container.styles.background = theme.cell_bg
         container.styles.border = ("thick", theme.accent)
-        self.query_one("#cmd-input").focus()
+        input_widget = self.query_one("#cmd-input", Input)
+        input_widget.focus()
+        # Select all text so typing replaces it
+        if self.default:
+            input_widget.selection = (0, len(self.default))
 
     @on(Input.Submitted)
     def on_submit(self, event: Input.Submitted) -> None:

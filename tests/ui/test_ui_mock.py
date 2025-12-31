@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from lotus123.ui.menu.menu_system import MenuSystem, MenuState, MenuAction
 from lotus123.ui.menu_bar import LotusMenu
 from lotus123.ui.themes import THEMES, ThemeType
+from lotus123.ui.dialogs.command_input import CommandInput
 from rich.text import Text
 
 class TestMenuSystem:
@@ -205,11 +206,45 @@ class TestLotusMenu:
         # Initial inactive state
         self.menu_bar.active = False
         self.menu_bar._update_display() # Populate _menu_positions
-        
+
         click_event = MagicMock()
         click_event.x = 5
         click_event.y = 0
-        
+
         self.menu_bar.on_click(click_event)
         # Should activate
         assert self.menu_bar.active is True
+
+
+class TestCommandInput:
+    """Tests for CommandInput dialog.
+
+    These tests verify the default value feature for CommandInput dialogs.
+    """
+
+    def test_command_input_default_value_stored(self):
+        """Test that CommandInput stores the default value."""
+        dialog = CommandInput("Enter value:", default="1")
+        assert dialog.default == "1"
+        assert dialog.prompt == "Enter value:"
+
+    def test_command_input_empty_default(self):
+        """Test CommandInput with no default value."""
+        dialog = CommandInput("Enter value:")
+        assert dialog.default == ""
+
+    def test_command_input_with_number_default(self):
+        """Test CommandInput with a number as default."""
+        dialog = CommandInput("Number of rows to insert:", default="5")
+        assert dialog.default == "5"
+
+    def test_command_input_long_default(self):
+        """Test CommandInput with a longer default value."""
+        dialog = CommandInput("Range:", default="A1:Z100")
+        assert dialog.default == "A1:Z100"
+
+    def test_command_input_prompt_stored(self):
+        """Test that the prompt is stored correctly."""
+        dialog = CommandInput("Column width (3-50):", default="9")
+        assert "Column width" in dialog.prompt
+        assert dialog.default == "9"

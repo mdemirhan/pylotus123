@@ -3,7 +3,6 @@
 from .cell import Cell, CellType, TextAlignment
 from .formatting import DateFormat, FormatCode, TimeFormat, format_value, parse_format_code
 from .named_ranges import NamedRangeManager
-from .protection import ProtectionManager
 from .reference import (
     CellReference,
     RangeReference,
@@ -35,5 +34,4 @@ __all__ = [
     "parse_format_code",
     "Spreadsheet",
     "NamedRangeManager",
-    "ProtectionManager",
 ]

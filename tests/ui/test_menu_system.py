@@ -283,7 +283,6 @@ class TestMenuSystemSubmenus:
         assert "L" in keys  # Label-Prefix
         assert "C" in keys  # Column-Width
         assert "R" in keys  # Recalculation
-        assert "P" in keys  # Protection
 
     def test_range_format_submenu(self):
         """Test range format submenu structure."""
@@ -687,24 +686,6 @@ class TestMenuSystemRecalcCommands:
         assert isinstance(result, str)
 
 
-class TestMenuSystemProtectionCommands:
-    """Tests for protection commands."""
-
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.menu_system = MenuSystem()
-
-    def test_cmd_protection_enable(self):
-        """Test protection enable command."""
-        result = self.menu_system._cmd_protection_enable()
-        assert isinstance(result, str)
-
-    def test_cmd_protection_disable(self):
-        """Test protection disable command."""
-        result = self.menu_system._cmd_protection_disable()
-        assert isinstance(result, str)
-
-
 class TestMenuSystemDefaultCommands:
     """Tests for default commands."""
 
@@ -766,11 +747,6 @@ class TestMenuSystemRangeCommands:
     def test_cmd_range_justify(self):
         """Test range justify command."""
         result = self.menu_system._cmd_range_justify("A1:B10")
-        assert isinstance(result, str)
-
-    def test_cmd_range_unprotect(self):
-        """Test range unprotect command."""
-        result = self.menu_system._cmd_range_unprotect("A1:B10")
         assert isinstance(result, str)
 
     def test_cmd_range_input(self):

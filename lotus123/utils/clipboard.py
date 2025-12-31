@@ -143,10 +143,6 @@ class Clipboard:
             if target_row >= self.spreadsheet.rows or target_col >= self.spreadsheet.cols:
                 continue
 
-            # Check protection
-            if self.spreadsheet.protection.is_cell_protected(target_row, target_col):
-                continue
-
             # Prepare value
             value = clip_cell.raw_value
             if adjust_references and clip_cell.is_formula:
@@ -222,10 +218,6 @@ class Clipboard:
 
             # Check bounds
             if target_row >= self.spreadsheet.rows or target_col >= self.spreadsheet.cols:
-                continue
-
-            # Check protection
-            if self.spreadsheet.protection.is_cell_protected(target_row, target_col):
                 continue
 
             cell = self.spreadsheet.get_cell(target_row, target_col)

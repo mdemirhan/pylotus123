@@ -40,6 +40,13 @@ class Theme:
     input_bg: str
     input_fg: str
     accent: str
+    protected_bg: str = ""  # Background for protected cells (when protection enabled)
+
+    def __post_init__(self) -> None:
+        """Set default protected_bg if not specified."""
+        if not self.protected_bg:
+            # Default to a slightly different shade of cell_bg
+            self.protected_bg = self.header_bg
 
 
 # Theme definitions

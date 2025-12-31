@@ -168,6 +168,7 @@ class DeleteRowCommand(Command):
     spreadsheet: Spreadsheet
     row: int
     saved_data: dict = field(default_factory=dict)
+    saved_formulas: dict = field(default_factory=dict)
 
     def execute(self) -> None:
         """Delete the row, saving its data."""
@@ -176,6 +177,12 @@ class DeleteRowCommand(Command):
         for (r, c), cell in list(self.spreadsheet._cells.items()):
             if r == self.row:
                 self.saved_data[c] = cell.to_dict()
+
+        # Save ALL formula cells before deletion (they may be modified by adjust_for_structural_change)
+        self.saved_formulas = {}
+        for (r, c), cell in self.spreadsheet._cells.items():
+            if cell.is_formula:
+                self.saved_formulas[(r, c)] = cell.raw_value
 
         self.spreadsheet.delete_row(self.row)
 
@@ -189,6 +196,13 @@ class DeleteRowCommand(Command):
 
         for col, cell_data in self.saved_data.items():
             self.spreadsheet._cells[(self.row, col)] = Cell.from_dict(cell_data)
+
+        # Restore all formulas to their original state
+        # After insert_row, cells are back to their original positions
+        for (r, c), formula in self.saved_formulas.items():
+            cell = self.spreadsheet._cells.get((r, c))
+            if cell and cell.is_formula:
+                cell.set_value(formula)
 
         self.spreadsheet._invalidate_cache()
         if self.spreadsheet._recalc_engine:
@@ -237,6 +251,7 @@ class DeleteColCommand(Command):
     col: int
     saved_data: dict = field(default_factory=dict)
     saved_width: int | None = None
+    saved_formulas: dict = field(default_factory=dict)
 
     def execute(self) -> None:
         """Delete the column, saving its data."""
@@ -248,6 +263,12 @@ class DeleteColCommand(Command):
 
         # Save column width
         self.saved_width = self.spreadsheet.get_col_width(self.col)
+
+        # Save ALL formula cells before deletion (they may be modified by adjust_for_structural_change)
+        self.saved_formulas = {}
+        for (r, c), cell in self.spreadsheet._cells.items():
+            if cell.is_formula:
+                self.saved_formulas[(r, c)] = cell.raw_value
 
         self.spreadsheet.delete_col(self.col)
 
@@ -265,6 +286,13 @@ class DeleteColCommand(Command):
         # Restore width
         if self.saved_width is not None:
             self.spreadsheet.set_col_width(self.col, self.saved_width)
+
+        # Restore all formulas to their original state
+        # After insert_col, cells are back to their original positions
+        for (r, c), formula in self.saved_formulas.items():
+            cell = self.spreadsheet._cells.get((r, c))
+            if cell and cell.is_formula:
+                cell.set_value(formula)
 
         self.spreadsheet._invalidate_cache()
         if self.spreadsheet._recalc_engine:
@@ -336,6 +364,35 @@ class ClearRangeCommand(Command):
     @property
     def description(self) -> str:
         return "Clear range"
+
+
+@dataclass
+class RangeFormatCommand(Command):
+    """Command for changing the format of a range of cells."""
+
+    spreadsheet: Spreadsheet
+    changes: list[tuple[int, int, str, str]] = field(default_factory=list)
+    # Each tuple: (row, col, new_format, old_format)
+
+    def execute(self) -> None:
+        """Apply format to all cells."""
+        for row, col, new_fmt, _ in self.changes:
+            cell = self.spreadsheet.get_cell(row, col)
+            cell.format_code = new_fmt
+
+    def undo(self) -> None:
+        """Restore all old formats."""
+        for row, col, _, old_fmt in self.changes:
+            cell = self.spreadsheet.get_cell(row, col)
+            cell.format_code = old_fmt
+
+    def redo(self) -> None:
+        """Apply format again."""
+        self.execute()
+
+    @property
+    def description(self) -> str:
+        return f"Format {len(self.changes)} cells"
 
 
 class CompositeCommand(Command):

@@ -153,7 +153,6 @@ class LotusApp(App[None]):
         self._global_format_code = "G"
         self._global_label_prefix = "'"
         self._global_col_width = 10
-        self._global_protection = False
         self._global_zero_display = True
         self._dirty = False
         # Query settings (Data Query)
@@ -329,8 +328,8 @@ class LotusApp(App[None]):
 
     @on(LotusMenu.MenuItemSelected)
     def on_menu_item_selected(self, event: LotusMenu.MenuItemSelected) -> None:
-        self._handle_menu(event.path)
         self._menu_active = False
+        self._handle_menu(event.path)
         self.query_one("#grid", SpreadsheetGrid).focus()
 
     @on(LotusMenu.MenuActivated)
@@ -586,8 +585,6 @@ class LotusApp(App[None]):
             self._range_handler.range_label()
         elif result == "Range:Name":
             self._range_handler.range_name()
-        elif result == "Range:Protect":
-            self._range_handler.range_protect()
         # Data
         elif result == "Data:Fill":
             self._data_handler.data_fill()
@@ -611,10 +608,14 @@ class LotusApp(App[None]):
         elif result == "Data:Query:Reset":
             self._query_handler.reset()
         # Worksheet
-        elif result == "Worksheet:Insert":
-            self._worksheet_handler.insert_row()
-        elif result == "Worksheet:Delete":
-            self._worksheet_handler.delete_row()
+        elif result == "Worksheet:Insert:Rows":
+            self._worksheet_handler.insert_rows()
+        elif result == "Worksheet:Insert:Columns":
+            self._worksheet_handler.insert_columns()
+        elif result == "Worksheet:Delete:Rows":
+            self._worksheet_handler.delete_rows()
+        elif result == "Worksheet:Delete:Columns":
+            self._worksheet_handler.delete_columns()
         elif result == "Worksheet:Column":
             self._worksheet_handler.set_column_width()
         elif result == "Worksheet:Erase":
@@ -627,8 +628,6 @@ class LotusApp(App[None]):
             self._worksheet_handler.global_column_width()
         elif result == "Worksheet:Global:Recalculation":
             self._worksheet_handler.global_recalculation()
-        elif result == "Worksheet:Global:Protection":
-            self._worksheet_handler.global_protection()
         elif result == "Worksheet:Global:Zero":
             self._worksheet_handler.global_zero()
         # Graph/Chart
@@ -660,6 +659,10 @@ class LotusApp(App[None]):
             self._chart_handler.view_chart()
         elif result == "Graph:Reset":
             self._chart_handler.reset_chart()
+        elif result == "Graph:Save":
+            self._chart_handler.save_chart()
+        elif result == "Graph:Load":
+            self._chart_handler.load_chart()
 
     def on_key(self, event: events.Key) -> None:
         """Handle key presses for navigation and direct cell input."""

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from ..core import make_cell_ref
 from ..ui import CommandInput
-from ..utils.undo import RangeChangeCommand
+from ..utils.undo import RangeChangeCommand, RangeFormatCommand
 from .base import BaseHandler
 
 if TYPE_CHECKING:
@@ -36,10 +36,16 @@ class RangeHandler(BaseHandler):
         format_code = format_map.get(format_char, "G")
         grid = self.get_grid()
         r1, c1, r2, c2 = grid.selection_range
+        changes = []
         for r in range(r1, r2 + 1):
             for c in range(c1, c2 + 1):
                 cell = self.spreadsheet.get_cell(r, c)
-                cell.format_code = format_code
+                old_format = cell.format_code
+                if old_format != format_code:
+                    changes.append((r, c, format_code, old_format))
+        if changes:
+            cmd = RangeFormatCommand(spreadsheet=self.spreadsheet, changes=changes)
+            self.undo_manager.execute(cmd)
         grid.refresh_grid()
         self._app._update_status()
         self._app._mark_dirty()
@@ -95,24 +101,9 @@ class RangeHandler(BaseHandler):
         name = result.strip().upper()
         if not name:
             return
-        self.spreadsheet.named_ranges.add_from_string(name, self._app._pending_range)
-        self._app._mark_dirty()
-        self.notify(f"Named range '{name}' created for {self._app._pending_range}")
-
-    def range_protect(self) -> None:
-        """Toggle protection for the selected range."""
-        grid = self.get_grid()
-        r1, c1, r2, c2 = grid.selection_range
-        protected_count = 0
-        for r in range(r1, r2 + 1):
-            for c in range(c1, c2 + 1):
-                cell = self.spreadsheet.get_cell(r, c)
-                cell.is_protected = not cell.is_protected
-                if cell.is_protected:
-                    protected_count += 1
-        total_cells = (r2 - r1 + 1) * (c2 - c1 + 1)
-        self._app._mark_dirty()
-        if protected_count > 0:
-            self.notify(f"Protected {protected_count} cell(s)")
-        else:
-            self.notify(f"Unprotected {total_cells} cell(s)")
+        try:
+            self.spreadsheet.named_ranges.add_from_string(name, self._app._pending_range)
+            self._app._mark_dirty()
+            self.notify(f"Named range '{name}' created for {self._app._pending_range}")
+        except ValueError as e:
+            self.notify(str(e), severity="error")

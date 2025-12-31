@@ -18,18 +18,50 @@ class FileHandler(BaseHandler):
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)
 
+    def _sync_global_settings_to_spreadsheet(self) -> None:
+        """Sync app global settings to spreadsheet before save."""
+        self.spreadsheet.global_settings["format_code"] = self._app._global_format_code
+        self.spreadsheet.global_settings["label_prefix"] = self._app._global_label_prefix
+        self.spreadsheet.global_settings["default_col_width"] = self._app._global_col_width
+        self.spreadsheet.global_settings["zero_display"] = self._app._global_zero_display
+
+    def _sync_global_settings_from_spreadsheet(self) -> None:
+        """Sync global settings from spreadsheet to app after load."""
+        grid = self.get_grid()
+
+        # Global settings
+        gs = self.spreadsheet.global_settings
+        self._app._global_format_code = gs.get("format_code", "G")
+        self._app._global_label_prefix = gs.get("label_prefix", "'")
+        self._app._global_col_width = gs.get("default_col_width", 10)
+        self._app._global_zero_display = gs.get("zero_display", True)
+
+        # Apply zero display to grid
+        grid.show_zero = self._app._global_zero_display
+        grid.default_col_width = self._app._global_col_width
+
     def new_file(self) -> None:
         """Create a new empty spreadsheet."""
         self.spreadsheet.clear()
         self.spreadsheet.filename = ""
         self.undo_manager.clear()
         self._app._dirty = False
+
+        # Reset global settings to defaults
+        self._app._global_format_code = "G"
+        self._app._global_label_prefix = "'"
+        self._app._global_col_width = 10
+        self._app._global_zero_display = True
+
         grid = self.get_grid()
         grid.cursor_row = 0
         grid.cursor_col = 0
         grid.scroll_row = 0
         grid.scroll_col = 0
+        grid.show_zero = True
+        grid.default_col_width = 10
         grid.refresh_grid()
+
         self._app._update_status()
         self._app._update_title()
         self.notify("New spreadsheet created")
@@ -46,6 +78,8 @@ class FileHandler(BaseHandler):
                 self.spreadsheet.load(str(path))
                 self.undo_manager.clear()
                 self._app._dirty = False
+                # Restore global settings from loaded file
+                self._sync_global_settings_from_spreadsheet()
                 grid = self.get_grid()
                 grid.refresh_grid()
                 self._app._update_status()
@@ -64,6 +98,8 @@ class FileHandler(BaseHandler):
                 self.spreadsheet.load(result)
                 self.undo_manager.clear()
                 self._app._dirty = False
+                # Restore global settings from loaded file
+                self._sync_global_settings_from_spreadsheet()
                 grid = self.get_grid()
                 grid.scroll_row = 1
                 grid.scroll_col = 1
@@ -84,6 +120,7 @@ class FileHandler(BaseHandler):
     def save(self) -> None:
         """Save the current spreadsheet."""
         if self.spreadsheet.filename:
+            self._sync_global_settings_to_spreadsheet()
             self.spreadsheet.save(self.spreadsheet.filename)
             self._app._dirty = False
             self._app._update_title()
@@ -97,15 +134,31 @@ class FileHandler(BaseHandler):
 
     def _do_save(self, result: str | None) -> None:
         if result:
-            try:
-                if not result.endswith(".json"):
-                    result += ".json"
-                self.spreadsheet.save(result)
-                self._app._dirty = False
-                self._app._update_title()
-                self.notify(f"Saved: {result}")
-            except Exception as e:
-                self.notify(f"Error: {e}", severity="error")
+            if not result.endswith(".json"):
+                result += ".json"
+            # Check if file exists
+            if Path(result).exists():
+                self._pending_save_path = result
+                self._app.push_screen(
+                    CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
+                    self._do_save_confirm,
+                )
+            else:
+                self._perform_save(result)
+
+    def _do_save_confirm(self, result: str | None) -> None:
+        if result and result.strip().upper().startswith("Y"):
+            self._perform_save(self._pending_save_path)
+
+    def _perform_save(self, filepath: str) -> None:
+        try:
+            self._sync_global_settings_to_spreadsheet()
+            self.spreadsheet.save(filepath)
+            self._app._dirty = False
+            self._app._update_title()
+            self.notify(f"Saved: {filepath}")
+        except Exception as e:
+            self.notify(f"Error: {e}", severity="error")
 
     def change_theme(self) -> None:
         """Show the theme selection dialog."""
@@ -140,6 +193,7 @@ class FileHandler(BaseHandler):
         response = result.strip().upper()
         if response.startswith("Y"):
             if self.spreadsheet.filename:
+                self._sync_global_settings_to_spreadsheet()
                 self.spreadsheet.save(self.spreadsheet.filename)
                 self._app.config.save()
                 self._app.exit()
@@ -151,6 +205,26 @@ class FileHandler(BaseHandler):
 
     def _do_save_and_quit(self, result: str | None) -> None:
         if result:
-            self.spreadsheet.save(result)
-        self._app.config.save()
-        self._app.exit()
+            if not result.endswith(".json"):
+                result += ".json"
+            if Path(result).exists():
+                self._pending_save_path = result
+                self._app.push_screen(
+                    CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
+                    self._do_save_and_quit_confirm,
+                )
+            else:
+                self._sync_global_settings_to_spreadsheet()
+                self.spreadsheet.save(result)
+                self._app.config.save()
+                self._app.exit()
+        else:
+            self._app.config.save()
+            self._app.exit()
+
+    def _do_save_and_quit_confirm(self, result: str | None) -> None:
+        if result and result.strip().upper().startswith("Y"):
+            self._sync_global_settings_to_spreadsheet()
+            self.spreadsheet.save(self._pending_save_path)
+            self._app.config.save()
+            self._app.exit()

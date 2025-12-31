@@ -34,9 +34,9 @@ class LotusJsonSerializer:
                 if not cell.is_empty
             },
             "named_ranges": spreadsheet.named_ranges.to_dict(),
-            "protection": spreadsheet.protection.to_dict(),
             "frozen_rows": spreadsheet.frozen_rows,
             "frozen_cols": spreadsheet.frozen_cols,
+            "global_settings": spreadsheet.global_settings,
         }
         with open(filename, "w") as f:
             json.dump(data, f, indent=2)
@@ -63,11 +63,12 @@ class LotusJsonSerializer:
         if "named_ranges" in data:
             spreadsheet.named_ranges.from_dict(data["named_ranges"])
 
-        if "protection" in data:
-            spreadsheet.protection.from_dict(data["protection"])
-
         spreadsheet.frozen_rows = data.get("frozen_rows", 0)
         spreadsheet.frozen_cols = data.get("frozen_cols", 0)
+
+        # Load global settings (with defaults for backward compatibility)
+        if "global_settings" in data:
+            spreadsheet.global_settings.update(data["global_settings"])
 
         # Rebuild dependency graph if engine is attached
         if spreadsheet._recalc_engine:

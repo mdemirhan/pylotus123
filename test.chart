@@ -1,0 +1,49 @@
+{
+  "chart_type": "BAR",
+  "x_range": "A18:A23",
+  "series": [
+    {
+      "name": "A",
+      "data_range": "B18:B23",
+      "values": [],
+      "line_style": "BOTH",
+      "color": "white"
+    },
+    {
+      "name": "B",
+      "data_range": "C18:C23",
+      "values": [],
+      "line_style": "BOTH",
+      "color": "white"
+    },
+    {
+      "name": "C",
+      "data_range": "D18:D23",
+      "values": [],
+      "line_style": "BOTH",
+      "color": "white"
+    }
+  ],
+  "x_axis": {
+    "title": "",
+    "min_value": null,
+    "max_value": null,
+    "scale_type": "LINEAR",
+    "grid_lines": false
+  },
+  "y_axis": {
+    "title": "",
+    "min_value": null,
+    "max_value": null,
+    "scale_type": "LINEAR",
+    "grid_lines": false
+  },
+  "options": {
+    "title": "",
+    "subtitle": "",
+    "show_legend": true,
+    "legend_position": "bottom",
+    "grid_horizontal": false,
+    "grid_vertical": false
+  }
+}

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ..charting import ChartType
+from ..charting import Chart, ChartType
 from ..core import make_cell_ref
-from ..ui import ChartViewScreen, CommandInput
+from ..ui import ChartViewScreen, CommandInput, FileDialog
 from .base import BaseHandler
 
 if TYPE_CHECKING:
@@ -176,3 +178,61 @@ class ChartHandler(BaseHandler):
         """Reset the chart to default state."""
         self.chart.reset()
         self.notify("Chart reset")
+
+    def save_chart(self) -> None:
+        """Save the current chart configuration to a file."""
+        if not self.chart.series:
+            self.notify("No chart data to save. Define data ranges first.")
+            return
+        self._app.push_screen(FileDialog(mode="save"), self._do_save_chart)
+
+    def _do_save_chart(self, result: str | None) -> None:
+        """Handle the save chart dialog result."""
+        if result:
+            if not result.endswith(".chart"):
+                result += ".chart"
+            if Path(result).exists():
+                self._pending_chart_path = result
+                self._app.push_screen(
+                    CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
+                    self._do_save_chart_confirm,
+                )
+            else:
+                self._perform_chart_save(result)
+
+    def _do_save_chart_confirm(self, result: str | None) -> None:
+        """Handle overwrite confirmation."""
+        if result and result.strip().upper().startswith("Y"):
+            self._perform_chart_save(self._pending_chart_path)
+
+    def _perform_chart_save(self, filepath: str) -> None:
+        """Actually save the chart to the file."""
+        try:
+            chart_data = self.chart.to_dict()
+            with open(filepath, "w") as f:
+                json.dump(chart_data, f, indent=2)
+            self.notify(f"Chart saved: {filepath}")
+        except Exception as e:
+            self.notify(f"Error saving chart: {e}", severity="error")
+
+    def load_chart(self) -> None:
+        """Load a chart configuration from a file."""
+        self._app.push_screen(FileDialog(mode="open"), self._do_load_chart)
+
+    def _do_load_chart(self, result: str | None) -> None:
+        """Handle the load chart dialog result."""
+        if result:
+            try:
+                with open(result) as f:
+                    chart_data = json.load(f)
+                loaded_chart = Chart.from_dict(chart_data)
+                # Copy loaded chart properties to the app's chart
+                self.chart.chart_type = loaded_chart.chart_type
+                self.chart.x_range = loaded_chart.x_range
+                self.chart.series = loaded_chart.series
+                self.chart.x_axis = loaded_chart.x_axis
+                self.chart.y_axis = loaded_chart.y_axis
+                self.chart.options = loaded_chart.options
+                self.notify(f"Chart loaded: {result}")
+            except Exception as e:
+                self.notify(f"Error loading chart: {e}", severity="error")

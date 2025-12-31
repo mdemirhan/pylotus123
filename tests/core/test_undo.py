@@ -463,3 +463,248 @@ class TestCompositeCommand:
         """Test description property."""
         composite = CompositeCommand([], "My description")
         assert composite.description == "My description"
+
+    def test_composite_insert_rows(self):
+        """Test CompositeCommand with multiple row inserts undoes all at once."""
+        self.ss.set_cell(0, 0, "row0")
+        self.ss.set_cell(1, 0, "row1")
+
+        commands = [
+            InsertRowCommand(self.ss, 1),
+            InsertRowCommand(self.ss, 1),
+            InsertRowCommand(self.ss, 1),
+        ]
+        composite = CompositeCommand(commands, "Insert 3 rows")
+        composite.execute()
+
+        # After 3 inserts at row 1, row1 data should be at row 4
+        assert self.ss.get_value(0, 0) == "row0"
+        assert self.ss.get_value(4, 0) == "row1"
+
+        # Single undo should revert all 3 inserts
+        composite.undo()
+        assert self.ss.get_value(0, 0) == "row0"
+        assert self.ss.get_value(1, 0) == "row1"
+
+    def test_composite_insert_cols(self):
+        """Test CompositeCommand with multiple column inserts undoes all at once."""
+        self.ss.set_cell(0, 0, "col0")
+        self.ss.set_cell(0, 1, "col1")
+
+        commands = [
+            InsertColCommand(self.ss, 1),
+            InsertColCommand(self.ss, 1),
+        ]
+        composite = CompositeCommand(commands, "Insert 2 columns")
+        composite.execute()
+
+        # After 2 inserts at col 1, col1 data should be at col 3
+        assert self.ss.get_value(0, 0) == "col0"
+        assert self.ss.get_value(0, 3) == "col1"
+
+        # Single undo should revert all 2 inserts
+        composite.undo()
+        assert self.ss.get_value(0, 0) == "col0"
+        assert self.ss.get_value(0, 1) == "col1"
+
+    def test_composite_delete_rows(self):
+        """Test CompositeCommand with multiple row deletes undoes all at once."""
+        self.ss.set_cell(0, 0, "row0")
+        self.ss.set_cell(1, 0, "row1")
+        self.ss.set_cell(2, 0, "row2")
+        self.ss.set_cell(3, 0, "row3")
+
+        commands = [
+            DeleteRowCommand(self.ss, 1),
+            DeleteRowCommand(self.ss, 1),
+        ]
+        composite = CompositeCommand(commands, "Delete 2 rows")
+        composite.execute()
+
+        # After 2 deletes at row 1, should have row0 and row3
+        assert self.ss.get_value(0, 0) == "row0"
+        assert self.ss.get_value(1, 0) == "row3"
+
+        # Single undo should restore both rows
+        composite.undo()
+        assert self.ss.get_value(0, 0) == "row0"
+        assert self.ss.get_value(1, 0) == "row1"
+        assert self.ss.get_value(2, 0) == "row2"
+        assert self.ss.get_value(3, 0) == "row3"
+
+
+class TestDeleteRowColumnFormulaRestoration:
+    """Tests for formula restoration when undoing row/column deletes.
+
+    These tests verify that formulas referencing deleted rows/columns
+    are properly restored to their original state after undo.
+    """
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.ss = Spreadsheet()
+
+    def test_delete_column_restores_formula_referencing_deleted_column(self):
+        """Test that deleting a column and undoing restores formulas that referenced it."""
+        # Set up data in column A
+        self.ss.set_cell(0, 0, "10")  # A1 = 10
+        self.ss.set_cell(1, 0, "20")  # A2 = 20
+
+        # Set up formula in column B that references column A
+        self.ss.set_cell(0, 1, "=A1*2")  # B1 = A1*2 = 20
+        self.ss.set_cell(1, 1, "=A2+5")  # B2 = A2+5 = 25
+
+        # Verify formulas work
+        assert self.ss.get_value(0, 1) == 20
+        assert self.ss.get_value(1, 1) == 25
+
+        # Delete column A
+        cmd = DeleteColCommand(self.ss, 0)
+        cmd.execute()
+
+        # Now B moved to A, formulas should be broken (#REF!)
+        # But we're testing undo, so let's undo
+        cmd.undo()
+
+        # After undo, formulas should be restored
+        assert self.ss.get_value(0, 0) == 10  # A1 restored
+        assert self.ss.get_value(1, 0) == 20  # A2 restored
+
+        # Formulas should work again
+        cell_b1 = self.ss.get_cell(0, 1)
+        cell_b2 = self.ss.get_cell(1, 1)
+        assert cell_b1.raw_value == "=A1*2"
+        assert cell_b2.raw_value == "=A2+5"
+        assert self.ss.get_value(0, 1) == 20
+        assert self.ss.get_value(1, 1) == 25
+
+    def test_delete_row_restores_formula_referencing_deleted_row(self):
+        """Test that deleting a row and undoing restores formulas that referenced it."""
+        # Set up data in row 1
+        self.ss.set_cell(0, 0, "10")  # A1 = 10
+        self.ss.set_cell(0, 1, "20")  # B1 = 20
+
+        # Set up formula in row 2 that references row 1
+        self.ss.set_cell(1, 0, "=A1*3")  # A2 = A1*3 = 30
+        self.ss.set_cell(1, 1, "=B1-5")  # B2 = B1-5 = 15
+
+        # Verify formulas work
+        assert self.ss.get_value(1, 0) == 30
+        assert self.ss.get_value(1, 1) == 15
+
+        # Delete row 1 (index 0)
+        cmd = DeleteRowCommand(self.ss, 0)
+        cmd.execute()
+
+        # Undo the delete
+        cmd.undo()
+
+        # After undo, formulas should be restored
+        assert self.ss.get_value(0, 0) == 10  # A1 restored
+        assert self.ss.get_value(0, 1) == 20  # B1 restored
+
+        # Formulas should work again
+        cell_a2 = self.ss.get_cell(1, 0)
+        cell_b2 = self.ss.get_cell(1, 1)
+        assert cell_a2.raw_value == "=A1*3"
+        assert cell_b2.raw_value == "=B1-5"
+        assert self.ss.get_value(1, 0) == 30
+        assert self.ss.get_value(1, 1) == 15
+
+    def test_delete_column_restores_sum_formula(self):
+        """Test that SUM formulas referencing deleted columns are restored."""
+        # Set up data
+        self.ss.set_cell(0, 0, "1")  # A1
+        self.ss.set_cell(0, 1, "2")  # B1
+        self.ss.set_cell(0, 2, "3")  # C1
+        self.ss.set_cell(0, 3, "=SUM(A1:C1)")  # D1 = SUM(A1:C1) = 6
+
+        # Verify formula works
+        assert self.ss.get_value(0, 3) == 6
+
+        # Delete column B (index 1)
+        cmd = DeleteColCommand(self.ss, 1)
+        cmd.execute()
+
+        # Undo the delete
+        cmd.undo()
+
+        # After undo, SUM formula should be restored
+        cell_d1 = self.ss.get_cell(0, 3)
+        assert cell_d1.raw_value == "=SUM(A1:C1)"
+        assert self.ss.get_value(0, 3) == 6
+
+    def test_delete_row_restores_sum_formula(self):
+        """Test that SUM formulas referencing deleted rows are restored."""
+        # Set up data
+        self.ss.set_cell(0, 0, "1")  # A1
+        self.ss.set_cell(1, 0, "2")  # A2
+        self.ss.set_cell(2, 0, "3")  # A3
+        self.ss.set_cell(3, 0, "=SUM(A1:A3)")  # A4 = SUM(A1:A3) = 6
+
+        # Verify formula works
+        assert self.ss.get_value(3, 0) == 6
+
+        # Delete row 2 (index 1)
+        cmd = DeleteRowCommand(self.ss, 1)
+        cmd.execute()
+
+        # Undo the delete
+        cmd.undo()
+
+        # After undo, SUM formula should be restored
+        cell_a4 = self.ss.get_cell(3, 0)
+        assert cell_a4.raw_value == "=SUM(A1:A3)"
+        assert self.ss.get_value(3, 0) == 6
+
+    def test_delete_column_multiple_formulas_restored(self):
+        """Test that multiple formulas are all restored after column delete undo."""
+        # Set up data
+        self.ss.set_cell(0, 0, "10")  # A1
+        self.ss.set_cell(1, 0, "20")  # A2
+        self.ss.set_cell(2, 0, "30")  # A3
+
+        # Set up multiple formulas in column B referencing column A
+        self.ss.set_cell(0, 1, "=A1+1")  # B1
+        self.ss.set_cell(1, 1, "=A2+2")  # B2
+        self.ss.set_cell(2, 1, "=A3+3")  # B3
+        self.ss.set_cell(3, 1, "=SUM(A1:A3)")  # B4
+
+        # Delete column A
+        cmd = DeleteColCommand(self.ss, 0)
+        cmd.execute()
+
+        # Undo
+        cmd.undo()
+
+        # All formulas should be restored
+        assert self.ss.get_cell(0, 1).raw_value == "=A1+1"
+        assert self.ss.get_cell(1, 1).raw_value == "=A2+2"
+        assert self.ss.get_cell(2, 1).raw_value == "=A3+3"
+        assert self.ss.get_cell(3, 1).raw_value == "=SUM(A1:A3)"
+
+        # Values should be correct
+        assert self.ss.get_value(0, 1) == 11
+        assert self.ss.get_value(1, 1) == 22
+        assert self.ss.get_value(2, 1) == 33
+        assert self.ss.get_value(3, 1) == 60
+
+    def test_redo_after_undo_delete_column(self):
+        """Test that redo after undo of column delete works correctly."""
+        self.ss.set_cell(0, 0, "10")  # A1
+        self.ss.set_cell(0, 1, "=A1*2")  # B1
+
+        cmd = DeleteColCommand(self.ss, 0)
+        cmd.execute()
+
+        # Undo
+        cmd.undo()
+        assert self.ss.get_value(0, 0) == 10
+        assert self.ss.get_value(0, 1) == 20
+
+        # Redo
+        cmd.redo()
+
+        # After redo, column A should be deleted again
+        # B1 (now A1) should have the formula but with #REF!
+        # The important thing is redo doesn't crash

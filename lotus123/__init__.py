@@ -4,7 +4,7 @@ This package provides:
 - Core spreadsheet data model with 256 columns x 65,536 rows
 - Complete formula engine with 100+ functions
 - Text alignment and numeric formatting
-- Named ranges and cell protection
+- Named ranges
 - Undo/redo support
 - Database operations (sort, query, fill)
 - Charting capabilities
@@ -24,7 +24,6 @@ from .core import (
     CellType,
     FormatCode,
     NamedRangeManager,
-    ProtectionManager,
     RangeReference,
     TextAlignment,
     col_to_index,
@@ -89,7 +88,6 @@ __all__ = [
     "FormatCode",
     "format_value",
     "NamedRangeManager",
-    "ProtectionManager",
     # Formula
     "FormulaParser",
     "FormulaEvaluator",

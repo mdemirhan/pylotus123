@@ -61,7 +61,6 @@ class Cell:
     Attributes:
         raw_value: The raw string value as entered by user
         format_code: Format code for display (e.g., 'F2' for 2 decimal fixed)
-        is_protected: Whether cell is protected from editing
         _cached_value: Cached computed value
         _cached_display: Cached display string
     """
@@ -72,7 +71,6 @@ class Cell:
 
     raw_value: str = ""
     format_code: str = "G"  # General format by default
-    is_protected: bool = False
     _cached_value: Any = field(default=None, repr=False, compare=False)
     _cached_display: str | None = field(default=None, repr=False, compare=False)
 
@@ -213,8 +211,6 @@ class Cell:
         data: dict = {"raw_value": self.raw_value}
         if self.format_code != "G":
             data["format_code"] = self.format_code
-        if self.is_protected:
-            data["is_protected"] = True
         return data
 
     @classmethod
@@ -228,11 +224,10 @@ class Cell:
         return cls(
             raw_value=data.get("raw_value", ""),
             format_code=format_code,
-            is_protected=data.get("is_protected", False),
         )
 
     def copy(self) -> Cell:
         """Create a copy of this cell."""
         return Cell(
-            raw_value=self.raw_value, format_code=self.format_code, is_protected=self.is_protected
+            raw_value=self.raw_value, format_code=self.format_code
         )

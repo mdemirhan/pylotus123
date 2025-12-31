@@ -233,20 +233,6 @@ class MenuSystem:
                 help_text="Justify text",
             ),
             MenuItem(
-                "P",
-                "Protect",
-                MenuAction.SUBMENU,
-                submenu=self._build_protect_menu(),
-                help_text="Cell protection",
-            ),
-            MenuItem(
-                "U",
-                "Unprotect",
-                MenuAction.RANGE,
-                handler=self._cmd_range_unprotect,
-                help_text="Unprotect cells",
-            ),
-            MenuItem(
                 "I",
                 "Input",
                 MenuAction.RANGE,
@@ -567,13 +553,6 @@ class MenuSystem:
                 help_text="Recalculation settings",
             ),
             MenuItem(
-                "P",
-                "Protection",
-                MenuAction.SUBMENU,
-                submenu=self._build_global_protection_menu(),
-                help_text="Worksheet protection",
-            ),
-            MenuItem(
                 "D",
                 "Default",
                 MenuAction.SUBMENU,
@@ -789,27 +768,6 @@ class MenuSystem:
                 MenuAction.INPUT,
                 handler=self._cmd_recalc_iteration,
                 help_text="Iteration count",
-            ),
-        ]
-        return menu
-
-    def _build_global_protection_menu(self) -> Menu:
-        """Build global protection submenu."""
-        menu = Menu("Protection")
-        menu.items = [
-            MenuItem(
-                "E",
-                "Enable",
-                MenuAction.COMMAND,
-                handler=self._cmd_protection_enable,
-                help_text="Enable protection",
-            ),
-            MenuItem(
-                "D",
-                "Disable",
-                MenuAction.COMMAND,
-                handler=self._cmd_protection_disable,
-                help_text="Disable protection",
             ),
         ]
         return menu
@@ -1116,20 +1074,6 @@ class MenuSystem:
                 handler=self._cmd_name_labels_up,
                 help_text="Names from bottom row",
             ),
-        ]
-        return menu
-
-    def _build_protect_menu(self) -> Menu:
-        """Build protect submenu."""
-        menu = Menu("Protect")
-        menu.items = [
-            MenuItem(
-                "P",
-                "Protect",
-                MenuAction.RANGE,
-                handler=self._cmd_protect_range,
-                help_text="Protect cells",
-            )
         ]
         return menu
 
@@ -1763,16 +1707,6 @@ class MenuSystem:
     def _cmd_recalc_iteration(self, count: str) -> str:
         return f"Iteration count set to {count}"
 
-    def _cmd_protection_enable(self) -> str:
-        if self.spreadsheet:
-            self.spreadsheet.protection.enable()
-        return "Protection enabled"
-
-    def _cmd_protection_disable(self) -> str:
-        if self.spreadsheet:
-            self.spreadsheet.protection.disable()
-        return "Protection disabled"
-
     def _cmd_default_directory(self, path: str) -> str:
         return f"Default directory: {path}"
 
@@ -1796,9 +1730,6 @@ class MenuSystem:
 
     def _cmd_range_justify(self, range_ref: str) -> str:
         return f"Range {range_ref} justified"
-
-    def _cmd_range_unprotect(self, range_ref: str) -> str:
-        return f"Range {range_ref} unprotected"
 
     def _cmd_range_input(self, range_ref: str) -> str:
         return f"Input range: {range_ref}"
@@ -1841,9 +1772,6 @@ class MenuSystem:
 
     def _cmd_name_labels_up(self, range_ref: str) -> str:
         return f"Names created from {range_ref}"
-
-    def _cmd_protect_range(self, range_ref: str) -> str:
-        return f"Range {range_ref} protected"
 
     def _cmd_copy(self, range_ref: str) -> str:
         return f"Range {range_ref} copied"
