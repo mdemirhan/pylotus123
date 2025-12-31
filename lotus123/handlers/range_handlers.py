@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class RangeHandler(BaseHandler):
-    """Handler for range operations (format, label, name, protect)."""
+    """Handler for range operations (format, label, name)."""
 
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)

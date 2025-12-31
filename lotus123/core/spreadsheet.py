@@ -307,12 +307,14 @@ class Spreadsheet:
 
     def get_col_width(self, col: int) -> int:
         """Get width of column."""
-        return self._col_widths.get(col, DEFAULT_COL_WIDTH)
+        default = self.global_settings.get("default_col_width", DEFAULT_COL_WIDTH)
+        return self._col_widths.get(col, default)
 
     def set_col_width(self, col: int, width: int) -> None:
         """Set width of column."""
         width = max(MIN_COL_WIDTH, min(MAX_COL_WIDTH, width))
-        if width == DEFAULT_COL_WIDTH:
+        default = self.global_settings.get("default_col_width", DEFAULT_COL_WIDTH)
+        if width == default:
             self._col_widths.pop(col, None)
         else:
             self._col_widths[col] = width

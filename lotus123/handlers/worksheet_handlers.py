@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from ..core.reference import index_to_col
 from ..ui import CommandInput
 from ..utils.undo import (
+    Command,
     CompositeCommand,
     DeleteColCommand,
     DeleteRowCommand,
@@ -48,7 +49,7 @@ class WorksheetHandler(BaseHandler):
             cmd = InsertRowCommand(spreadsheet=self.spreadsheet, row=grid.cursor_row)
             self.undo_manager.execute(cmd)
         else:
-            commands = [
+            commands: list[Command] = [
                 InsertRowCommand(spreadsheet=self.spreadsheet, row=grid.cursor_row)
                 for _ in range(count)
             ]
@@ -81,7 +82,7 @@ class WorksheetHandler(BaseHandler):
             cmd = InsertColCommand(spreadsheet=self.spreadsheet, col=grid.cursor_col)
             self.undo_manager.execute(cmd)
         else:
-            commands = [
+            commands: list[Command] = [
                 InsertColCommand(spreadsheet=self.spreadsheet, col=grid.cursor_col)
                 for _ in range(count)
             ]
@@ -115,7 +116,7 @@ class WorksheetHandler(BaseHandler):
             cmd = DeleteRowCommand(spreadsheet=self.spreadsheet, row=grid.cursor_row)
             self.undo_manager.execute(cmd)
         else:
-            commands = [
+            commands: list[Command] = [
                 DeleteRowCommand(spreadsheet=self.spreadsheet, row=grid.cursor_row)
                 for _ in range(count)
             ]
@@ -149,7 +150,7 @@ class WorksheetHandler(BaseHandler):
             cmd = DeleteColCommand(spreadsheet=self.spreadsheet, col=grid.cursor_col)
             self.undo_manager.execute(cmd)
         else:
-            commands = [
+            commands: list[Command] = [
                 DeleteColCommand(spreadsheet=self.spreadsheet, col=grid.cursor_col)
                 for _ in range(count)
             ]
@@ -235,6 +236,7 @@ class WorksheetHandler(BaseHandler):
             width = int(result)
             width = max(3, min(50, width))
             self._app._global_col_width = width
+            self.spreadsheet.global_settings["default_col_width"] = width
             grid = self.get_grid()
             grid.default_col_width = width
             grid.recalculate_visible_area()

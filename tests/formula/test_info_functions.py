@@ -99,11 +99,6 @@ class TestCell:
         result = fn_cell("format")
         assert result == "G"
 
-    def test_cell_protect(self):
-        """Test CELL with protect info type."""
-        result = fn_cell("protect")
-        assert result == 0
-
     def test_cell_prefix(self):
         """Test CELL with prefix info type."""
         result = fn_cell("prefix")

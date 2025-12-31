@@ -14,6 +14,7 @@ from textual.binding import Binding
 from textual.containers import Container
 from textual.screen import ModalScreen
 from textual.widgets import Input, Label
+from textual.widgets._input import Selection
 
 
 class CommandInput(ModalScreen[str | None]):
@@ -65,7 +66,7 @@ class CommandInput(ModalScreen[str | None]):
         input_widget.focus()
         # Select all text so typing replaces it
         if self.default:
-            input_widget.selection = (0, len(self.default))
+            input_widget.selection = Selection(0, len(self.default))
 
     @on(Input.Submitted)
     def on_submit(self, event: Input.Submitted) -> None:

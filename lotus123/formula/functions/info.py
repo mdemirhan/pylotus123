@@ -44,7 +44,6 @@ def fn_cell(info_type: Any, reference: Any = None) -> Any:
         "type" - "b" (blank), "l" (label), "v" (value)
         "width" - Column width
         "format" - Format code
-        "protect" - Protection status (0 or 1)
         "prefix" - Label prefix character
 
     Note: Without spreadsheet context, returns placeholder values.
@@ -70,8 +69,6 @@ def fn_cell(info_type: Any, reference: Any = None) -> Any:
         return 9  # Default width
     elif info == "format":
         return "G"  # General
-    elif info == "protect":
-        return 0
     elif info == "prefix":
         return "'"  # Default left-align
     else:
