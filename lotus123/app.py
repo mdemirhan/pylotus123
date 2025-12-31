@@ -413,6 +413,7 @@ class LotusApp(App[None]):
                         spreadsheet=self.spreadsheet, changes=changes
                     )
                     self.undo_manager.execute(cmd)
+                    self._mark_dirty()
                 grid.clear_selection()
             else:
                 cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
@@ -425,6 +426,7 @@ class LotusApp(App[None]):
                         old_value=cell.raw_value,
                     )
                     self.undo_manager.execute(cell_cmd)
+                    self._mark_dirty()
             grid.refresh_grid()
             self._update_status()
 
