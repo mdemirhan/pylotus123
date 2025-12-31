@@ -2,7 +2,6 @@
 
 import datetime
 
-import pytest
 
 from lotus123.formula.functions.datetime import (
     _date_to_serial,

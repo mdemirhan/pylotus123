@@ -1,6 +1,5 @@
 """Tests for charting module."""
 
-import pytest
 
 from lotus123.charting.chart import (
     Chart,
@@ -14,7 +13,7 @@ from lotus123.charting.chart import (
 from lotus123.charting.renderer import TextChartRenderer
 from lotus123.charting.renderers import get_renderer
 from lotus123.charting.renderers.bar import BarChartRenderer
-from lotus123.charting.renderers.base import ChartTypeRenderer, RenderContext
+from lotus123.charting.renderers.base import RenderContext
 from lotus123.charting.renderers.line import LineChartRenderer
 from lotus123.charting.renderers.pie import PieChartRenderer
 from lotus123.charting.renderers.scatter import ScatterChartRenderer

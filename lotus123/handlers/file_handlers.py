@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -89,8 +90,14 @@ class FileHandler(BaseHandler):
                 self.notify(f"Loaded: {path}")
             else:
                 self.notify(f"File not found: {filepath}", severity="error")
-        except Exception as e:
-            self.notify(f"Error loading file: {e}", severity="error")
+        except FileNotFoundError:
+            self.notify(f"File not found: {filepath}", severity="error")
+        except PermissionError:
+            self.notify(f"Permission denied: {filepath}", severity="error")
+        except json.JSONDecodeError:
+            self.notify(f"Invalid file format: {filepath}", severity="error")
+        except (OSError, IOError) as e:
+            self.notify(f"Error reading file: {e}", severity="error")
 
     def _do_open(self, result: str | None) -> None:
         if result:
@@ -114,8 +121,14 @@ class FileHandler(BaseHandler):
                 self._app.config.add_recent_file(result)
                 self._app.config.save()
                 self.notify(f"Loaded: {result}")
-            except Exception as e:
-                self.notify(f"Error: {e}", severity="error")
+            except FileNotFoundError:
+                self.notify(f"File not found: {result}", severity="error")
+            except PermissionError:
+                self.notify(f"Permission denied: {result}", severity="error")
+            except json.JSONDecodeError:
+                self.notify(f"Invalid file format: {result}", severity="error")
+            except (OSError, IOError) as e:
+                self.notify(f"Error reading file: {e}", severity="error")
 
     def save(self) -> None:
         """Save the current spreadsheet."""
@@ -157,8 +170,10 @@ class FileHandler(BaseHandler):
             self._app._dirty = False
             self._app._update_title()
             self.notify(f"Saved: {filepath}")
-        except Exception as e:
-            self.notify(f"Error: {e}", severity="error")
+        except PermissionError:
+            self.notify(f"Permission denied: {filepath}", severity="error")
+        except (OSError, IOError) as e:
+            self.notify(f"Error saving file: {e}", severity="error")
 
     def change_theme(self) -> None:
         """Show the theme selection dialog."""

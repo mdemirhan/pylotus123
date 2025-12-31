@@ -1,6 +1,5 @@
 """Tests for criteria parsing module."""
 
-import pytest
 
 from lotus123.data.criteria import (
     Criterion,

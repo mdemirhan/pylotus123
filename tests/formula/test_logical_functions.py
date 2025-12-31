@@ -1,6 +1,5 @@
 """Tests for logical functions."""
 
-import pytest
 
 from lotus123.formula.functions.logical import (
     _flatten_args,

@@ -1,6 +1,5 @@
 """Tests for database operations module."""
 
-import pytest
 
 from lotus123 import Spreadsheet
 from lotus123.data.database import (

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol
 
 if TYPE_CHECKING:
     from textual.screen import Screen

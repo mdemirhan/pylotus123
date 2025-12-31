@@ -1,5 +1,4 @@
 
-import pytest
 from unittest.mock import MagicMock
 from lotus123.ui.menu.menu_system import MenuSystem, MenuState, MenuAction
 from lotus123.ui.menu_bar import LotusMenu

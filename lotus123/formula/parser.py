@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import math
 import operator
 import re
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any
 
-from .functions import REGISTRY, FunctionRegistry
+from .functions import REGISTRY
 
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
@@ -106,7 +107,7 @@ class FormulaParser:
             result = self._parse_expression()
 
             # Handle NaN as error
-            if isinstance(result, float) and (result != result):  # NaN check
+            if isinstance(result, float) and math.isnan(result):
                 return "#NUM!"
 
             return result
@@ -114,7 +115,7 @@ class FormulaParser:
             return "#DIV/0!"
         except RecursionError:
             return "#REF!"
-        except Exception:
+        except (ValueError, TypeError, KeyError, IndexError, AttributeError, OverflowError):
             return "#ERR!"
 
     def _tokenize(self, formula: str) -> list[Token]:
@@ -292,7 +293,7 @@ class FormulaParser:
                 left = op_fn(left, right)
             except ZeroDivisionError:
                 left = "#DIV/0!"
-            except Exception:
+            except (ValueError, TypeError, OverflowError):
                 left = "#ERR!"
 
             # Propagate errors from operation result
@@ -444,7 +445,7 @@ class FormulaParser:
             if name in aggregate_fns:
                 return fn(*args)
             return fn(*args)
-        except Exception:
+        except (ValueError, TypeError, ZeroDivisionError, OverflowError, IndexError):
             return "#ERR!"
 
     def _get_cell_value(self, ref: str) -> Any:

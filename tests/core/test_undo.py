@@ -1,6 +1,5 @@
 """Tests for undo/redo operations."""
 
-import pytest
 
 from lotus123 import Spreadsheet
 from lotus123.utils.undo import (

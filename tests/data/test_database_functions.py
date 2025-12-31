@@ -1,11 +1,9 @@
 """Tests for database statistical functions."""
 
-import pytest
 
 from lotus123.formula.functions.database import (
     DATABASE_FUNCTIONS,
     _get_field_index,
-    _get_matching_values,
     _matches_criteria,
     _to_number,
     fn_davg,

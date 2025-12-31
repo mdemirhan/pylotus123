@@ -1,6 +1,5 @@
 """Tests for formula evaluator."""
 
-import pytest
 
 from lotus123 import Spreadsheet
 from lotus123.formula.evaluator import (

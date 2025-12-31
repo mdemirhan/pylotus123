@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
-    from ..core.cell import Cell
 
 # Constants for default values to save space
 DEFAULT_COL_WIDTH = 10
@@ -49,10 +48,18 @@ class LotusJsonSerializer:
         with open(filename, "r") as f:
             data = json.load(f)
 
+        # Validate dimensions to prevent loading excessively large files
+        loaded_rows = data.get("rows", MAX_ROWS)
+        loaded_cols = data.get("cols", MAX_COLS)
+        if loaded_rows > MAX_ROWS or loaded_rows < 1:
+            raise ValueError(f"Invalid row count: {loaded_rows} (must be 1-{MAX_ROWS})")
+        if loaded_cols > MAX_COLS or loaded_cols < 1:
+            raise ValueError(f"Invalid column count: {loaded_cols} (must be 1-{MAX_COLS})")
+
         spreadsheet.clear()
 
-        spreadsheet.rows = data.get("rows", MAX_ROWS)
-        spreadsheet.cols = data.get("cols", MAX_COLS)
+        spreadsheet.rows = loaded_rows
+        spreadsheet.cols = loaded_cols
         spreadsheet._col_widths = {int(k): v for k, v in data.get("col_widths", {}).items()}
         spreadsheet._row_heights = {int(k): v for k, v in data.get("row_heights", {}).items()}
 
@@ -71,5 +78,4 @@ class LotusJsonSerializer:
             spreadsheet.global_settings.update(data["global_settings"])
 
         # Rebuild dependency graph if engine is attached
-        if spreadsheet._recalc_engine:
-            spreadsheet._recalc_engine._rebuild_dependency_graph()
+        spreadsheet.rebuild_dependency_graph()

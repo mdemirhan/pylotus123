@@ -30,7 +30,7 @@ class AppConfig:
                 with open(CONFIG_FILE, "r") as f:
                     data = json.load(f)
                 return cls(**data)
-        except Exception:
+        except (OSError, IOError, json.JSONDecodeError, TypeError, KeyError):
             pass
         return cls()
 
@@ -40,7 +40,7 @@ class AppConfig:
             CONFIG_DIR.mkdir(parents=True, exist_ok=True)
             with open(CONFIG_FILE, "w") as f:
                 json.dump(asdict(self), f, indent=2)
-        except Exception:
+        except (OSError, IOError, TypeError):
             pass
 
     def add_recent_file(self, filepath: str) -> None:

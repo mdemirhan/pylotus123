@@ -2,7 +2,6 @@
 
 import datetime
 
-import pytest
 
 from lotus123.core.formatting import (
     DateFormat,

@@ -3,7 +3,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
 
 from lotus123 import Spreadsheet
 from lotus123.io.text_export import (

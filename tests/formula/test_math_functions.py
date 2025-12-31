@@ -2,7 +2,6 @@
 
 import math
 
-import pytest
 
 from lotus123.formula.functions.math import (
     _flatten_args,

@@ -1,11 +1,9 @@
 """Tests for configuration module."""
 
-import json
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 
 from lotus123.ui.config import AppConfig
 

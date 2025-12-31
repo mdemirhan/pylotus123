@@ -75,7 +75,6 @@ class StackedBarChartRenderer(ChartTypeRenderer):
         y_axis_width = y_label_width + 1
 
         # Calculate bar dimensions
-        num_series = len(series_values)
         available_width = ctx.width - y_axis_width - 4
 
         # Each group has ONE stacked bar + spacing

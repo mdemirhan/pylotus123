@@ -1,5 +1,4 @@
 
-import pytest
 from unittest.mock import MagicMock, patch
 from lotus123.handlers.clipboard_handlers import ClipboardHandler
 from lotus123.handlers.query_handlers import QueryHandler
@@ -265,7 +264,7 @@ class TestChartHandler:
         self.app.chart.add_series.side_effect = add_series_side_effect
         self.app._chart_renderer = MagicMock()
         
-        from lotus123.handlers.chart_handlers import ChartHandler, ChartType
+        from lotus123.handlers.chart_handlers import ChartHandler
         self.handler = ChartHandler(self.app)
 
     def test_set_chart_type(self):

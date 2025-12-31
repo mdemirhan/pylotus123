@@ -1,5 +1,4 @@
 
-import pytest
 from lotus123.core.spreadsheet import Spreadsheet
 from lotus123.formula.recalc import create_recalc_engine, RecalcMode
 from lotus123.utils.undo import DeleteRowCommand, UndoManager

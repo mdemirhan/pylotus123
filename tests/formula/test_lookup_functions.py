@@ -1,6 +1,5 @@
 """Tests for lookup and reference functions."""
 
-import pytest
 
 from lotus123.formula.functions.lookup import (
     LOOKUP_FUNCTIONS,

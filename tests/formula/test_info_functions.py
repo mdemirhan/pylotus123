@@ -1,6 +1,5 @@
 """Tests for information functions."""
 
-import pytest
 
 from lotus123.formula.functions.info import (
     INFO_FUNCTIONS,

@@ -1,7 +1,6 @@
 
-import pytest
 from unittest.mock import MagicMock, PropertyMock, patch
-from lotus123.ui.status_bar import StatusBar, StatusBarWidget, Mode, ModeIndicator, LockIndicators
+from lotus123.ui.status_bar import StatusBar, StatusBarWidget, Mode
 from lotus123.core.cell import Cell
 
 class TestStatusBar:

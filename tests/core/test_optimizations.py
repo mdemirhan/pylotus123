@@ -1,7 +1,6 @@
 """Tests for optimizations and refactoring."""
 
 import os
-import pytest
 from lotus123.core.spreadsheet import Spreadsheet
 from lotus123.core.cell import Cell
 from lotus123.formula.parser import FormulaParser

@@ -1,6 +1,5 @@
 """Tests for fill operations module."""
 
-import pytest
 
 from lotus123 import Spreadsheet
 from lotus123.data.fill import (

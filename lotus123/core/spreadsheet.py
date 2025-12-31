@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING, Any, Iterator
 
 from .cell import Cell
@@ -133,12 +132,11 @@ class Spreadsheet:
         """
         cell = self.get_cell(row, col)
         cell.set_value(value)
-        
+
         # Update dependency graph incrementally
-        if self._recalc_engine:
-            self._recalc_engine.mark_dirty(row, col)
-            new_formula = cell.formula if cell.is_formula else None
-            self._recalc_engine.update_cell_dependency(row, col, new_formula)
+        self.mark_cell_dirty(row, col)
+        new_formula = cell.formula if cell.is_formula else None
+        self.update_cell_dependency(row, col, new_formula)
 
         self.modified = True
         self._invalidate_cache()
@@ -157,12 +155,11 @@ class Spreadsheet:
         """Delete a cell (remove from sparse storage)."""
         if (row, col) in self._cells:
             del self._cells[(row, col)]
-            
+
             # Update dependency graph incrementally (remove dependencies)
-            if self._recalc_engine:
-                self._recalc_engine.mark_dirty(row, col)
-                self._recalc_engine.update_cell_dependency(row, col, None)
-                
+            self.mark_cell_dirty(row, col)
+            self.update_cell_dependency(row, col, None)
+
             self.modified = True
             self._invalidate_cache()
 
@@ -244,7 +241,7 @@ class Spreadsheet:
             parser = FormulaParser(self)
             result = parser.evaluate(cell.formula)
             return result
-        except Exception:
+        except (ValueError, TypeError, ZeroDivisionError, OverflowError, KeyError, IndexError):
             return "#ERR!"
         finally:
             self._computing.discard((row, col))
@@ -259,6 +256,35 @@ class Spreadsheet:
         self._invalidate_cache()
         if self._recalc_engine:
             self._recalc_engine.recalculate()
+
+    def update_cell_dependency(self, row: int, col: int, formula: str | None) -> None:
+        """Update the dependency graph for a cell.
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+            formula: The formula string, or None if the cell has no formula
+        """
+        if self._recalc_engine:
+            self._recalc_engine.update_cell_dependency(row, col, formula)
+
+    def rebuild_dependency_graph(self) -> None:
+        """Rebuild the entire dependency graph.
+
+        Call this after structural changes like inserting/deleting rows/columns.
+        """
+        if self._recalc_engine:
+            self._recalc_engine._rebuild_dependency_graph()
+
+    def mark_cell_dirty(self, row: int, col: int) -> None:
+        """Mark a cell as needing recalculation.
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+        """
+        if self._recalc_engine:
+            self._recalc_engine.mark_dirty(row, col)
 
     @property
     def needs_recalc(self) -> bool:
@@ -422,8 +448,7 @@ class Spreadsheet:
 
         self.modified = True
         self._invalidate_cache()
-        if self._recalc_engine:
-            self._recalc_engine._rebuild_dependency_graph()
+        self.rebuild_dependency_graph()
 
     def insert_row(self, row: int) -> None:
         """Insert a row and shift cells down."""
@@ -456,8 +481,7 @@ class Spreadsheet:
 
         self.modified = True
         self._invalidate_cache()
-        if self._recalc_engine:
-            self._recalc_engine._rebuild_dependency_graph()
+        self.rebuild_dependency_graph()
 
     def delete_col(self, col: int) -> None:
         """Delete a column and shift cells left."""
@@ -493,8 +517,7 @@ class Spreadsheet:
 
         self.modified = True
         self._invalidate_cache()
-        if self._recalc_engine:
-            self._recalc_engine._rebuild_dependency_graph()
+        self.rebuild_dependency_graph()
 
     def insert_col(self, col: int) -> None:
         """Insert a column and shift cells right."""
@@ -527,8 +550,7 @@ class Spreadsheet:
 
         self.modified = True
         self._invalidate_cache()
-        if self._recalc_engine:
-            self._recalc_engine._rebuild_dependency_graph()
+        self.rebuild_dependency_graph()
 
     # -------------------------------------------------------------------------
     # Copy Operations
@@ -561,10 +583,9 @@ class Spreadsheet:
         dest.format_code = src.format_code
 
         # Update dependency graph incrementally
-        if self._recalc_engine:
-            self._recalc_engine.mark_dirty(to_row, to_col)
-            new_formula = dest.formula if dest.is_formula else None
-            self._recalc_engine.update_cell_dependency(to_row, to_col, new_formula)
+        self.mark_cell_dirty(to_row, to_col)
+        new_formula = dest.formula if dest.is_formula else None
+        self.update_cell_dependency(to_row, to_col, new_formula)
 
         self.modified = True
         self._invalidate_cache()

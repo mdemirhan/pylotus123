@@ -2,7 +2,6 @@
 
 import math
 
-import pytest
 
 from lotus123.formula.functions.statistical import (
     _flatten_args,

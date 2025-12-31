@@ -1,8 +1,6 @@
 """Tests for financial functions."""
 
-import math
 
-import pytest
 
 from lotus123.formula.functions.financial import (
     FINANCIAL_FUNCTIONS,

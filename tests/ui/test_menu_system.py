@@ -1,6 +1,5 @@
 """Tests for menu system module."""
 
-import pytest
 
 from lotus123 import Spreadsheet
 from lotus123.ui.menu.menu_system import (
