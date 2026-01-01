@@ -417,6 +417,35 @@ A$1         # Mixed: column relative, row absolute
 | XY Scatter | Correlation between variables |
 | Pie | Proportions of a whole |
 
+### Saving and Loading Charts
+
+Charts can be saved to separate `.chart` files and loaded later. This is useful for:
+- Reusing chart configurations across different spreadsheets
+- Creating chart templates with predefined settings
+- Backing up complex chart setups
+
+**To Save a Chart:**
+1. Configure your chart (set type, X range, data series A-F, titles, etc.)
+2. Press `/` → `Graph` → `Save`
+3. Enter a filename (`.chart` extension added automatically)
+
+**To Load a Chart:**
+1. Press `/` → `Graph` → `Load`
+2. Select the `.chart` file
+
+**What is saved in a `.chart` file:**
+- Chart type (line, bar, pie, etc.)
+- X-axis range reference (e.g., `A1:A10`)
+- Data series (A through F) with their range references
+- Axis settings (titles, min/max values, scale type, grid lines)
+- Chart options (title, subtitle, legend position)
+
+**Important Notes:**
+- Chart files store **range references**, not actual data values
+- When you load a chart, it reads data from the **current spreadsheet** using the saved range references
+- This means you can create a "chart template" and apply it to different spreadsheets with similar data layouts
+- To reset a chart configuration, use `/` → `Graph` → `Reset`
+
 ---
 
 ## Data Operations
