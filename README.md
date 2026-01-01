@@ -2,6 +2,9 @@
 
 A modern terminal-based spreadsheet application inspired by the classic Lotus 1-2-3.
 
+![](images/blue1.png)
+![](images/chart1.png)
+
 ## Features
 
 - 256 columns (A-IV) x 65,536 rows grid
