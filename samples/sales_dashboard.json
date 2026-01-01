@@ -3,7 +3,7 @@
   "rows": 65536,
   "cols": 256,
   "col_widths": {
-    "0": 14,
+    "0": 15,
     "1": 12,
     "2": 12,
     "3": 12,
@@ -12,82 +12,262 @@
   },
   "row_heights": {},
   "cells": {
-    "0,0": {"raw_value": "^QUARTERLY SALES REPORT"},
-    "1,0": {"raw_value": "\\-"},
-    "1,1": {"raw_value": "\\-"},
-    "1,2": {"raw_value": "\\-"},
-    "1,3": {"raw_value": "\\-"},
-    "1,4": {"raw_value": "\\-"},
-    "1,5": {"raw_value": "\\-"},
-    "2,0": {"raw_value": "^Region"},
-    "2,1": {"raw_value": "^Q1"},
-    "2,2": {"raw_value": "^Q2"},
-    "2,3": {"raw_value": "^Q3"},
-    "2,4": {"raw_value": "^Q4"},
-    "2,5": {"raw_value": "^TOTAL"},
-    "3,0": {"raw_value": "\\-"},
-    "3,1": {"raw_value": "\\-"},
-    "3,2": {"raw_value": "\\-"},
-    "3,3": {"raw_value": "\\-"},
-    "3,4": {"raw_value": "\\-"},
-    "3,5": {"raw_value": "\\-"},
-    "4,0": {"raw_value": "'North"},
-    "4,1": {"raw_value": "45200", "format_code": ",0"},
-    "4,2": {"raw_value": "52300", "format_code": ",0"},
-    "4,3": {"raw_value": "48900", "format_code": ",0"},
-    "4,4": {"raw_value": "61200", "format_code": ",0"},
-    "4,5": {"raw_value": "@SUM(B5..E5)", "format_code": ",0"},
-    "5,0": {"raw_value": "'South"},
-    "5,1": {"raw_value": "38700", "format_code": ",0"},
-    "5,2": {"raw_value": "41500", "format_code": ",0"},
-    "5,3": {"raw_value": "44200", "format_code": ",0"},
-    "5,4": {"raw_value": "47800", "format_code": ",0"},
-    "5,5": {"raw_value": "@SUM(B6..E6)", "format_code": ",0"},
-    "6,0": {"raw_value": "'East"},
-    "6,1": {"raw_value": "51800", "format_code": ",0"},
-    "6,2": {"raw_value": "49200", "format_code": ",0"},
-    "6,3": {"raw_value": "55600", "format_code": ",0"},
-    "6,4": {"raw_value": "58400", "format_code": ",0"},
-    "6,5": {"raw_value": "@SUM(B7..E7)", "format_code": ",0"},
-    "7,0": {"raw_value": "'West"},
-    "7,1": {"raw_value": "42100", "format_code": ",0"},
-    "7,2": {"raw_value": "46800", "format_code": ",0"},
-    "7,3": {"raw_value": "51300", "format_code": ",0"},
-    "7,4": {"raw_value": "54700", "format_code": ",0"},
-    "7,5": {"raw_value": "@SUM(B8..E8)", "format_code": ",0"},
-    "8,0": {"raw_value": "\\="},
-    "8,1": {"raw_value": "\\="},
-    "8,2": {"raw_value": "\\="},
-    "8,3": {"raw_value": "\\="},
-    "8,4": {"raw_value": "\\="},
-    "8,5": {"raw_value": "\\="},
-    "9,0": {"raw_value": "'TOTAL"},
-    "9,1": {"raw_value": "@SUM(B5..B8)", "format_code": ",0"},
-    "9,2": {"raw_value": "@SUM(C5..C8)", "format_code": ",0"},
-    "9,3": {"raw_value": "@SUM(D5..D8)", "format_code": ",0"},
-    "9,4": {"raw_value": "@SUM(E5..E8)", "format_code": ",0"},
-    "9,5": {"raw_value": "@SUM(B5..E8)", "format_code": ",0"},
-    "11,0": {"raw_value": "^STATISTICS"},
-    "12,0": {"raw_value": "\\-"},
-    "12,1": {"raw_value": "\\-"},
-    "12,2": {"raw_value": "\\-"},
-    "13,0": {"raw_value": "'Average"},
-    "13,1": {"raw_value": "@AVG(B5..E8)", "format_code": ",0"},
-    "14,0": {"raw_value": "'Maximum"},
-    "14,1": {"raw_value": "@MAX(B5..E8)", "format_code": ",0"},
-    "15,0": {"raw_value": "'Minimum"},
-    "15,1": {"raw_value": "@MIN(B5..E8)", "format_code": ",0"},
-    "16,0": {"raw_value": "'Count"},
-    "16,1": {"raw_value": "@COUNT(B5..E8)"},
-    "18,0": {"raw_value": "^GROWTH ANALYSIS"},
-    "19,0": {"raw_value": "\\-"},
-    "19,1": {"raw_value": "\\-"},
-    "19,2": {"raw_value": "\\-"},
-    "20,0": {"raw_value": "'Q4 vs Q1 %"},
-    "20,1": {"raw_value": "@ROUND((E10-B10)/B10*100,1)", "format_code": "F1"}
+    "0,0": {
+      "raw_value": "^QUARTERLY SALES REPORT"
+    },
+    "1,0": {
+      "raw_value": "\\-"
+    },
+    "1,1": {
+      "raw_value": "\\-"
+    },
+    "1,2": {
+      "raw_value": "\\-"
+    },
+    "1,3": {
+      "raw_value": "\\-"
+    },
+    "1,4": {
+      "raw_value": "\\-"
+    },
+    "1,5": {
+      "raw_value": "\\-"
+    },
+    "2,0": {
+      "raw_value": "^Region"
+    },
+    "2,1": {
+      "raw_value": "^Q1"
+    },
+    "2,2": {
+      "raw_value": "^Q2"
+    },
+    "2,3": {
+      "raw_value": "^Q3"
+    },
+    "2,4": {
+      "raw_value": "^Q4"
+    },
+    "2,5": {
+      "raw_value": "^TOTAL"
+    },
+    "3,0": {
+      "raw_value": "\\-"
+    },
+    "3,1": {
+      "raw_value": "\\-"
+    },
+    "3,2": {
+      "raw_value": "\\-"
+    },
+    "3,3": {
+      "raw_value": "\\-"
+    },
+    "3,4": {
+      "raw_value": "\\-"
+    },
+    "3,5": {
+      "raw_value": "\\-"
+    },
+    "4,0": {
+      "raw_value": "'North"
+    },
+    "4,1": {
+      "raw_value": "45200",
+      "format_code": "C2"
+    },
+    "4,2": {
+      "raw_value": "52300",
+      "format_code": "C2"
+    },
+    "4,3": {
+      "raw_value": "48900",
+      "format_code": "C2"
+    },
+    "4,4": {
+      "raw_value": "61200",
+      "format_code": "C2"
+    },
+    "4,5": {
+      "raw_value": "@SUM(B5..E5)",
+      "format_code": "C2"
+    },
+    "5,0": {
+      "raw_value": "'South"
+    },
+    "5,1": {
+      "raw_value": "38700",
+      "format_code": "C2"
+    },
+    "5,2": {
+      "raw_value": "41500",
+      "format_code": "C2"
+    },
+    "5,3": {
+      "raw_value": "44200",
+      "format_code": "C2"
+    },
+    "5,4": {
+      "raw_value": "47800",
+      "format_code": "C2"
+    },
+    "5,5": {
+      "raw_value": "@SUM(B6..E6)",
+      "format_code": "C2"
+    },
+    "6,0": {
+      "raw_value": "'East"
+    },
+    "6,1": {
+      "raw_value": "51800",
+      "format_code": "C2"
+    },
+    "6,2": {
+      "raw_value": "49200",
+      "format_code": "C2"
+    },
+    "6,3": {
+      "raw_value": "55600",
+      "format_code": "C2"
+    },
+    "6,4": {
+      "raw_value": "58400",
+      "format_code": "C2"
+    },
+    "6,5": {
+      "raw_value": "@SUM(B7..E7)",
+      "format_code": "C2"
+    },
+    "7,0": {
+      "raw_value": "'West"
+    },
+    "7,1": {
+      "raw_value": "42100",
+      "format_code": "C2"
+    },
+    "7,2": {
+      "raw_value": "46800",
+      "format_code": "C2"
+    },
+    "7,3": {
+      "raw_value": "51300",
+      "format_code": "C2"
+    },
+    "7,4": {
+      "raw_value": "54700",
+      "format_code": "C2"
+    },
+    "7,5": {
+      "raw_value": "@SUM(B8..E8)",
+      "format_code": "C2"
+    },
+    "8,0": {
+      "raw_value": "\\="
+    },
+    "8,1": {
+      "raw_value": "\\="
+    },
+    "8,2": {
+      "raw_value": "\\="
+    },
+    "8,3": {
+      "raw_value": "\\="
+    },
+    "8,4": {
+      "raw_value": "\\="
+    },
+    "8,5": {
+      "raw_value": "\\="
+    },
+    "9,0": {
+      "raw_value": "'TOTAL"
+    },
+    "9,1": {
+      "raw_value": "@SUM(B5..B8)",
+      "format_code": "C2"
+    },
+    "9,2": {
+      "raw_value": "@SUM(C5..C8)",
+      "format_code": "C2"
+    },
+    "9,3": {
+      "raw_value": "@SUM(D5..D8)",
+      "format_code": "C2"
+    },
+    "9,4": {
+      "raw_value": "@SUM(E5..E8)",
+      "format_code": "C2"
+    },
+    "9,5": {
+      "raw_value": "@SUM(B5..E8)",
+      "format_code": "C2"
+    },
+    "11,0": {
+      "raw_value": "^STATISTICS"
+    },
+    "12,0": {
+      "raw_value": "\\-"
+    },
+    "12,1": {
+      "raw_value": "\\-"
+    },
+    "12,2": {
+      "raw_value": "\\-"
+    },
+    "13,0": {
+      "raw_value": "'Average"
+    },
+    "13,1": {
+      "raw_value": "@AVG(B5..E8)",
+      "format_code": "C2"
+    },
+    "14,0": {
+      "raw_value": "'Maximum"
+    },
+    "14,1": {
+      "raw_value": "@MAX(B5..E8)",
+      "format_code": "C2"
+    },
+    "15,0": {
+      "raw_value": "'Minimum"
+    },
+    "15,1": {
+      "raw_value": "@MIN(B5..E8)",
+      "format_code": "C2"
+    },
+    "16,0": {
+      "raw_value": "'Count"
+    },
+    "16,1": {
+      "raw_value": "@COUNT(B5..E8)"
+    },
+    "18,0": {
+      "raw_value": "^GROWTH ANALYSIS"
+    },
+    "19,0": {
+      "raw_value": "\\-"
+    },
+    "19,1": {
+      "raw_value": "\\-"
+    },
+    "19,2": {
+      "raw_value": "\\-"
+    },
+    "20,0": {
+      "raw_value": "'Q4 vs Q1 %"
+    },
+    "20,1": {
+      "raw_value": "=(E10-B10)/B10",
+      "format_code": "P2"
+    }
   },
   "named_ranges": {},
   "frozen_rows": 0,
   "frozen_cols": 0,
-  "global_settings": {}
+  "global_settings": {
+    "format_code": "G",
+    "label_prefix": "'",
+    "default_col_width": 10,
+    "zero_display": true
+  }
 }
