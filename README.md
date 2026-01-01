@@ -525,6 +525,28 @@ Import/Export via menu:
 - Press `/` → `File` → `Import` → `WK1`
 - Press `/` → `File` → `Export` → `WK1`
 
+**What is preserved in WK1:**
+- Cell values (numbers, strings, formulas)
+- Formulas (compiled to WK1 bytecode format)
+- Column widths
+- Named ranges
+- Calculation mode (manual/automatic)
+- Calculation order (natural/column/row)
+- Cell format codes (fixed, scientific, currency, percent, comma, date/time)
+
+**What is NOT preserved in WK1:**
+- **Row heights** - WK1 format does not support custom row heights
+- **Frozen rows/columns** - Window settings are not exported
+- **Charts** - WK1 does not support embedded charts
+- **Modern functions** - Only functions available in Lotus 1-2-3 R2 can be exported; modern functions will be saved as their calculated values
+- **Cell protection** - Protection flags are decoded but not fully implemented
+- **Hidden columns** - Column visibility settings are not preserved
+
+**WK1 Format Limitations:**
+- Maximum grid size: 256 columns × 8,192 rows (original Lotus 1-2-3 limits)
+- String literals in formula bytecode are not fully supported
+- Some complex formula expressions may not round-trip perfectly
+
 ### CSV/TSV Import/Export
 
 For data exchange with other applications:
@@ -540,6 +562,19 @@ For data exchange with other applications:
 2. Select `Text`
 3. Choose format (CSV or TSV)
 4. Enter filename
+
+> **Important**: When exporting to CSV or TSV, **formulas are converted to their calculated values**. The exported file contains only the results, not the original formulas. This is standard behavior for data interchange formats.
+
+**What is preserved in CSV/TSV:**
+- All cell values (as calculated results)
+- Text content
+
+**What is NOT preserved in CSV/TSV:**
+- Formulas (converted to values)
+- Cell formatting and alignment
+- Column widths
+- Named ranges
+- Charts
 
 ---
 
