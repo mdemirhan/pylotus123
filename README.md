@@ -93,7 +93,7 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 ```bash
 # Clone the repository
 git clone https://github.com/mdemirhan/pylotus123.git
-cd lotus123
+cd pylotus123
 
 # Install dependencies
 uv sync
