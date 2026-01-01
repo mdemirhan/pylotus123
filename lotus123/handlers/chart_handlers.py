@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ..charting import Chart, ChartType
+from ..charting import Chart, ChartType, TextChartRenderer
 from ..core import make_cell_ref
 from ..ui import ChartViewScreen, CommandInput, FileDialog
 from .base import BaseHandler
@@ -20,6 +20,8 @@ class ChartHandler(BaseHandler):
 
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)
+        # Chart renderer - owned by this handler
+        self.chart_renderer = TextChartRenderer(self.spreadsheet)
 
     @property
     def chart(self):
@@ -165,11 +167,11 @@ class ChartHandler(BaseHandler):
         if not self.chart.series:
             self.notify("No data series defined. Use A-Range to set data.")
             return
-        self._app._chart_renderer.spreadsheet = self.spreadsheet
+        self.chart_renderer.spreadsheet = self.spreadsheet
         # Use ~75% of terminal size for the chart
         chart_width = int(self._app.size.width * 0.75)
         chart_height = int(self._app.size.height * 0.70)
-        chart_lines = self._app._chart_renderer.render(
+        chart_lines = self.chart_renderer.render(
             self.chart, width=chart_width, height=chart_height
         )
         self._app.push_screen(ChartViewScreen(chart_lines))

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol
 if TYPE_CHECKING:
     from textual.screen import Screen
 
-    from ..charting import Chart, TextChartRenderer
+    from ..charting import Chart
     from ..core import Spreadsheet
     from ..ui import SpreadsheetGrid
     from ..utils.undo import UndoManager
@@ -26,37 +26,17 @@ class AppProtocol(Protocol):
     undo_manager: "UndoManager"
     config: Any  # AppConfig
 
-    # Chart renderer
-    _chart_renderer: "TextChartRenderer"
-
     # State flags
     editing: bool
     _dirty: bool
     _menu_active: bool
-    _recalc_mode: str
 
-    # Clipboard state
-    _cell_clipboard: tuple[int, int, str] | None
-    _range_clipboard: list[list[str]] | None
-    _clipboard_is_cut: bool
-    _clipboard_origin: tuple[int, int]
-
-    # Query state
-    _query_input_range: tuple[int, int, int, int] | None
-    _query_criteria_range: tuple[int, int, int, int] | None
-    _query_output_range: tuple[int, int] | None
-    _query_find_results: list[int] | None
-    _query_find_index: int
-
-    # Global settings
-    _global_format_code: str
-    _global_label_prefix: str
-    _global_col_width: int
-    _global_zero_display: bool
-
-    # Pending operation state
-    _pending_source_range: tuple[int, int, int, int]
-    _pending_range: str
+    # Global settings (public - shared across handlers)
+    global_format_code: str
+    global_label_prefix: str
+    global_col_width: int
+    global_zero_display: bool
+    recalc_mode: str
 
     # Theme
     current_theme_type: Any  # ThemeType

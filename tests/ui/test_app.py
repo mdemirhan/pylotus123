@@ -48,7 +48,7 @@ class TestLotusAppInit:
         assert app.editing is False
         assert app._menu_active is False
         assert app._dirty is False
-        assert app._recalc_mode == "auto"
+        assert app.recalc_mode == "auto"
 
 
 class TestLotusAppProperties:
@@ -63,10 +63,10 @@ class TestLotusAppProperties:
     def test_global_settings(self):
         """Test global settings are initialized."""
         app = LotusApp()
-        assert app._global_format_code == "G"
-        assert app._global_label_prefix == "'"
-        assert app._global_col_width == 10
-        assert app._global_zero_display is True
+        assert app.global_format_code == "G"
+        assert app.global_label_prefix == "'"
+        assert app.global_col_width == 10
+        assert app.global_zero_display is True
 
 
 class TestLotusAppClipboard:
@@ -75,9 +75,10 @@ class TestLotusAppClipboard:
     def test_clipboard_initial_state(self):
         """Test clipboard is empty initially."""
         app = LotusApp()
-        assert app._cell_clipboard is None
-        assert app._range_clipboard is None
-        assert app._clipboard_is_cut is False
+        # Clipboard state is now owned by the clipboard handler
+        assert app._clipboard_handler.cell_clipboard is None
+        assert app._clipboard_handler.range_clipboard is None
+        assert app._clipboard_handler.clipboard_is_cut is False
 
 
 class TestLotusAppQuery:
@@ -86,11 +87,12 @@ class TestLotusAppQuery:
     def test_query_initial_state(self):
         """Test query settings initial state."""
         app = LotusApp()
-        assert app._query_input_range is None
-        assert app._query_criteria_range is None
-        assert app._query_output_range is None
-        assert app._query_find_results is None
-        assert app._query_find_index == 0
+        # Query state is now owned by the query handler
+        assert app._query_handler.input_range is None
+        assert app._query_handler.criteria_range is None
+        assert app._query_handler.output_range is None
+        assert app._query_handler.find_results is None
+        assert app._query_handler.find_index == 0
 
 
 class TestLotusAppBindings:

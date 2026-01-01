@@ -21,10 +21,10 @@ class FileHandler(BaseHandler):
 
     def _sync_global_settings_to_spreadsheet(self) -> None:
         """Sync app global settings to spreadsheet before save."""
-        self.spreadsheet.global_settings["format_code"] = self._app._global_format_code
-        self.spreadsheet.global_settings["label_prefix"] = self._app._global_label_prefix
-        self.spreadsheet.global_settings["default_col_width"] = self._app._global_col_width
-        self.spreadsheet.global_settings["zero_display"] = self._app._global_zero_display
+        self.spreadsheet.global_settings["format_code"] = self._app.global_format_code
+        self.spreadsheet.global_settings["label_prefix"] = self._app.global_label_prefix
+        self.spreadsheet.global_settings["default_col_width"] = self._app.global_col_width
+        self.spreadsheet.global_settings["zero_display"] = self._app.global_zero_display
 
     def _sync_global_settings_from_spreadsheet(self) -> None:
         """Sync global settings from spreadsheet to app after load."""
@@ -32,14 +32,14 @@ class FileHandler(BaseHandler):
 
         # Global settings
         gs = self.spreadsheet.global_settings
-        self._app._global_format_code = gs.get("format_code", "G")
-        self._app._global_label_prefix = gs.get("label_prefix", "'")
-        self._app._global_col_width = gs.get("default_col_width", 10)
-        self._app._global_zero_display = gs.get("zero_display", True)
+        self._app.global_format_code = gs.get("format_code", "G")
+        self._app.global_label_prefix = gs.get("label_prefix", "'")
+        self._app.global_col_width = gs.get("default_col_width", 10)
+        self._app.global_zero_display = gs.get("zero_display", True)
 
         # Apply zero display to grid
-        grid.show_zero = self._app._global_zero_display
-        grid.default_col_width = self._app._global_col_width
+        grid.show_zero = self._app.global_zero_display
+        grid.default_col_width = self._app.global_col_width
 
     def new_file(self) -> None:
         """Create a new empty spreadsheet."""
@@ -49,10 +49,10 @@ class FileHandler(BaseHandler):
         self._app._dirty = False
 
         # Reset global settings to defaults
-        self._app._global_format_code = "G"
-        self._app._global_label_prefix = "'"
-        self._app._global_col_width = 10
-        self._app._global_zero_display = True
+        self._app.global_format_code = "G"
+        self._app.global_label_prefix = "'"
+        self._app.global_col_width = 10
+        self._app.global_zero_display = True
 
         grid = self.get_grid()
         grid.cursor_row = 0

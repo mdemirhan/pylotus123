@@ -187,7 +187,7 @@ class WorksheetHandler(BaseHandler):
         """Set the default format for new cells."""
         self._app.push_screen(
             CommandInput(
-                f"Default format (F=Fixed, S=Scientific, C=Currency, P=Percent, G=General) [{self._app._global_format_code}]:"
+                f"Default format (F=Fixed, S=Scientific, C=Currency, P=Percent, G=General) [{self._app.global_format_code}]:"
             ),
             self._do_global_format,
         )
@@ -197,9 +197,9 @@ class WorksheetHandler(BaseHandler):
             return
         format_char = result.upper()[0] if result else "G"
         format_map = {"F": "F2", "S": "S", "C": "C2", "P": "P2", "G": "G", ",": ",2"}
-        self._app._global_format_code = format_map.get(format_char, "G")
+        self._app.global_format_code = format_map.get(format_char, "G")
         self._app._mark_dirty()
-        self.notify(f"Default format set to {self._app._global_format_code}")
+        self.notify(f"Default format set to {self._app.global_format_code}")
 
     def global_label_prefix(self) -> None:
         """Set the default label alignment."""
@@ -213,18 +213,18 @@ class WorksheetHandler(BaseHandler):
             return
         align_char = result.upper()[0] if result else "L"
         prefix_map = {"L": "'", "R": '"', "C": "^"}
-        self._app._global_label_prefix = prefix_map.get(align_char, "'")
+        self._app.global_label_prefix = prefix_map.get(align_char, "'")
         self._app._mark_dirty()
         align_names = {"'": "Left", '"': "Right", "^": "Center"}
         self.notify(
-            f"Default label alignment set to {align_names.get(self._app._global_label_prefix, 'Left')}"
+            f"Default label alignment set to {align_names.get(self._app.global_label_prefix, 'Left')}"
         )
 
     def global_column_width(self) -> None:
         """Set the default column width."""
         self._app.push_screen(
             CommandInput(
-                f"Default column width (3-50) [{self._app._global_col_width}]:"
+                f"Default column width (3-50) [{self._app.global_col_width}]:"
             ),
             self._do_global_column_width,
         )
@@ -235,7 +235,7 @@ class WorksheetHandler(BaseHandler):
         try:
             width = int(result)
             width = max(3, min(50, width))
-            self._app._global_col_width = width
+            self._app.global_col_width = width
             self.spreadsheet.global_settings["default_col_width"] = width
             grid = self.get_grid()
             grid.default_col_width = width
@@ -248,11 +248,11 @@ class WorksheetHandler(BaseHandler):
 
     def global_recalculation(self) -> None:
         """Toggle between automatic and manual recalculation."""
-        if self._app._recalc_mode == "auto":
-            self._app._recalc_mode = "manual"
+        if self._app.recalc_mode == "auto":
+            self._app.recalc_mode = "manual"
             self.notify("Recalculation: Manual (press F9 to recalculate)")
         else:
-            self._app._recalc_mode = "auto"
+            self._app.recalc_mode = "auto"
             self.spreadsheet._invalidate_cache()
             grid = self.get_grid()
             grid.refresh_grid()
@@ -260,12 +260,12 @@ class WorksheetHandler(BaseHandler):
 
     def global_zero(self) -> None:
         """Toggle display of zero values."""
-        self._app._global_zero_display = not self._app._global_zero_display
+        self._app.global_zero_display = not self._app.global_zero_display
         grid = self.get_grid()
-        grid.show_zero = self._app._global_zero_display
+        grid.show_zero = self._app.global_zero_display
         grid.refresh_grid()
         self._app._mark_dirty()
-        if self._app._global_zero_display:
+        if self._app.global_zero_display:
             self.notify("Zero values: Displayed")
         else:
             self.notify("Zero values: Hidden (blank)")

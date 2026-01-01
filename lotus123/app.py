@@ -11,7 +11,7 @@ from textual.containers import Container, Horizontal
 from textual.css.query import NoMatches
 from textual.widgets import Footer, Input, Static
 
-from .charting import Chart, ChartType, TextChartRenderer
+from .charting import Chart, ChartType
 from .core import Spreadsheet, make_cell_ref
 
 # Handler classes
@@ -141,30 +141,16 @@ class LotusApp(App[None]):
         self.current_theme_type = get_theme_type(self.config.theme)
         self.color_theme = THEMES[self.current_theme_type]
         self.editing = False
-        self._cell_clipboard: tuple[int, int, str] | None = None
-        self._range_clipboard: list[list[str]] | None = None
-        self._clipboard_is_cut = False
-        self._clipboard_origin: tuple[int, int] = (0, 0)
         self._menu_active = False
         self.undo_manager = UndoManager(max_history=100)
-        self._recalc_mode = "auto"
+        self.recalc_mode = "auto"
         self.chart = Chart()
-        self._chart_renderer = TextChartRenderer(self.spreadsheet)
-        # Global worksheet settings
-        self._global_format_code = "G"
-        self._global_label_prefix = "'"
-        self._global_col_width = 10
-        self._global_zero_display = True
+        # Global worksheet settings (public - shared across handlers)
+        self.global_format_code = "G"
+        self.global_label_prefix = "'"
+        self.global_col_width = 10
+        self.global_zero_display = True
         self._dirty = False
-        # Query settings (Data Query)
-        self._query_input_range: tuple[int, int, int, int] | None = None
-        self._query_criteria_range: tuple[int, int, int, int] | None = None
-        self._query_output_range: tuple[int, int] | None = None
-        self._query_find_results: list[int] | None = None
-        self._query_find_index: int = 0
-        # Pending operation state
-        self._pending_source_range: tuple[int, int, int, int] = (0, 0, 0, 0)
-        self._pending_range: str = ""
 
         # Initialize handlers with explicit dependency injection
         # Note: type: ignore needed because Textual's overloaded methods

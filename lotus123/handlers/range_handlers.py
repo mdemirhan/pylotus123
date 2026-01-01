@@ -18,6 +18,8 @@ class RangeHandler(BaseHandler):
 
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)
+        # Pending operation state - owned by this handler
+        self.pending_range: str = ""
 
     def range_format(self) -> None:
         """Set the format for the selected range."""
@@ -90,7 +92,7 @@ class RangeHandler(BaseHandler):
         grid = self.get_grid()
         r1, c1, r2, c2 = grid.selection_range
         range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-        self._app._pending_range = range_str
+        self.pending_range = range_str
         self._app.push_screen(
             CommandInput(f"Name for range {range_str}:"), self._do_range_name
         )
@@ -102,8 +104,8 @@ class RangeHandler(BaseHandler):
         if not name:
             return
         try:
-            self.spreadsheet.named_ranges.add_from_string(name, self._app._pending_range)
+            self.spreadsheet.named_ranges.add_from_string(name, self.pending_range)
             self._app._mark_dirty()
-            self.notify(f"Named range '{name}' created for {self._app._pending_range}")
+            self.notify(f"Named range '{name}' created for {self.pending_range}")
         except ValueError as e:
             self.notify(str(e), severity="error")

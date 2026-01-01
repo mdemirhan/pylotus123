@@ -17,13 +17,19 @@ class QueryHandler(BaseHandler):
 
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)
+        # Query state - owned by this handler
+        self.input_range: tuple[int, int, int, int] | None = None
+        self.criteria_range: tuple[int, int, int, int] | None = None
+        self.output_range: tuple[int, int] | None = None
+        self.find_results: list[int] | None = None
+        self.find_index: int = 0
 
     def set_input(self) -> None:
         """Set the input (database) range for queries."""
         grid = self.get_grid()
         if grid.has_selection:
             r1, c1, r2, c2 = grid.selection_range
-            self._app._query_input_range = (r1, c1, r2, c2)
+            self.input_range = (r1, c1, r2, c2)
             range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
             self.notify(f"Query Input range set to {range_str}")
         else:
@@ -39,7 +45,7 @@ class QueryHandler(BaseHandler):
             if len(parts) == 2:
                 r1, c1 = parse_cell_ref(parts[0])
                 r2, c2 = parse_cell_ref(parts[1])
-                self._app._query_input_range = (r1, c1, r2, c2)
+                self.input_range = (r1, c1, r2, c2)
                 self.notify(f"Query Input range set to {result.upper()}")
             else:
                 self.notify("Invalid range format", severity="error")
@@ -51,8 +57,8 @@ class QueryHandler(BaseHandler):
         grid = self.get_grid()
         if grid.has_selection:
             r1, c1, r2, c2 = grid.selection_range
-            self._app._query_criteria_range = (r1, c1, r2, c2)
-            self._app._query_find_results = None
+            self.criteria_range = (r1, c1, r2, c2)
+            self.find_results = None
             range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
             self.notify(f"Query Criteria range set to {range_str}")
         else:
@@ -69,8 +75,8 @@ class QueryHandler(BaseHandler):
             if len(parts) == 2:
                 r1, c1 = parse_cell_ref(parts[0])
                 r2, c2 = parse_cell_ref(parts[1])
-                self._app._query_criteria_range = (r1, c1, r2, c2)
-                self._app._query_find_results = None
+                self.criteria_range = (r1, c1, r2, c2)
+                self.find_results = None
                 self.notify(f"Query Criteria range set to {result.upper()}")
             else:
                 self.notify("Invalid range format", severity="error")
@@ -82,7 +88,7 @@ class QueryHandler(BaseHandler):
         grid = self.get_grid()
         if grid.has_selection:
             r1, c1, _, _ = grid.selection_range
-            self._app._query_output_range = (r1, c1)
+            self.output_range = (r1, c1)
             self.notify(f"Query Output range set to {make_cell_ref(r1, c1)}")
         else:
             self._app.push_screen(
@@ -94,20 +100,20 @@ class QueryHandler(BaseHandler):
             return
         try:
             row, col = parse_cell_ref(result.upper())
-            self._app._query_output_range = (row, col)
+            self.output_range = (row, col)
             self.notify(f"Query Output range set to {result.upper()}")
         except ValueError as e:
             self.notify(f"Invalid cell reference: {e}", severity="error")
 
     def _build_criteria_filter(self) -> Callable[[list], bool] | None:
         """Build a filter function from the criteria range."""
-        if not self._app._query_criteria_range or not self._app._query_input_range:
+        if not self.criteria_range or not self.input_range:
             return None
 
         from ..data.criteria import CriteriaParser
 
-        cr1, cc1, cr2, cc2 = self._app._query_criteria_range
-        ir1, ic1, ir2, ic2 = self._app._query_input_range
+        cr1, cc1, cr2, cc2 = self.criteria_range
+        ir1, ic1, ir2, ic2 = self.input_range
 
         # Get input headers
         input_headers = []
@@ -155,22 +161,22 @@ class QueryHandler(BaseHandler):
 
     def find(self) -> None:
         """Find records matching the criteria."""
-        if not self._app._query_input_range:
+        if not self.input_range:
             self.notify("Set Input range first (Data:Query:Input)", severity="warning")
             return
 
         grid = self.get_grid()
 
         # If we already have results, cycle to the next one
-        if self._app._query_find_results:
-            self._app._query_find_index = (
-                self._app._query_find_index + 1
-            ) % len(self._app._query_find_results)
-            target_row = self._app._query_find_results[self._app._query_find_index]
+        if self.find_results:
+            self.find_index = (
+                self.find_index + 1
+            ) % len(self.find_results)
+            target_row = self.find_results[self.find_index]
             grid.cursor_row = target_row
             grid.cursor_col = self._get_first_criteria_col()
-            pos = self._app._query_find_index + 1
-            total = len(self._app._query_find_results)
+            pos = self.find_index + 1
+            total = len(self.find_results)
             self.notify(f"Record {pos} of {total}")
             return
 
@@ -181,16 +187,16 @@ class QueryHandler(BaseHandler):
         criteria_filter = self._build_criteria_filter()
 
         matching_rows = db.query(
-            self._app._query_input_range, criteria_func=criteria_filter
+            self.input_range, criteria_func=criteria_filter
         )
 
         if not matching_rows:
             self.notify("No matching records found")
-            self._app._query_find_results = None
+            self.find_results = None
             return
 
-        self._app._query_find_results = matching_rows
-        self._app._query_find_index = 0
+        self.find_results = matching_rows
+        self.find_index = 0
 
         # Navigate to first match
         first_row = matching_rows[0]
@@ -203,11 +209,11 @@ class QueryHandler(BaseHandler):
 
     def _get_first_criteria_col(self) -> int:
         """Get the column index in the input range that matches the first criteria header."""
-        if not self._app._query_criteria_range or not self._app._query_input_range:
-            return self._app._query_input_range[1] if self._app._query_input_range else 0
+        if not self.criteria_range or not self.input_range:
+            return self.input_range[1] if self.input_range else 0
 
-        crit_start_row, crit_start_col, _, crit_end_col = self._app._query_criteria_range
-        input_start_row, input_start_col, _, input_end_col = self._app._query_input_range
+        crit_start_row, crit_start_col, _, crit_end_col = self.criteria_range
+        input_start_row, input_start_col, _, input_end_col = self.input_range
 
         # Get input headers
         input_headers: dict[str, int] = {}
@@ -226,10 +232,10 @@ class QueryHandler(BaseHandler):
 
     def extract(self) -> None:
         """Extract matching records to the output range."""
-        if not self._app._query_input_range:
+        if not self.input_range:
             self.notify("Set Input range first (Data:Query:Input)", severity="warning")
             return
-        if not self._app._query_output_range:
+        if not self.output_range:
             self.notify(
                 "Set Output range first (Data:Query:Output)", severity="warning"
             )
@@ -241,7 +247,7 @@ class QueryHandler(BaseHandler):
         criteria_filter = self._build_criteria_filter()
 
         matching_rows = db.query(
-            self._app._query_input_range, criteria_func=criteria_filter
+            self.input_range, criteria_func=criteria_filter
         )
 
         if not matching_rows:
@@ -249,7 +255,7 @@ class QueryHandler(BaseHandler):
             return
 
         count = db.extract(
-            self._app._query_input_range, self._app._query_output_range, matching_rows
+            self.input_range, self.output_range, matching_rows
         )
         grid = self.get_grid()
         grid.refresh_grid()
@@ -258,10 +264,10 @@ class QueryHandler(BaseHandler):
 
     def unique(self) -> None:
         """Extract unique matching records to the output range."""
-        if not self._app._query_input_range:
+        if not self.input_range:
             self.notify("Set Input range first (Data:Query:Input)", severity="warning")
             return
-        if not self._app._query_output_range:
+        if not self.output_range:
             self.notify(
                 "Set Output range first (Data:Query:Output)", severity="warning"
             )
@@ -274,7 +280,7 @@ class QueryHandler(BaseHandler):
 
         # First query matching rows
         matching_rows = db.query(
-            self._app._query_input_range, criteria_func=criteria_filter
+            self.input_range, criteria_func=criteria_filter
         )
 
         if not matching_rows:
@@ -282,15 +288,15 @@ class QueryHandler(BaseHandler):
             return
 
         # Then find unique among matching
-        ir1, ic1, ir2, ic2 = self._app._query_input_range
+        ir1, ic1, ir2, ic2 = self.input_range
         all_columns = list(range(ic2 - ic1 + 1))
-        unique_rows = db.unique(self._app._query_input_range, all_columns)
+        unique_rows = db.unique(self.input_range, all_columns)
 
         # Intersect with matching
         unique_matching = [r for r in unique_rows if r in matching_rows]
 
         count = db.extract(
-            self._app._query_input_range, self._app._query_output_range, unique_matching
+            self.input_range, self.output_range, unique_matching
         )
         grid = self.get_grid()
         grid.refresh_grid()
@@ -299,7 +305,7 @@ class QueryHandler(BaseHandler):
 
     def delete(self) -> None:
         """Delete records matching the criteria."""
-        if not self._app._query_input_range:
+        if not self.input_range:
             self.notify("Set Input range first (Data:Query:Input)", severity="warning")
             return
 
@@ -309,14 +315,14 @@ class QueryHandler(BaseHandler):
         criteria_filter = self._build_criteria_filter()
 
         matching_rows = db.query(
-            self._app._query_input_range, criteria_func=criteria_filter
+            self.input_range, criteria_func=criteria_filter
         )
 
         if not matching_rows:
             self.notify("No matching records to delete")
             return
 
-        count = db.delete_matching(self._app._query_input_range, matching_rows)
+        count = db.delete_matching(self.input_range, matching_rows)
         grid = self.get_grid()
         grid.refresh_grid()
         self._app._mark_dirty()
@@ -324,9 +330,9 @@ class QueryHandler(BaseHandler):
 
     def reset(self) -> None:
         """Reset all query settings."""
-        self._app._query_input_range = None
-        self._app._query_criteria_range = None
-        self._app._query_output_range = None
-        self._app._query_find_results = None
-        self._app._query_find_index = 0
+        self.input_range = None
+        self.criteria_range = None
+        self.output_range = None
+        self.find_results = None
+        self.find_index = 0
         self.notify("Query settings reset")
