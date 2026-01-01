@@ -75,7 +75,30 @@ class LotusMenu(Static, can_focus=True):
         "Move": {"key": "M", "items": []},
         "File": {
             "key": "F",
-            "items": [("R", "Retrieve"), ("S", "Save"), ("N", "New"), ("Q", "Quit")],
+            "items": [
+                ("R", "Retrieve"),
+                ("S", "Save"),
+                ("N", "New"),
+                (
+                    "I",
+                    "Import",
+                    [
+                        ("C", "CSV"),
+                        ("T", "TSV"),
+                        ("W", "WK1"),
+                    ],
+                ),
+                (
+                    "E",
+                    "Export",
+                    [
+                        ("C", "CSV"),
+                        ("T", "TSV"),
+                        ("W", "WK1"),
+                    ],
+                ),
+                ("Q", "Quit"),
+            ],
         },
         "Graph": {
             "key": "G",

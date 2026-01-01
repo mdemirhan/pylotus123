@@ -53,13 +53,23 @@ class FileDialog(ModalScreen[str | None]):
     }
     """
 
-    def __init__(self, mode: str = "open", initial_path: str = ".", **kwargs: Any) -> None:
+    def __init__(
+        self,
+        mode: str = "open",
+        initial_path: str = ".",
+        title: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
         self.mode = mode
         self.initial_path = initial_path
+        self._custom_title = title
 
     def compose(self) -> ComposeResult:
-        title = "Open File" if self.mode == "open" else "Save File"
+        if self._custom_title:
+            title = self._custom_title
+        else:
+            title = "Open File" if self.mode == "open" else "Save File"
         with Container(id="file-dialog-container"):
             yield Label(f"[bold]{title}[/bold]", id="dialog-title")
             yield DirectoryTree(self.initial_path, id="file-tree")

@@ -15,10 +15,9 @@ A modern terminal-based spreadsheet application inspired by the classic Lotus 1-
 - Copy/cut/paste with clipboard management
 - Undo/redo support
 - Named ranges
-- Cell protection
 - Data operations (sort, query, fill)
 - Text import/export (CSV, TSV, custom delimited)
-- Charting (line, bar, pie, scatter plots)
+- Charting (line, bar, stacked bar, XY scatter, pie, area, horizontal bar)
 - Save/load spreadsheets to JSON
 
 ## Installation

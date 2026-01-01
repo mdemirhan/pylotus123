@@ -11,7 +11,6 @@ from .dialogs import ChartViewScreen, CommandInput, FileDialog, ThemeDialog, The
 from .grid import SpreadsheetGrid
 
 # Window management (existing)
-from .menu import Menu, MenuAction, MenuContext, MenuItem, MenuState, MenuSystem
 from .menu_bar import LotusMenu
 from .status_bar import Mode, ModeIndicator, StatusBar, StatusBarWidget
 from .themes import THEMES, Theme, ThemeType, get_theme, get_theme_type
@@ -41,13 +40,6 @@ __all__ = [
     "ThemeDialog",
     "ThemeItem",
     "ChartViewScreen",
-    # Menu system
-    "Menu",
-    "MenuItem",
-    "MenuAction",
-    "MenuState",
-    "MenuContext",
-    "MenuSystem",
     # Window management
     "SplitType",
     "TitleFreezeType",

@@ -30,8 +30,7 @@ lotus123/
 │   ├── spreadsheet.py       # Main spreadsheet managing the grid
 │   ├── reference.py         # Cell/range reference handling (A1, $A$1, ranges)
 │   ├── formatting.py        # Numeric, date, time format definitions
-│   ├── named_ranges.py      # Named range management
-│   └── protection.py        # Cell and worksheet protection
+│   └── named_ranges.py      # Named range management
 │
 ├── formula/                 # Formula engine
 │   ├── __init__.py
@@ -58,9 +57,6 @@ lotus123/
 │   ├── themes.py            # Theme definitions and management
 │   ├── config.py            # Application configuration
 │   ├── window.py            # Window splitting and frozen titles
-│   ├── menu/                # Lotus-style menu system
-│   │   ├── __init__.py
-│   │   └── menu_system.py   # Complete menu system with all commands
 │   └── dialogs/             # Modal dialog screens
 │       ├── __init__.py
 │       ├── file_dialog.py   # File open/save
@@ -89,7 +85,8 @@ lotus123/
 │       ├── line.py          # Line chart renderer
 │       ├── bar.py           # Bar chart renderer
 │       ├── pie.py           # Pie chart renderer
-│       └── scatter.py       # Scatter plot renderer
+│       ├── scatter.py       # Scatter plot renderer
+│       └── stacked.py       # Stacked bar chart renderer
 │
 └── utils/                   # Utility modules
     ├── __init__.py
@@ -128,13 +125,16 @@ class UndoManager:
     def redo(self) -> None: ...
 ```
 
-#### Plugin-Ready Menu System (ui/menu/)
+#### Menu System (ui/menu_bar.py)
 ```python
-class MenuItem:
-    key: str           # Single keystroke
-    label: str         # Display label
-    action: Callable   # Handler function
-    submenu: list[MenuItem] | None
+# LotusMenu uses a static MENU_STRUCTURE dictionary
+MENU_STRUCTURE = {
+    "File": {
+        "key": "F",
+        "items": [("R", "Retrieve"), ("S", "Save"), ...],
+    },
+    ...
+}
 ```
 
 #### Handler Composition Pattern (handlers/)
@@ -189,6 +189,7 @@ class CellType(Enum):
     FORMULA = auto()
     DATE = auto()
     TIME = auto()
+    DATETIME = auto()
     ERROR = auto()
 
 class TextAlignment(Enum):
@@ -203,7 +204,6 @@ class Cell:
     cell_type: CellType
     alignment: TextAlignment
     format_code: str
-    is_protected: bool
     # ... computed properties for display
 ```
 
@@ -284,16 +284,13 @@ class RecalcEngine:
 | Database functions (13) | formula/functions/database.py | ✓ Complete |
 | Info functions (10) | formula/functions/info.py | ✓ Complete |
 | Recalc engine | formula/recalc.py | ✓ Complete |
-| Menu system | ui/menu/ | ✓ Complete |
-| Worksheet commands | ui/menu/menu_system.py | ✓ Complete |
-| Range commands | ui/menu/menu_system.py | ✓ Complete |
+| Menu system | ui/menu_bar.py | ✓ Complete |
 | Named ranges | core/named_ranges.py | ✓ Complete |
 | Database operations | data/database.py | ✓ Complete |
 | Undo/redo | utils/undo.py | ✓ Complete |
 | Window splitting | ui/window.py | ✓ Complete |
 | Frozen titles | ui/window.py | ✓ Complete |
-| Cell protection | core/protection.py | ✓ Complete |
-| Charting (5 types) | charting/ | ✓ Complete |
+| Charting (7 types) | charting/ | ✓ Complete |
 | Text import/export | io/ | ✓ Complete |
 | Status indicators | ui/status_bar.py | ✓ Complete |
 | Theme support | ui/themes.py | ✓ Complete |

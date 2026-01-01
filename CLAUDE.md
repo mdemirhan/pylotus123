@@ -30,14 +30,14 @@ uv run pytest tests/test_formula.py::test_function_name -v
 The codebase follows a modular architecture with clear separation of concerns:
 
 - **lotus123/app.py** - Main TUI application using Textual framework
-- **lotus123/spreadsheet.py** - Core spreadsheet grid data model
-- **lotus123/core/** - Core data model (cell, reference, formatting, named ranges, protection)
+- **lotus123/core/** - Core data model (cell, spreadsheet, reference, formatting, named ranges)
 - **lotus123/formula/** - Formula engine with parser, evaluator, recalc engine, and 180+ functions
 - **lotus123/ui/** - UI components (grid, menus, dialogs, status bar, themes, window management)
 - **lotus123/data/** - Data operations (sort, query, fill, criteria parsing)
 - **lotus123/io/** - File I/O (text import/export in CSV/TSV/delimited formats)
-- **lotus123/charting/** - Chart data model and text-based renderers (line, bar, pie, scatter)
+- **lotus123/charting/** - Chart data model and text-based renderers (line, bar, stacked bar, XY scatter, pie, area, horizontal bar)
 - **lotus123/utils/** - Utilities (undo/redo with command pattern, clipboard)
+- **lotus123/handlers/** - Application handlers using composition pattern (file, clipboard, data, navigation, chart, query, range, worksheet)
 
 ### Key Patterns
 
@@ -45,7 +45,7 @@ The codebase follows a modular architecture with clear separation of concerns:
 
 **Command Pattern** (`utils/undo.py`): All undoable operations implement execute/undo protocol with CellChangeCommand, RangeChangeCommand, InsertRowCommand, DeleteRowCommand.
 
-**Menu System** (`ui/menu/menu_system.py`): Lotus-style `/` menu with hierarchical MenuItem structures supporting File, Worksheet, Range, Data, Graph, and Tools menus.
+**Menu System** (`ui/menu_bar.py`): Lotus-style `/` menu with hierarchical menu structures supporting File, Worksheet, Range, Data, Graph, and Quit menus.
 
 ## Formula System
 

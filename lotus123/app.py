@@ -20,6 +20,7 @@ from .handlers import (
     ClipboardHandler,
     DataHandler,
     FileHandler,
+    ImportExportHandler,
     NavigationHandler,
     QueryHandler,
     RangeHandler,
@@ -172,6 +173,7 @@ class LotusApp(App[None]):
         self._clipboard_handler = ClipboardHandler(self)  # type: ignore[arg-type]
         self._data_handler = DataHandler(self)  # type: ignore[arg-type]
         self._file_handler = FileHandler(self)  # type: ignore[arg-type]
+        self._import_export_handler = ImportExportHandler(self)  # type: ignore[arg-type]
         self._navigation_handler = NavigationHandler(self)  # type: ignore[arg-type]
         self._query_handler = QueryHandler(self)  # type: ignore[arg-type]
         self._range_handler = RangeHandler(self)  # type: ignore[arg-type]
@@ -663,6 +665,19 @@ class LotusApp(App[None]):
             self._chart_handler.save_chart()
         elif result == "Graph:Load":
             self._chart_handler.load_chart()
+        # Import/Export
+        elif result == "File:Import:CSV":
+            self._import_export_handler.import_csv()
+        elif result == "File:Import:TSV":
+            self._import_export_handler.import_tsv()
+        elif result == "File:Import:WK1":
+            self._import_export_handler.import_wk1()
+        elif result == "File:Export:CSV":
+            self._import_export_handler.export_csv()
+        elif result == "File:Export:TSV":
+            self._import_export_handler.export_tsv()
+        elif result == "File:Export:WK1":
+            self._import_export_handler.export_wk1()
 
     def on_key(self, event: events.Key) -> None:
         """Handle key presses for navigation and direct cell input."""

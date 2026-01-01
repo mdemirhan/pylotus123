@@ -42,8 +42,7 @@
       "raw_value": "'Status"
     },
     "2,0": {
-      "raw_value": "1001",
-      "is_protected": true
+      "raw_value": "1001"
     },
     "2,1": {
       "raw_value": "'Alice Johnson"
@@ -65,8 +64,7 @@
       "raw_value": "'Active"
     },
     "3,0": {
-      "raw_value": "1002",
-      "is_protected": true
+      "raw_value": "1002"
     },
     "3,1": {
       "raw_value": "'Bob Smith"
@@ -88,8 +86,7 @@
       "raw_value": "'Active"
     },
     "4,0": {
-      "raw_value": "1003",
-      "is_protected": true
+      "raw_value": "1003"
     },
     "4,1": {
       "raw_value": "'Carol Davis"
@@ -111,8 +108,7 @@
       "raw_value": "'Active"
     },
     "5,0": {
-      "raw_value": "1004",
-      "is_protected": true
+      "raw_value": "1004"
     },
     "5,1": {
       "raw_value": "'David Wilson"
@@ -134,8 +130,7 @@
       "raw_value": "'Active"
     },
     "6,0": {
-      "raw_value": "1005",
-      "is_protected": true
+      "raw_value": "1005"
     },
     "6,1": {
       "raw_value": "'Eve Martinez"
@@ -157,8 +152,7 @@
       "raw_value": "'OnLeave"
     },
     "7,0": {
-      "raw_value": "1006",
-      "is_protected": true
+      "raw_value": "1006"
     },
     "7,1": {
       "raw_value": "'Frank Brown"
@@ -180,8 +174,7 @@
       "raw_value": "'Active"
     },
     "8,0": {
-      "raw_value": "1007",
-      "is_protected": true
+      "raw_value": "1007"
     },
     "8,1": {
       "raw_value": "'Grace Lee"
@@ -203,8 +196,7 @@
       "raw_value": "'Active"
     },
     "9,0": {
-      "raw_value": "1008",
-      "is_protected": true
+      "raw_value": "1008"
     },
     "9,1": {
       "raw_value": "'Henry Taylor"
@@ -226,8 +218,7 @@
       "raw_value": "'Active"
     },
     "10,0": {
-      "raw_value": "1009",
-      "is_protected": true
+      "raw_value": "1009"
     },
     "10,1": {
       "raw_value": "'Ivy Chen"
@@ -249,8 +240,7 @@
       "raw_value": "'Active"
     },
     "11,0": {
-      "raw_value": "1010",
-      "is_protected": true
+      "raw_value": "1010"
     },
     "11,1": {
       "raw_value": "'Jack Miller"
@@ -844,19 +834,6 @@
     }
   },
   "named_ranges": {},
-  "protection": {
-    "settings": {
-      "enabled": false,
-      "password_hash": "",
-      "allow_formatting": false,
-      "allow_insert_rows": false,
-      "allow_insert_cols": false,
-      "allow_delete_rows": false,
-      "allow_delete_cols": false,
-      "allow_sort": false
-    },
-    "unprotected_cells": []
-  },
   "frozen_rows": 0,
   "frozen_cols": 0,
   "global_settings": {
