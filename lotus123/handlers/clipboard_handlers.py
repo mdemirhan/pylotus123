@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from ..core import adjust_formula_references, make_cell_ref, parse_cell_ref
 from ..ui import CommandInput
+from ..utils.os_clipboard import copy_to_clipboard, format_cells_as_tsv
 from ..utils.undo import CellChangeCommand, RangeChangeCommand
 from .base import BaseHandler
 
@@ -141,16 +142,29 @@ class ClipboardHandler(BaseHandler):
         r1, c1, r2, c2 = grid.selection_range
         self._app._range_clipboard = []
         self._app._clipboard_origin = (r1, c1)
+
+        # Collect raw values for internal clipboard and display values for OS clipboard
+        os_clipboard_data: list[list[str]] = []
         for r in range(r1, r2 + 1):
             row_data = []
+            os_row_data = []
             for c in range(c1, c2 + 1):
                 cell = self.spreadsheet.get_cell(r, c)
                 row_data.append(cell.raw_value)
+                # Use display value for OS clipboard (computed values for formulas)
+                os_row_data.append(cell.display_value)
             self._app._range_clipboard.append(row_data)
+            os_clipboard_data.append(os_row_data)
+
         self._app._clipboard_is_cut = False
         cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
         self._app._cell_clipboard = (grid.cursor_row, grid.cursor_col, cell.raw_value)
         cells_count = (r2 - r1 + 1) * (c2 - c1 + 1)
+
+        # Copy to OS clipboard as TSV
+        tsv_text = format_cells_as_tsv(os_clipboard_data)
+        copy_to_clipboard(tsv_text)
+
         self.notify(f"Copied {cells_count} cell(s)")
 
     def cut_cells(self) -> None:
