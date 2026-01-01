@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Any, Iterator
 
-from .cell import Cell
+from .cell import Cell, TextAlignment
 from .formatting import format_value, parse_format_code
 from .named_ranges import NamedRangeManager
 from .reference import adjust_for_structural_change, adjust_formula_references, parse_cell_ref
@@ -332,6 +332,56 @@ class Spreadsheet:
                 return str(int(value))
             return f"{value:.2f}" if math.isfinite(value) else str(value)
         return str(value) if value != "" else ""
+
+    def get_cell_alignment(self, row: int, col: int) -> TextAlignment:
+        """Get the alignment for a cell.
+
+        Lotus 1-2-3 alignment rules:
+        - Explicit prefix overrides default: ' (left), " (right), ^ (center), \\ (repeat)
+        - Numbers, currency, dates, times: right-aligned by default
+        - Text/labels: left-aligned by default
+        - Formulas: based on computed result type
+        - Errors: left-aligned
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+
+        Returns:
+            TextAlignment enum value
+        """
+        cell = self._cells.get((row, col))
+        if not cell or cell.is_empty:
+            return TextAlignment.DEFAULT
+
+        # Check for explicit alignment prefix
+        explicit_alignment = cell.alignment
+        if explicit_alignment != TextAlignment.DEFAULT:
+            return explicit_alignment
+
+        # For formulas, determine alignment based on computed value type
+        if cell.is_formula:
+            value = self.get_value(row, col)
+            # Errors are left-aligned
+            if isinstance(value, str) and value.startswith("#"):
+                return TextAlignment.LEFT
+            # Numbers are right-aligned
+            if isinstance(value, (int, float)):
+                return TextAlignment.RIGHT
+            # Text results are left-aligned
+            return TextAlignment.LEFT
+
+        # For non-formula cells, check the cell type
+        # Numbers are right-aligned, text is left-aligned
+        display = cell.display_value
+        if display:
+            try:
+                float(display.replace(",", ""))
+                return TextAlignment.RIGHT
+            except ValueError:
+                pass
+
+        return TextAlignment.LEFT
 
     # -------------------------------------------------------------------------
     # Column/Row Dimensions

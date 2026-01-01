@@ -16,6 +16,7 @@ from textual.reactive import reactive
 from textual.widgets import Static
 
 from ..core import Spreadsheet, index_to_col, parse_cell_ref
+from ..core.cell import TextAlignment
 from .themes import Theme
 
 
@@ -177,6 +178,39 @@ class SpreadsheetGrid(Static, can_focus=True):
         self.theme = theme
         self.refresh_grid()
 
+    def _align_value(self, value: str, width: int, row: int, col: int) -> str:
+        """Align a cell value according to Lotus 1-2-3 rules.
+
+        Args:
+            value: The display value to align
+            width: Column width in characters
+            row: Cell row index
+            col: Cell column index
+
+        Returns:
+            String padded/truncated to width with proper alignment
+        """
+        alignment = self.spreadsheet.get_cell_alignment(row, col)
+
+        # Handle repeating character (backslash prefix)
+        if alignment == TextAlignment.REPEAT and value:
+            return (value * (width // len(value) + 1))[:width]
+
+        # Truncate if too long
+        if len(value) > width:
+            return value[:width]
+
+        # Apply alignment
+        if alignment == TextAlignment.LEFT:
+            return value.ljust(width)
+        elif alignment == TextAlignment.RIGHT:
+            return value.rjust(width)
+        elif alignment == TextAlignment.CENTER:
+            return value.center(width)
+        else:
+            # DEFAULT - should not happen as get_cell_alignment returns specific alignment
+            return value.ljust(width)
+
     def refresh_grid(self) -> None:
         """Redraw the grid."""
         lines = []
@@ -245,7 +279,7 @@ class SpreadsheetGrid(Static, can_focus=True):
                 # Hide zero values if show_zero is False
                 if not self.show_zero and value in ("0", "0.0", "0.00"):
                     value = ""
-                display = value[:col_width].ljust(col_width)
+                display = self._align_value(value, col_width, r, c)
 
                 if self.is_in_selection(r, c):
                     row_text.append(display, selected_style)

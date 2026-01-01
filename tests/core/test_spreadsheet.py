@@ -6,6 +6,7 @@ import tempfile
 import pytest
 
 from lotus123 import Cell, Spreadsheet, col_to_index, index_to_col, make_cell_ref, parse_cell_ref
+from lotus123.core.cell import TextAlignment
 
 
 class TestCellReferenceConversions:
@@ -237,3 +238,131 @@ class TestSpreadsheetSaveLoad:
             assert ss2.get_col_width(0) == 15
         finally:
             os.unlink(temp_path)
+
+
+class TestCellAlignment:
+    """Tests for Lotus 1-2-3 style cell alignment."""
+
+    def test_empty_cell_default_alignment(self):
+        """Empty cells have default alignment."""
+        ss = Spreadsheet()
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.DEFAULT
+
+    def test_number_right_aligned(self):
+        """Numbers are right-aligned by default."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "123")
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.RIGHT
+
+    def test_float_right_aligned(self):
+        """Floats are right-aligned by default."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "3.14")
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.RIGHT
+
+    def test_text_left_aligned(self):
+        """Text is left-aligned by default."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "Hello")
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.LEFT
+
+    def test_apostrophe_prefix_left(self):
+        """Apostrophe prefix forces left alignment."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "'123")  # Number with left alignment
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.LEFT
+
+    def test_quote_prefix_right(self):
+        """Quote prefix forces right alignment."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, '"Hello')  # Text with right alignment
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.RIGHT
+
+    def test_caret_prefix_center(self):
+        """Caret prefix forces center alignment."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "^Centered")
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.CENTER
+
+    def test_backslash_prefix_repeat(self):
+        """Backslash prefix forces repeat alignment."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "\\-")  # Repeating hyphen for separator
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.REPEAT
+
+    def test_formula_result_number_right_aligned(self):
+        """Formula returning number is right-aligned."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "10")
+        ss.set_cell(0, 1, "20")
+        ss.set_cell(0, 2, "=A1+B1")
+        assert ss.get_cell_alignment(0, 2) == TextAlignment.RIGHT
+
+    def test_formula_result_text_left_aligned(self):
+        """Formula returning text is left-aligned."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "Hello")
+        ss.set_cell(0, 1, '=A1&" World"')
+        assert ss.get_cell_alignment(0, 1) == TextAlignment.LEFT
+
+    def test_formula_error_left_aligned(self):
+        """Formula with error is left-aligned."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "=1/0")  # Division by zero
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.LEFT
+
+    def test_negative_number_right_aligned(self):
+        """Negative numbers are right-aligned."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "-42")
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.RIGHT
+
+    def test_comma_number_right_aligned(self):
+        """Numbers with comma separators are right-aligned."""
+        ss = Spreadsheet()
+        ss.set_cell(0, 0, "1,234")
+        assert ss.get_cell_alignment(0, 0) == TextAlignment.RIGHT
+
+
+class TestCellAlignmentPrefix:
+    """Tests for Cell alignment property with prefix characters."""
+
+    def test_cell_alignment_default(self):
+        """Cell without prefix has default alignment."""
+        cell = Cell(raw_value="test")
+        assert cell.alignment == TextAlignment.DEFAULT
+
+    def test_cell_alignment_apostrophe(self):
+        """Apostrophe prefix gives left alignment."""
+        cell = Cell(raw_value="'test")
+        assert cell.alignment == TextAlignment.LEFT
+
+    def test_cell_alignment_quote(self):
+        """Quote prefix gives right alignment."""
+        cell = Cell(raw_value='"test')
+        assert cell.alignment == TextAlignment.RIGHT
+
+    def test_cell_alignment_caret(self):
+        """Caret prefix gives center alignment."""
+        cell = Cell(raw_value="^test")
+        assert cell.alignment == TextAlignment.CENTER
+
+    def test_cell_alignment_backslash(self):
+        """Backslash prefix gives repeat alignment."""
+        cell = Cell(raw_value="\\-")
+        assert cell.alignment == TextAlignment.REPEAT
+
+    def test_cell_display_value_strips_prefix(self):
+        """Display value strips alignment prefix."""
+        cell = Cell(raw_value="'Hello")
+        assert cell.display_value == "Hello"
+
+    def test_cell_display_value_center(self):
+        """Display value strips center prefix."""
+        cell = Cell(raw_value="^Title")
+        assert cell.display_value == "Title"
+
+    def test_cell_display_value_repeat(self):
+        """Display value strips repeat prefix."""
+        cell = Cell(raw_value="\\=")
+        assert cell.display_value == "="
