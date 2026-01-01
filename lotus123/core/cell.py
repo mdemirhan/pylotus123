@@ -68,6 +68,8 @@ class Cell:
     # Pre-compiled regex for number detection in is_formula
     # Using a regex that mimics float() acceptance roughly but stricter on partial inputs
     _NUMBER_PATTERN = re.compile(r'^\d*\.?\d+(?:[eE][+-]?\d+)?$')
+    # IEEE 754 special float values (case-insensitive)
+    _SPECIAL_FLOATS = frozenset({"inf", "nan"})
 
     raw_value: str = ""
     format_code: str = "G"  # General format by default
@@ -105,7 +107,9 @@ class Cell:
             # Return TRUE if it is NOT a number, False otherwise.
             if self._NUMBER_PATTERN.match(rest):
                 return False
-            
+            # Also check for IEEE 754 special float values (inf, nan)
+            if rest.lower() in self._SPECIAL_FLOATS:
+                return False
             # If it's not a standard number, it's a formula (e.g. +A1 or +1.2.3)
             return True
         return False

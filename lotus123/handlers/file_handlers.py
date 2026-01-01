@@ -162,6 +162,8 @@ class FileHandler(BaseHandler):
     def _do_save_confirm(self, result: str | None) -> None:
         if result and result.strip().upper().startswith("Y"):
             self._perform_save(self._pending_save_path)
+        else:
+            self.notify("Save cancelled", severity="warning")
 
     def _perform_save(self, filepath: str) -> None:
         try:

@@ -204,6 +204,8 @@ class ChartHandler(BaseHandler):
         """Handle overwrite confirmation."""
         if result and result.strip().upper().startswith("Y"):
             self._perform_chart_save(self._pending_chart_path)
+        else:
+            self.notify("Save cancelled", severity="warning")
 
     def _perform_chart_save(self, filepath: str) -> None:
         """Actually save the chart to the file."""

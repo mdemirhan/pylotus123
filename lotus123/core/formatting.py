@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import math
 from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
@@ -285,6 +286,9 @@ def format_value(value: Any, spec: FormatSpec, width: int = 10) -> str:
 def _format_general(value: Any) -> str:
     """Format value in general (automatic) format."""
     if isinstance(value, float):
+        # Handle IEEE 754 special values (infinity, NaN)
+        if not math.isfinite(value):
+            return str(value)
         if value == int(value):
             return str(int(value))
         # Use up to 10 significant digits
@@ -369,6 +373,10 @@ def _format_time(value: float, variant: TimeFormat) -> str:
 def _format_plusminus(value: float, width: int) -> str:
     """Format as horizontal bar graph (+/- characters)."""
     if not isinstance(value, (int, float)):
+        return str(value)
+
+    # Handle IEEE 754 special values (infinity, NaN)
+    if isinstance(value, float) and not math.isfinite(value):
         return str(value)
 
     # Scale: typically -10 to +10 maps to full width

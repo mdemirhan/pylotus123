@@ -337,7 +337,8 @@
       "raw_value": "52000"
     },
     "17,3": {
-      "raw_value": "=((C18-B18)/B18)*100"
+      "raw_value": "=((C18-B18)/B18)",
+      "format_code": "P2"
     },
     "18,0": {
       "raw_value": "'Feb"
@@ -349,7 +350,8 @@
       "raw_value": "55000"
     },
     "18,3": {
-      "raw_value": "=((C19-B19)/B19)*100"
+      "raw_value": "=((C19-B19)/B19)",
+      "format_code": "P2"
     },
     "19,0": {
       "raw_value": "'Mar"
@@ -361,7 +363,8 @@
       "raw_value": "61000"
     },
     "19,3": {
-      "raw_value": "=((C20-B20)/B20)*100"
+      "raw_value": "=((C20-B20)/B20)",
+      "format_code": "P2"
     },
     "20,0": {
       "raw_value": "'Apr"
@@ -373,7 +376,8 @@
       "raw_value": "58000"
     },
     "20,3": {
-      "raw_value": "=((C21-B21)/B21)*100"
+      "raw_value": "=((C21-B21)/B21)",
+      "format_code": "P2"
     },
     "21,0": {
       "raw_value": "'May"
@@ -385,7 +389,8 @@
       "raw_value": "63000"
     },
     "21,3": {
-      "raw_value": "=((C22-B22)/B22)*100"
+      "raw_value": "=((C22-B22)/B22)",
+      "format_code": "P2"
     },
     "22,0": {
       "raw_value": "'Jun"
@@ -397,7 +402,8 @@
       "raw_value": "68000"
     },
     "22,3": {
-      "raw_value": "=((C23-B23)/B23)*100"
+      "raw_value": "=((C23-B23)/B23)",
+      "format_code": "P2"
     },
     "23,0": {
       "raw_value": "'Total"
@@ -409,7 +415,8 @@
       "raw_value": "=SUM(C18:C23)"
     },
     "23,3": {
-      "raw_value": "=AVG(D18:D23)"
+      "raw_value": "=AVG(D18:D23)",
+      "format_code": "P2"
     },
     "26,0": {
       "raw_value": "'=== PRODUCT MIX (Pie chart) ==="
@@ -831,6 +838,54 @@
     },
     "12,5": {
       "raw_value": "=AVG(F3:F12)"
+    },
+    "15,5": {
+      "raw_value": "'=== SPECIAL VALUES"
+    },
+    "16,5": {
+      "raw_value": "inf"
+    },
+    "17,5": {
+      "raw_value": "-inf"
+    },
+    "18,5": {
+      "raw_value": "nan"
+    },
+    "19,5": {
+      "raw_value": "0"
+    },
+    "20,5": {
+      "raw_value": "-0.0"
+    },
+    "21,5": {
+      "raw_value": "0.0"
+    },
+    "22,5": {
+      "raw_value": "+inf"
+    },
+    "15,6": {
+      "raw_value": "'=== MALFORMED FORMULAS"
+    },
+    "16,6": {
+      "raw_value": "=@SOME WEIRD FORMULA"
+    },
+    "17,6": {
+      "raw_value": "=== MALFORMED"
+    },
+    "18,6": {
+      "raw_value": "=BLAH"
+    },
+    "19,6": {
+      "raw_value": "=== BLAH"
+    },
+    "20,6": {
+      "raw_value": "=!="
+    },
+    "21,6": {
+      "raw_value": "=H"
+    },
+    "22,6": {
+      "raw_value": "==B:A"
     }
   },
   "named_ranges": {},

@@ -389,12 +389,13 @@ class FormulaParser:
                 self._advance()
             return result
 
-        # EOF or unknown
+        # EOF - empty expression
         if token.type == TokenType.EOF:
             return ""
 
+        # Unknown/unexpected token - malformed formula
         self._advance()
-        return ""
+        return "#ERR!"
 
     def _parse_function(self, name: str) -> Any:
         """Parse and evaluate a function call."""

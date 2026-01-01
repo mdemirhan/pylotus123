@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Any, Iterator
 
 from .cell import Cell
@@ -208,10 +209,14 @@ class Spreadsheet:
         """Parse a literal value (number or string)."""
         if not value:
             return ""
-        try:
-            # Try integer first
-            if "." not in value and "e" not in value.lower():
+        # Try integer first (only for standard numeric formats)
+        if "." not in value and "e" not in value.lower():
+            try:
                 return int(value.replace(",", ""))
+            except ValueError:
+                pass  # Fall through to try float
+        # Try float (handles decimals, scientific notation, and special values like inf/nan)
+        try:
             return float(value.replace(",", ""))
         except ValueError:
             return value
@@ -322,9 +327,10 @@ class Spreadsheet:
 
         # Default formatting
         if isinstance(value, float):
-            if value == int(value):
+            # Handle IEEE 754 special values (infinity, NaN)
+            if math.isfinite(value) and value == int(value):
                 return str(int(value))
-            return f"{value:.2f}"
+            return f"{value:.2f}" if math.isfinite(value) else str(value)
         return str(value) if value != "" else ""
 
     # -------------------------------------------------------------------------
