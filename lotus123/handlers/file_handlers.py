@@ -71,7 +71,12 @@ class FileHandler(BaseHandler):
 
     def open_file(self) -> None:
         """Show the file open dialog."""
-        self._app.push_screen(FileDialog(mode="open"), self._do_open)
+        # Supported formats: JSON (native), XLSX, CSV, TSV
+        supported_extensions = [".json", ".xlsx", ".xls", ".csv", ".tsv", ".wk1", ".wks"]
+        self._app.push_screen(
+            FileDialog(mode="open", file_extensions=supported_extensions),
+            self._do_open,
+        )
 
     def load_initial_file(self, filepath: str) -> None:
         """Load a file specified at startup."""

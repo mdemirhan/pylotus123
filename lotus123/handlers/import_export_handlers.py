@@ -27,7 +27,7 @@ class ImportExportHandler(BaseHandler):
     def import_csv(self) -> None:
         """Show file dialog to import a CSV file."""
         self._app.push_screen(
-            FileDialog(mode="open", title="Import CSV"),
+            FileDialog(mode="open", title="Import CSV", file_extensions=[".csv"]),
             self._do_import_csv,
         )
 
@@ -129,7 +129,7 @@ class ImportExportHandler(BaseHandler):
     def import_tsv(self) -> None:
         """Show file dialog to import a TSV file."""
         self._app.push_screen(
-            FileDialog(mode="open", title="Import TSV"),
+            FileDialog(mode="open", title="Import TSV", file_extensions=[".tsv"]),
             self._do_import_tsv,
         )
 
@@ -231,7 +231,7 @@ class ImportExportHandler(BaseHandler):
     def import_wk1(self) -> None:
         """Show file dialog to import a Lotus WK1 file."""
         self._app.push_screen(
-            FileDialog(mode="open", title="Import Lotus 1-2-3"),
+            FileDialog(mode="open", title="Import Lotus 1-2-3", file_extensions=[".wk1", ".wks"]),
             self._do_import_wk1,
         )
 
@@ -326,7 +326,7 @@ class ImportExportHandler(BaseHandler):
     def import_xlsx(self) -> None:
         """Show file dialog to import an Excel XLSX file."""
         self._app.push_screen(
-            FileDialog(mode="open", title="Import Excel XLSX"),
+            FileDialog(mode="open", title="Import Excel XLSX", file_extensions=[".xlsx", ".xls"]),
             self._do_import_xlsx_file,
         )
 

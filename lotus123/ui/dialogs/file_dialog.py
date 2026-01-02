@@ -6,14 +6,53 @@ with directory tree navigation and filename input.
 
 from __future__ import annotations
 
-from typing import Any
+from pathlib import Path
+from typing import Any, Iterable
 
 from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
 from textual.screen import ModalScreen
-from textual.widgets import Button, DirectoryTree, Input, Label
+from textual.widgets import Button, Checkbox, DirectoryTree, Input, Label
+
+
+class FilteredDirectoryTree(DirectoryTree):
+    """DirectoryTree that filters files by extension."""
+
+    def __init__(
+        self,
+        path: str | Path,
+        extensions: list[str] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(path, **kwargs)
+        # Normalize extensions to lowercase with leading dot
+        self._extensions: set[str] | None = None
+        if extensions:
+            self._extensions = {
+                ext.lower() if ext.startswith(".") else f".{ext.lower()}"
+                for ext in extensions
+            }
+        self._show_all = False
+
+    def set_show_all(self, show_all: bool) -> None:
+        """Toggle showing all files."""
+        self._show_all = show_all
+        self.reload()
+
+    def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
+        """Filter paths to only show matching extensions."""
+        if self._show_all or not self._extensions:
+            return paths
+
+        result = []
+        for path in paths:
+            if path.is_dir():
+                result.append(path)
+            elif path.suffix.lower() in self._extensions:
+                result.append(path)
+        return result
 
 
 class FileDialog(ModalScreen[str | None]):
@@ -39,6 +78,11 @@ class FileDialog(ModalScreen[str | None]):
         margin: 1 0;
     }
 
+    #filter-row {
+        height: auto;
+        margin: 0 0;
+    }
+
     #filename-input {
         margin: 1 0;
     }
@@ -58,12 +102,14 @@ class FileDialog(ModalScreen[str | None]):
         mode: str = "open",
         initial_path: str = ".",
         title: str | None = None,
+        file_extensions: list[str] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.mode = mode
         self.initial_path = initial_path
         self._custom_title = title
+        self._file_extensions = file_extensions
 
     def compose(self) -> ComposeResult:
         if self._custom_title:
@@ -72,7 +118,14 @@ class FileDialog(ModalScreen[str | None]):
             title = "Open File" if self.mode == "open" else "Save File"
         with Container(id="file-dialog-container"):
             yield Label(f"[bold]{title}[/bold]", id="dialog-title")
-            yield DirectoryTree(self.initial_path, id="file-tree")
+            yield FilteredDirectoryTree(
+                self.initial_path,
+                extensions=self._file_extensions,
+                id="file-tree",
+            )
+            if self._file_extensions:
+                with Horizontal(id="filter-row"):
+                    yield Checkbox("Show all files", id="show-all-checkbox")
             yield Input(placeholder="Filename...", id="filename-input")
             with Horizontal(id="dialog-buttons"):
                 yield Button("OK", id="ok-btn", variant="primary")
@@ -87,6 +140,12 @@ class FileDialog(ModalScreen[str | None]):
         container = self.query_one("#file-dialog-container")
         container.styles.background = theme.cell_bg
         container.styles.border = ("thick", theme.accent)
+
+    @on(Checkbox.Changed, "#show-all-checkbox")
+    def on_show_all_changed(self, event: Checkbox.Changed) -> None:
+        """Toggle showing all files in the directory tree."""
+        tree = self.query_one("#file-tree", FilteredDirectoryTree)
+        tree.set_show_all(event.value)
 
     @on(DirectoryTree.FileSelected)
     def on_file_selected(self, event: DirectoryTree.FileSelected) -> None:
