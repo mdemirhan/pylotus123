@@ -91,7 +91,7 @@ class LotusMenu(Static, can_focus=True):
                     ],
                 ),
                 (
-                    "x",
+                    "X",
                     "Export",
                     [
                         ("C", "CSV"),
@@ -143,7 +143,7 @@ class LotusMenu(Static, can_focus=True):
                         ("C", "Criteria"),
                         ("O", "Output"),
                         ("F", "Find"),
-                        ("E", "Extract"),
+                        ("X", "Extract"),
                         ("U", "Unique"),
                         ("D", "Delete"),
                         ("R", "Reset"),
