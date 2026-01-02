@@ -16,4 +16,4 @@
 - [x] Optimize topological ordering in the recalc engine.
 
 ## P3 (Testing)
-- [ ] Add shared pytest fixtures in `tests/conftest.py`.
+- [x] Add shared pytest fixtures in `tests/conftest.py`.
