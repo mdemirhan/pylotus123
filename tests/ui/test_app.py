@@ -312,14 +312,45 @@ class TestLotusAppActionsAsync:
 
     @pytest.mark.asyncio
     async def test_action_new_file(self):
-        """Test new file action."""
+        """Test new file action when not dirty."""
+        app = LotusApp()
+        async with app.run_test() as pilot:
+            # Set some data first
+            app.spreadsheet.set_cell(0, 0, "test data")
+            app._dirty = False  # Not dirty, no confirmation needed
+            # Run new file action
+            app.action_new_file()
+            # Spreadsheet should be cleared
+            assert app.spreadsheet.get_value(0, 0) == ""
+            assert app._dirty is False
+
+    @pytest.mark.asyncio
+    async def test_action_new_file_dirty_prompts(self):
+        """Test new file action when dirty shows confirmation dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             # Set some data first
             app.spreadsheet.set_cell(0, 0, "test data")
             app._dirty = True
-            # Run new file action
+            # Run new file action - should prompt for save
             app.action_new_file()
+            await pilot.pause()
+            # Dialog should be shown, data should still exist
+            assert app.spreadsheet.get_value(0, 0) == "test data"
+            assert app._dirty is True
+            # Cancel the dialog
+            await pilot.press("escape")
+
+    @pytest.mark.asyncio
+    async def test_do_new_file_directly(self):
+        """Test _do_new_file clears spreadsheet."""
+        app = LotusApp()
+        async with app.run_test() as pilot:
+            # Set some data first
+            app.spreadsheet.set_cell(0, 0, "test data")
+            app._dirty = True
+            # Call the internal method directly
+            app._file_handler._do_new_file()
             # Spreadsheet should be cleared
             assert app.spreadsheet.get_value(0, 0) == ""
             assert app._dirty is False

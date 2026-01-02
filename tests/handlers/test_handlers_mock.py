@@ -185,6 +185,43 @@ class TestWorksheetHandler:
         self.handler.set_column_width()
         self.app.push_screen.assert_called()
 
+    def test_do_set_width_single_column(self):
+        """Test setting width for a single column."""
+        # Set selection to single column (A1:A3)
+        self.app.grid.selection_range = (0, 0, 2, 0)
+        self.handler._do_set_width("15")
+        # Should set width for column 0
+        self.app.spreadsheet.set_col_width.assert_called_once_with(0, 15)
+        assert self.app._dirty is True
+
+    def test_do_set_width_multiple_columns(self):
+        """Test setting width for multiple selected columns."""
+        # Set selection to columns A-C (A1:C3)
+        self.app.grid.selection_range = (0, 0, 2, 2)
+        self.handler._do_set_width("12")
+        # Should set width for columns 0, 1, 2
+        assert self.app.spreadsheet.set_col_width.call_count == 3
+        self.app.spreadsheet.set_col_width.assert_any_call(0, 12)
+        self.app.spreadsheet.set_col_width.assert_any_call(1, 12)
+        self.app.spreadsheet.set_col_width.assert_any_call(2, 12)
+        assert self.app._dirty is True
+
+    def test_do_set_width_invalid_value(self):
+        """Test setting width with invalid value."""
+        self.handler._do_set_width("abc")
+        self.app.notify.assert_called_with("Invalid width value", severity="error")
+        self.app.spreadsheet.set_col_width.assert_not_called()
+
+    def test_do_set_width_out_of_range(self):
+        """Test setting width outside valid range."""
+        self.handler._do_set_width("2")  # Less than 3
+        self.app.notify.assert_called_with("Width must be between 3 and 50", severity="error")
+        self.app.spreadsheet.set_col_width.assert_not_called()
+
+        self.app.notify.reset_mock()
+        self.handler._do_set_width("51")  # Greater than 50
+        self.app.notify.assert_called_with("Width must be between 3 and 50", severity="error")
+
 class TestFileHandler:
     def setup_method(self):
         self.app = MockApp()

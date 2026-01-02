@@ -25,7 +25,7 @@ class RangeHandler(BaseHandler):
         """Set the format for the selected range."""
         self._app.push_screen(
             CommandInput(
-                "Format (F=Fixed, S=Scientific, C=Currency, P=Percent, G=General):"
+                "Format: G, F0-F15, S0-S15, C0-C15, P0-P15, ,0-,15, D1-D9, T1-T4, H, +:"
             ),
             self._do_range_format,
         )
@@ -33,9 +33,10 @@ class RangeHandler(BaseHandler):
     def _do_range_format(self, result: str | None) -> None:
         if not result:
             return
-        format_char = result.upper()[0] if result else "G"
-        format_map = {"F": "F2", "S": "S", "C": "C2", "P": "P2", "G": "G", ",": ",2"}
-        format_code = format_map.get(format_char, "G")
+        format_code = self._normalize_format_code(result)
+        if format_code is None:
+            self.notify(f"Invalid format: {result}", severity="error")
+            return
         grid = self.get_grid()
         r1, c1, r2, c2 = grid.selection_range
         changes = []
@@ -109,3 +110,70 @@ class RangeHandler(BaseHandler):
             self.notify(f"Named range '{name}' created for {self.pending_range}")
         except ValueError as e:
             self.notify(str(e), severity="error")
+
+    def _normalize_format_code(self, code: str) -> str | None:
+        """Normalize and validate a format code.
+
+        Args:
+            code: User-entered format code
+
+        Returns:
+            Normalized format code, or None if invalid
+        """
+        code = code.strip().upper()
+        if not code:
+            return None
+
+        # Single character formats
+        if code in ("G", "H", "+"):
+            return code
+
+        # Formats with decimal places: F, S, C, P (0-15)
+        if code[0] in ("F", "S", "C", "P"):
+            if len(code) == 1:
+                return code + "2"  # Default to 2 decimal places
+            try:
+                decimals = int(code[1:])
+                if 0 <= decimals <= 15:
+                    return f"{code[0]}{decimals}"
+            except ValueError:
+                pass
+            return None
+
+        # Comma format (,0-,15)
+        if code.startswith(","):
+            if len(code) == 1:
+                return ",2"  # Default to 2 decimal places
+            try:
+                decimals = int(code[1:])
+                if 0 <= decimals <= 15:
+                    return f",{decimals}"
+            except ValueError:
+                pass
+            return None
+
+        # Date formats (D1-D9)
+        if code[0] == "D":
+            if len(code) == 1:
+                return "D1"  # Default to D1
+            try:
+                variant = int(code[1:])
+                if 1 <= variant <= 9:
+                    return f"D{variant}"
+            except ValueError:
+                pass
+            return None
+
+        # Time formats (T1-T4)
+        if code[0] == "T":
+            if len(code) == 1:
+                return "T1"  # Default to T1
+            try:
+                variant = int(code[1:])
+                if 1 <= variant <= 4:
+                    return f"T{variant}"
+            except ValueError:
+                pass
+            return None
+
+        return None

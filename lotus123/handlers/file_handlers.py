@@ -20,6 +20,7 @@ class FileHandler(BaseHandler):
         super().__init__(app)
         self._pending_save_path: str = ""
         self._pending_xlsx_import_path: str = ""
+        self._pending_action: callable | None = None  # Callback for after save confirmation
 
     def _sync_global_settings_to_spreadsheet(self) -> None:
         """Sync app global settings to spreadsheet before save."""
@@ -43,8 +44,62 @@ class FileHandler(BaseHandler):
         grid.show_zero = self._app.global_zero_display
         grid.default_col_width = self._app.global_col_width
 
+    def _confirm_save_if_dirty(self, prompt: str, on_proceed: callable) -> None:
+        """Prompt to save if dirty, then call on_proceed.
+
+        Args:
+            prompt: The confirmation prompt message
+            on_proceed: Callback to execute after saving or declining to save
+        """
+        if self._app._dirty:
+            self._pending_action = on_proceed
+            self._app.push_screen(
+                CommandInput(prompt),
+                self._do_save_confirm,
+            )
+        else:
+            on_proceed()
+
+    def _do_save_confirm(self, result: str | None) -> None:
+        """Handle Y/N/C response for save confirmation."""
+        if not result or not self._pending_action:
+            self._pending_action = None
+            return
+        response = result.strip().upper()
+        if response.startswith("Y"):
+            if self.spreadsheet.filename:
+                self._sync_global_settings_to_spreadsheet()
+                self.spreadsheet.save(self.spreadsheet.filename)
+                self._pending_action()
+                self._pending_action = None
+            else:
+                self._app.push_screen(FileDialog(mode="save"), self._do_save_then_action)
+        elif response.startswith("N"):
+            self._pending_action()
+            self._pending_action = None
+        else:
+            # Cancel (C) or anything else: do nothing
+            self._pending_action = None
+
+    def _do_save_then_action(self, result: str | None) -> None:
+        """Save to chosen file then execute pending action."""
+        if result and self._pending_action:
+            self._sync_global_settings_to_spreadsheet()
+            self.spreadsheet.save(result)
+            self._app.config.add_recent_file(result)
+            self._app.config.save()
+            self._pending_action()
+        self._pending_action = None
+
     def new_file(self) -> None:
-        """Create a new empty spreadsheet."""
+        """Create a new empty spreadsheet, prompting to save if dirty."""
+        self._confirm_save_if_dirty(
+            "Save changes before creating new file? (Y/N/C=Cancel):",
+            self._do_new_file,
+        )
+
+    def _do_new_file(self) -> None:
+        """Actually create a new empty spreadsheet."""
         self.spreadsheet.clear()
         self.spreadsheet.filename = ""
         self.undo_manager.clear()
@@ -63,6 +118,7 @@ class FileHandler(BaseHandler):
         grid.scroll_col = 0
         grid.show_zero = True
         grid.default_col_width = 10
+        grid.recalculate_visible_area()
         grid.refresh_grid()
 
         self._app._update_status()
@@ -323,49 +379,15 @@ class FileHandler(BaseHandler):
 
     def quit_app(self) -> None:
         """Quit the application, prompting to save if dirty."""
-        if self._app._dirty:
-            self._app.push_screen(
-                CommandInput("Save changes before quitting? (Y/N/C=Cancel):"),
-                self._do_quit_confirm,
-            )
-        else:
-            self._app.config.save()
-            self._app.exit()
+        self._confirm_save_if_dirty(
+            "Save changes before quitting? (Y/N/C=Cancel):",
+            self._do_quit,
+        )
 
-    def _do_quit_confirm(self, result: str | None) -> None:
-        if not result:
-            return
-        response = result.strip().upper()
-        if response.startswith("Y"):
-            if self.spreadsheet.filename:
-                self._sync_global_settings_to_spreadsheet()
-                self.spreadsheet.save(self.spreadsheet.filename)
-                self._app.config.save()
-                self._app.exit()
-            else:
-                self._app.push_screen(FileDialog(mode="save"), self._do_save_and_quit)
-        elif response.startswith("N"):
-            self._app.config.save()
-            self._app.exit()
-
-    def _do_save_and_quit(self, result: str | None) -> None:
-        if result:
-            if not result.endswith(".json"):
-                result += ".json"
-            if Path(result).exists():
-                self._pending_save_path = result
-                self._app.push_screen(
-                    CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
-                    self._do_save_and_quit_confirm,
-                )
-            else:
-                self._sync_global_settings_to_spreadsheet()
-                self.spreadsheet.save(result)
-                self._app.config.save()
-                self._app.exit()
-        else:
-            self._app.config.save()
-            self._app.exit()
+    def _do_quit(self) -> None:
+        """Actually quit the application."""
+        self._app.config.save()
+        self._app.exit()
 
     def _do_save_and_quit_confirm(self, result: str | None) -> None:
         if result and result.strip().upper().startswith("Y"):
