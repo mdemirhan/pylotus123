@@ -340,8 +340,8 @@ class LotusApp(App[None]):
 
         status_bar = self.query_one("#status-bar", StatusBarWidget)
         status_bar.update_cell(grid.cursor_row, grid.cursor_col)
-        status_bar.set_modified(self._dirty)
         status_bar.update_from_spreadsheet()
+        status_bar.set_modified(self._dirty)  # Must be after update_from_spreadsheet
 
         if not self.editing:
             self.query_one("#cell-input", Input).value = cell.raw_value
@@ -658,12 +658,16 @@ class LotusApp(App[None]):
             self._import_export_handler.import_tsv()
         elif result == "File:Import:WK1":
             self._import_export_handler.import_wk1()
+        elif result == "File:Import:XLSX":
+            self._import_export_handler.import_xlsx()
         elif result == "File:Export:CSV":
             self._import_export_handler.export_csv()
         elif result == "File:Export:TSV":
             self._import_export_handler.export_tsv()
         elif result == "File:Export:WK1":
             self._import_export_handler.export_wk1()
+        elif result == "File:Export:XLSX":
+            self._import_export_handler.export_xlsx()
 
     def on_key(self, event: events.Key) -> None:
         """Handle key presses for navigation and direct cell input."""

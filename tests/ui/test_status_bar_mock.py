@@ -33,16 +33,36 @@ class TestStatusBar:
         self.mock_sheet.needs_recalc = True
         self.mock_sheet.has_circular_refs = True
         self.mock_sheet.modified = True
-        
+        self.mock_sheet.filename = "test.json"
+
         self.status.update_from_spreadsheet()
-        
+
         assert self.status.needs_recalc
         assert self.status.has_circular_ref
         assert self.status.modified
-        
+
         assert "CALC" in self.status.get_indicators()
         assert "CIRC" in self.status.get_indicators()
-        assert "*" in self.status.get_indicators()
+        assert "(modified)" in self.status.get_indicators()
+
+    def test_filename_display(self):
+        # New file (no filename) - should show **New File**
+        self.status.filename = ""
+        self.status.modified = False
+        assert self.status.get_filename_display() == "**New File**"
+
+        # New file modified - still shows **New File** (no modified suffix)
+        self.status.modified = True
+        assert self.status.get_filename_display() == "**New File**"
+
+        # Existing file - shows filename
+        self.status.filename = "/path/to/budget.json"
+        self.status.modified = False
+        assert self.status.get_filename_display() == "budget.json"
+
+        # Existing file modified - shows filename (modified)
+        self.status.modified = True
+        assert self.status.get_filename_display() == "budget.json (modified)"
 
     def test_update_cell(self):
         # Mock cell

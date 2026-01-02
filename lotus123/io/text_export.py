@@ -153,6 +153,12 @@ class TextExporter:
                         value = cell.raw_value if cell else ""
                     else:
                         value = self.spreadsheet.get_display_value(row, col)
+                        # Preserve text that looks like formulas by adding ' prefix
+                        # This prevents re-import from treating them as formulas
+                        cell = self.spreadsheet.get_cell_if_exists(row, col)
+                        if value and not (cell and cell.is_formula):
+                            if value[0] in "=@+-":
+                                value = "'" + value
                     row_data.append(value)
 
                 writer.writerow(row_data)
@@ -236,6 +242,11 @@ class TextExporter:
                     value = cell.raw_value if cell else ""
                 else:
                     value = self.spreadsheet.get_display_value(row, col)
+                    # Preserve text that looks like formulas by adding ' prefix
+                    cell = self.spreadsheet.get_cell_if_exists(row, col)
+                    if value and not (cell and cell.is_formula):
+                        if value[0] in "=@+-":
+                            value = "'" + value
 
                 # Quote if needed
                 if options.delimiter in str(value) or options.text_qualifier in str(value):

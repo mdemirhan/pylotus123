@@ -1,4 +1,4 @@
-"""Import/Export handler for CSV, TSV, and WK1 file formats."""
+"""Import/Export handler for CSV, TSV, WK1, and XLSX file formats."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ..ui import CommandInput, FileDialog
+from ..ui.dialogs import SheetSelectDialog
 from .base import BaseHandler
 
 if TYPE_CHECKING:
@@ -13,12 +14,13 @@ if TYPE_CHECKING:
 
 
 class ImportExportHandler(BaseHandler):
-    """Handler for import/export operations (CSV, TSV, WK1)."""
+    """Handler for import/export operations (CSV, TSV, WK1, XLSX)."""
 
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)
         self._pending_export_format: str = ""
         self._pending_export_path: str = ""
+        self._pending_xlsx_path: str = ""
 
     # ===== CSV Operations =====
 
@@ -318,3 +320,143 @@ class ImportExportHandler(BaseHandler):
             self.notify(f"Permission denied: {filepath}", severity="error")
         except Exception as e:
             self.notify(f"Error exporting WK1: {e}", severity="error")
+
+    # ===== XLSX Operations =====
+
+    def import_xlsx(self) -> None:
+        """Show file dialog to import an Excel XLSX file."""
+        self._app.push_screen(
+            FileDialog(mode="open", title="Import Excel XLSX"),
+            self._do_import_xlsx_file,
+        )
+
+    def _do_import_xlsx_file(self, result: str | None) -> None:
+        """Handle XLSX file selection dialog result."""
+        if not result:
+            return
+
+        self._pending_xlsx_path = result
+
+        try:
+            from ..io.xlsx import get_xlsx_sheet_names
+
+            sheet_names = get_xlsx_sheet_names(result)
+
+            if len(sheet_names) > 1:
+                # Multiple sheets - show selection dialog
+                self._app.push_screen(
+                    SheetSelectDialog(sheet_names),
+                    self._do_import_xlsx_sheet,
+                )
+            else:
+                # Single sheet - import directly
+                self._perform_import_xlsx(result, sheet_names[0] if sheet_names else None)
+
+        except ImportError as e:
+            self.notify(str(e), severity="error")
+        except FileNotFoundError:
+            self.notify(f"File not found: {result}", severity="error")
+        except PermissionError:
+            self.notify(f"Permission denied: {result}", severity="error")
+        except Exception as e:
+            self.notify(f"Error reading XLSX: {e}", severity="error")
+
+    def _do_import_xlsx_sheet(self, sheet_name: str | None) -> None:
+        """Handle sheet selection dialog result."""
+        if not sheet_name:
+            self.notify("Import cancelled", severity="warning")
+            return
+
+        self._perform_import_xlsx(self._pending_xlsx_path, sheet_name)
+
+    def _perform_import_xlsx(self, filepath: str, sheet_name: str | None) -> None:
+        """Actually perform the XLSX import."""
+        try:
+            from ..io.xlsx import XlsxReader
+
+            reader = XlsxReader(self.spreadsheet)
+            warnings = reader.load(filepath, sheet_name)
+
+            # Update state
+            self.spreadsheet.filename = ""  # Not a native file
+            self._app._dirty = True
+            self.undo_manager.clear()
+
+            # Refresh UI
+            grid = self.get_grid()
+            grid.cursor_row = 0
+            grid.cursor_col = 0
+            grid.scroll_row = 0
+            grid.scroll_col = 0
+            grid.refresh_grid()
+            self._app._update_status()
+            self._app._update_title()
+
+            # Show result with warnings
+            if warnings.has_warnings():
+                self.notify(
+                    f"Imported from XLSX. {warnings.to_message()}",
+                    severity="warning",
+                )
+            else:
+                self.notify(f"Imported from {Path(filepath).name}")
+
+        except ImportError as e:
+            self.notify(str(e), severity="error")
+        except FileNotFoundError:
+            self.notify(f"File not found: {filepath}", severity="error")
+        except PermissionError:
+            self.notify(f"Permission denied: {filepath}", severity="error")
+        except Exception as e:
+            self.notify(f"Error importing XLSX: {e}", severity="error")
+
+    def export_xlsx(self) -> None:
+        """Show file dialog to export to Excel XLSX format."""
+        self._pending_export_format = "xlsx"
+        self._app.push_screen(
+            FileDialog(mode="save", title="Export Excel XLSX"),
+            self._do_export_xlsx,
+        )
+
+    def _do_export_xlsx(self, result: str | None) -> None:
+        """Handle XLSX export dialog result."""
+        if not result:
+            return
+
+        # Ensure .xlsx extension
+        if not result.lower().endswith(".xlsx"):
+            result += ".xlsx"
+
+        # Check if file exists
+        if Path(result).exists():
+            self._pending_export_path = result
+            self._app.push_screen(
+                CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
+                self._do_export_xlsx_confirm,
+            )
+        else:
+            self._perform_export_xlsx(result)
+
+    def _do_export_xlsx_confirm(self, result: str | None) -> None:
+        """Handle XLSX overwrite confirmation."""
+        if result and result.strip().upper().startswith("Y"):
+            self._perform_export_xlsx(self._pending_export_path)
+        else:
+            self.notify("Export cancelled", severity="warning")
+
+    def _perform_export_xlsx(self, filepath: str) -> None:
+        """Actually perform the XLSX export."""
+        try:
+            from ..io.xlsx import XlsxWriter
+
+            writer = XlsxWriter(self.spreadsheet)
+            writer.save(filepath)
+
+            self.notify(f"Exported to {Path(filepath).name}")
+
+        except ImportError as e:
+            self.notify(str(e), severity="error")
+        except PermissionError:
+            self.notify(f"Permission denied: {filepath}", severity="error")
+        except Exception as e:
+            self.notify(f"Error exporting XLSX: {e}", severity="error")

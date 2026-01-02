@@ -405,3 +405,87 @@ class TestDetectOptions:
         """Test detecting unknown format defaults to CSV."""
         opts = self.exporter._detect_options("file.xyz")
         assert opts.format == ExportFormat.CSV
+
+
+class TestRoundTripTextLikeFormula:
+    """Tests for round-trip of text that looks like formulas."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        from lotus123.io.text_import import TextImporter
+        self.ss = Spreadsheet()
+        self.exporter = TextExporter(self.ss)
+        self.importer = TextImporter(self.ss)
+
+    def test_roundtrip_text_starting_with_equals(self):
+        """Test text starting with = survives round-trip."""
+        # Text that looks like a formula but isn't
+        self.ss.set_cell(0, 0, "'==== HEADER ====")  # Left-aligned text
+        self.ss.set_cell(0, 1, "'=Some Text")
+
+        # Export to CSV
+        csv_content = self.exporter.export_to_string()
+
+        # Verify exported content has ' prefix to preserve as text
+        assert "'==== HEADER ====" in csv_content
+        assert "'=Some Text" in csv_content
+
+        # Create new spreadsheet and import
+        ss2 = Spreadsheet()
+        from lotus123.io.text_import import TextImporter
+        importer2 = TextImporter(ss2)
+        importer2.import_text(csv_content)
+
+        # Verify values are text, not formulas
+        cell1 = ss2.get_cell(0, 0)
+        cell2 = ss2.get_cell(0, 1)
+
+        # The ' prefix marks them as text
+        assert cell1.raw_value == "'==== HEADER ===="
+        assert cell2.raw_value == "'=Some Text"
+        assert not cell1.is_formula
+        assert not cell2.is_formula
+
+    def test_roundtrip_text_starting_with_at(self):
+        """Test text starting with @ survives round-trip."""
+        self.ss.set_cell(0, 0, "'@mention")
+
+        csv_content = self.exporter.export_to_string()
+        assert "'@mention" in csv_content
+
+        ss2 = Spreadsheet()
+        from lotus123.io.text_import import TextImporter
+        importer2 = TextImporter(ss2)
+        importer2.import_text(csv_content)
+
+        cell = ss2.get_cell(0, 0)
+        assert cell.raw_value == "'@mention"
+        assert not cell.is_formula
+
+    def test_roundtrip_text_starting_with_plus_minus(self):
+        """Test text starting with + or - survives round-trip."""
+        self.ss.set_cell(0, 0, "'+1 Rating")
+        self.ss.set_cell(0, 1, "'-5 Points")
+
+        csv_content = self.exporter.export_to_string()
+
+        ss2 = Spreadsheet()
+        from lotus123.io.text_import import TextImporter
+        importer2 = TextImporter(ss2)
+        importer2.import_text(csv_content)
+
+        cell1 = ss2.get_cell(0, 0)
+        cell2 = ss2.get_cell(0, 1)
+
+        assert not cell1.is_formula
+        assert not cell2.is_formula
+
+    def test_actual_formulas_exported_correctly(self):
+        """Test actual formulas are exported as values (not prefixed)."""
+        self.ss.set_cell(0, 0, "=1+2")
+        self.ss.recalculate()
+
+        # Default export uses display values
+        csv_content = self.exporter.export_to_string()
+        # The result of 1+2=3 should be exported, not the formula
+        assert "3" in csv_content

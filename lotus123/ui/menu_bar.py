@@ -86,6 +86,7 @@ class LotusMenu(Static, can_focus=True):
                         ("C", "CSV"),
                         ("T", "TSV"),
                         ("W", "WK1"),
+                        ("X", "XLSX"),
                     ],
                 ),
                 (
@@ -95,6 +96,7 @@ class LotusMenu(Static, can_focus=True):
                         ("C", "CSV"),
                         ("T", "TSV"),
                         ("W", "WK1"),
+                        ("X", "XLSX"),
                     ],
                 ),
                 ("Q", "Quit"),

@@ -110,6 +110,7 @@ class StatusBar:
         self.has_circular_ref: bool = False
         self.modified: bool = False
         self.message: str = ""
+        self.filename: str = ""  # Current file name or empty for new/imported
 
     def set_mode(self, mode: Mode) -> None:
         """Set the current mode."""
@@ -144,6 +145,7 @@ class StatusBar:
         self.needs_recalc = self.spreadsheet.needs_recalc
         self.has_circular_ref = self.spreadsheet.has_circular_refs
         self.modified = self.spreadsheet.modified
+        self.filename = self.spreadsheet.filename
 
     def get_cell_display(self) -> str:
         """Get cell reference and value display."""
@@ -171,16 +173,35 @@ class StatusBar:
         if self.has_circular_ref:
             parts.append("CIRC")
 
-        # Modified
-        if self.modified:
-            parts.append("*")
-
         # Lock indicators
         lock_str = self.locks.as_string()
         if lock_str:
             parts.append(lock_str)
 
+        # Filename with modified indicator
+        file_display = self.get_filename_display()
+        if file_display:
+            parts.append(file_display)
+
         return " ".join(parts)
+
+    def get_filename_display(self) -> str:
+        """Get filename display for status bar.
+
+        Returns:
+            Formatted string like 'Filename.json (modified)' or '**New File**'
+        """
+        from pathlib import Path
+
+        if self.filename:
+            # Show just the filename, not the full path
+            name = Path(self.filename).name
+            if self.modified:
+                return f"{name} (modified)"
+            return name
+        else:
+            # No filename - new file or imported (no (modified) suffix for new files)
+            return "**New File**"
 
     def get_full_status(self, width: int = 80) -> str:
         """Get full status bar string.

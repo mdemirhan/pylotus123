@@ -18,6 +18,8 @@ class FileHandler(BaseHandler):
 
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)
+        self._pending_save_path: str = ""
+        self._pending_xlsx_import_path: str = ""
 
     def _sync_global_settings_to_spreadsheet(self) -> None:
         """Sync app global settings to spreadsheet before save."""
@@ -100,35 +102,156 @@ class FileHandler(BaseHandler):
             self.notify(f"Error reading file: {e}", severity="error")
 
     def _do_open(self, result: str | None) -> None:
-        if result:
-            try:
-                self.spreadsheet.load(result)
-                self.undo_manager.clear()
-                self._app._dirty = False
-                # Restore global settings from loaded file
-                self._sync_global_settings_from_spreadsheet()
-                grid = self.get_grid()
-                grid.scroll_row = 1
-                grid.scroll_col = 1
-                grid.scroll_row = 0
-                grid.scroll_col = 0
-                grid.cursor_row = 0
-                grid.cursor_col = 0
-                grid.recalculate_visible_area()
-                grid.refresh_grid()
-                self._app._update_status()
-                self._app._update_title()
-                self._app.config.add_recent_file(result)
-                self._app.config.save()
-                self.notify(f"Loaded: {result}")
-            except FileNotFoundError:
-                self.notify(f"File not found: {result}", severity="error")
-            except PermissionError:
-                self.notify(f"Permission denied: {result}", severity="error")
-            except json.JSONDecodeError:
-                self.notify(f"Invalid file format: {result}", severity="error")
-            except (OSError, IOError) as e:
-                self.notify(f"Error reading file: {e}", severity="error")
+        if not result:
+            return
+
+        # Detect file type by extension
+        path = Path(result)
+        ext = path.suffix.lower()
+
+        # Handle non-JSON files as imports
+        if ext in (".csv", ".tsv", ".wk1", ".xlsx"):
+            self._import_non_json_file(result, ext)
+            return
+
+        # Handle JSON (native) format
+        try:
+            self.spreadsheet.load(result)
+            self.undo_manager.clear()
+            self._app._dirty = False
+            # Restore global settings from loaded file
+            self._sync_global_settings_from_spreadsheet()
+            grid = self.get_grid()
+            grid.scroll_row = 1
+            grid.scroll_col = 1
+            grid.scroll_row = 0
+            grid.scroll_col = 0
+            grid.cursor_row = 0
+            grid.cursor_col = 0
+            grid.recalculate_visible_area()
+            grid.refresh_grid()
+            self._app._update_status()
+            self._app._update_title()
+            self._app.config.add_recent_file(result)
+            self._app.config.save()
+            self.notify(f"Loaded: {result}")
+        except FileNotFoundError:
+            self.notify(f"File not found: {result}", severity="error")
+        except PermissionError:
+            self.notify(f"Permission denied: {result}", severity="error")
+        except json.JSONDecodeError:
+            self.notify(f"Invalid file format: {result}", severity="error")
+        except (OSError, IOError) as e:
+            self.notify(f"Error reading file: {e}", severity="error")
+
+    def _import_non_json_file(self, filepath: str, ext: str) -> None:
+        """Import a non-JSON file format (CSV, TSV, WK1, XLSX).
+
+        This is called when the user opens a non-JSON file.
+        The file is imported, not opened - save will require Save As.
+        """
+        path = Path(filepath)
+        filename = path.name
+
+        try:
+            if ext == ".csv":
+                from ..io import ImportOptions, TextImporter
+                from ..io.text_import import ImportFormat
+
+                self.spreadsheet.clear()
+                importer = TextImporter(self.spreadsheet)
+                options = ImportOptions(format=ImportFormat.CSV)
+                importer.import_file(filepath, options)
+                self._finalize_import(f"Imported {filename}. Use 'Save As' to save as Lotus JSON.")
+
+            elif ext == ".tsv":
+                from ..io import ImportOptions, TextImporter
+                from ..io.text_import import ImportFormat
+
+                self.spreadsheet.clear()
+                importer = TextImporter(self.spreadsheet)
+                options = ImportOptions(format=ImportFormat.TSV)
+                importer.import_file(filepath, options)
+                self._finalize_import(f"Imported {filename}. Use 'Save As' to save as Lotus JSON.")
+
+            elif ext == ".wk1":
+                from ..io.wk1 import Wk1Reader
+
+                reader = Wk1Reader(self.spreadsheet)
+                reader.load(filepath)
+                self._finalize_import(f"Imported {filename}. Use 'Save As' to save as Lotus JSON.")
+
+            elif ext == ".xlsx":
+                # For XLSX, we may need to show sheet selection dialog
+                from ..io.xlsx import get_xlsx_sheet_names
+
+                self._pending_xlsx_import_path = filepath
+                sheet_names = get_xlsx_sheet_names(filepath)
+
+                if len(sheet_names) > 1:
+                    # Multiple sheets - show selection dialog
+                    from ..ui.dialogs import SheetSelectDialog
+
+                    self._app.push_screen(
+                        SheetSelectDialog(sheet_names),
+                        self._do_import_xlsx_from_open,
+                    )
+                else:
+                    # Single sheet - import directly
+                    self._perform_xlsx_import_from_open(filepath, sheet_names[0] if sheet_names else None)
+
+        except FileNotFoundError:
+            self.notify(f"File not found: {filepath}", severity="error")
+        except PermissionError:
+            self.notify(f"Permission denied: {filepath}", severity="error")
+        except ImportError as e:
+            self.notify(str(e), severity="error")
+        except Exception as e:
+            self.notify(f"Error importing {filename}: {e}", severity="error")
+
+    def _do_import_xlsx_from_open(self, sheet_name: str | None) -> None:
+        """Handle sheet selection for XLSX import from open dialog."""
+        if not sheet_name:
+            self.notify("Import cancelled", severity="warning")
+            return
+        self._perform_xlsx_import_from_open(self._pending_xlsx_import_path, sheet_name)
+
+    def _perform_xlsx_import_from_open(self, filepath: str, sheet_name: str | None) -> None:
+        """Perform XLSX import from open dialog."""
+        try:
+            from ..io.xlsx import XlsxReader
+
+            reader = XlsxReader(self.spreadsheet)
+            warnings = reader.load(filepath, sheet_name)
+
+            filename = Path(filepath).name
+            msg = f"Imported {filename}. Use 'Save As' to save as Lotus JSON."
+            if warnings.has_warnings():
+                msg += f" {warnings.to_message()}"
+                self._finalize_import(msg, severity="warning")
+            else:
+                self._finalize_import(msg)
+
+        except Exception as e:
+            self.notify(f"Error importing XLSX: {e}", severity="error")
+
+    def _finalize_import(self, message: str, severity: str = "information") -> None:
+        """Finalize an import operation and refresh the UI."""
+        self.spreadsheet.filename = ""  # Not a native file
+        self._app._dirty = True
+        self.undo_manager.clear()
+
+        grid = self.get_grid()
+        grid.cursor_row = 0
+        grid.cursor_col = 0
+        grid.scroll_row = 0
+        grid.scroll_col = 0
+        grid.recalculate_visible_area()
+        grid.refresh_grid()
+        self._app._update_status()
+        self._app._update_title()
+
+        self.notify(message, severity=severity)
 
     def save(self) -> None:
         """Save the current spreadsheet."""
