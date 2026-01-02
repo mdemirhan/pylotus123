@@ -145,7 +145,7 @@ class TextImporter:
 
                 dest_row = options.dest_row + rows_imported
 
-                for col_idx, value in enumerate(row[options.start_col :]):
+                for col_idx, value in enumerate(row[options.start_col:]):
                     if options.trim_whitespace:
                         value = value.strip()
 
@@ -214,9 +214,9 @@ class TextImporter:
         space_counts = [0] * max_len
 
         for line in lines:
-            for i, char in enumerate(line):
+            for idx, char in enumerate(line):
                 if char == " ":
-                    space_counts[i] += 1
+                    space_counts[idx] += 1
 
         # Find field boundaries (positions with high space counts)
         threshold = len(lines) * 0.8
@@ -257,7 +257,7 @@ class TextImporter:
         rows_imported = 0
         lines = text.split("\n")
 
-        for line_idx, line in enumerate(lines[options.start_row :]):
+        for line in lines[options.start_row:]:
             if options.skip_blank_lines and not line.strip():
                 continue
 

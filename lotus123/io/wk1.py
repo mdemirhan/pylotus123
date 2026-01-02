@@ -641,7 +641,7 @@ class FormulaDecompiler:
             if self.pos < len(self.bytecode):
                 actual_count = self.bytecode[self.pos]
                 self.pos += 1
-                args = []
+                args: list[str] = []
                 for _ in range(actual_count):
                     if self.stack:
                         args.insert(0, self.stack.pop()[0])
@@ -663,7 +663,7 @@ class FormulaDecompiler:
                 if self.pos < len(self.bytecode):
                     arg_count = self.bytecode[self.pos]
                     self.pos += 1
-                    args = []
+                    args: list[str] = []
                     for _ in range(arg_count):
                         if self.stack:
                             args.insert(0, self.stack.pop()[0])

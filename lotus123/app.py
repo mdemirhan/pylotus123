@@ -386,7 +386,6 @@ class LotusApp(App[None]):
         grid = self.query_one("#grid", SpreadsheetGrid)
         cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
         old_value = cell.raw_value
-        old_format = cell.format_code
 
         # Determine new value with global defaults applied
         new_value = event.value

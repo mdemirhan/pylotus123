@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
+from ..io.text_import import ImportFormat
+from ..io.text_export import ExportFormat
 from ..ui import FileDialog
 from ..ui.dialogs import SheetSelectDialog
 from .base import BaseHandler
@@ -21,6 +23,84 @@ class ImportExportHandler(BaseHandler):
         self._pending_export_format: str = ""
         self._pending_xlsx_path: str = ""
 
+    # ===== Common Import/Export Helpers =====
+
+    def _import_text_file(
+        self, filepath: str, format_type: ImportFormat, format_name: str
+    ) -> None:
+        """Common text file import logic for CSV/TSV."""
+        try:
+            from ..io import ImportOptions, TextImporter
+
+            self.spreadsheet.clear()
+            importer = TextImporter(self.spreadsheet)
+            options = ImportOptions(format=format_type)
+            row_count = importer.import_file(filepath, options)
+
+            self.spreadsheet.filename = ""
+            self.is_dirty = True
+            self.undo_manager.clear()
+            self.reset_view()
+
+            self.notify(f"Imported {row_count} rows from {format_name}")
+
+        except FileNotFoundError:
+            self.notify(f"File not found: {filepath}", severity="error")
+        except PermissionError:
+            self.notify(f"Permission denied: {filepath}", severity="error")
+        except Exception as e:
+            self.notify(f"Error importing {format_name}: {e}", severity="error")
+
+    def _export_text_file(
+        self, filepath: str, format_type: ExportFormat, format_name: str
+    ) -> None:
+        """Common text file export logic for CSV/TSV."""
+        try:
+            from ..io import ExportOptions, TextExporter
+
+            exporter = TextExporter(self.spreadsheet)
+            options = ExportOptions(format=format_type, use_formulas=False)
+            row_count = exporter.export_file(filepath, options)
+
+            self.notify(f"Exported {row_count} rows to {Path(filepath).name}")
+
+        except PermissionError:
+            self.notify(f"Permission denied: {filepath}", severity="error")
+        except Exception as e:
+            self.notify(f"Error exporting {format_name}: {e}", severity="error")
+
+    def _handle_export_dialog(
+        self,
+        result: str | None,
+        extension: str,
+        perform_export: Callable[[str], None],
+    ) -> None:
+        """Common export dialog result handling."""
+        if not result:
+            return
+
+        if not result.lower().endswith(extension):
+            result += extension
+
+        self.confirm_overwrite(result, perform_export, cancel_message="Export cancelled")
+
+    def _refresh_after_binary_import(self, filename: str) -> None:
+        """Common UI refresh after WK1/XLSX import."""
+        self.spreadsheet.filename = ""
+        self.is_dirty = True
+        self.undo_manager.clear()
+
+        grid = self.get_grid()
+        grid.cursor_row = 0
+        grid.cursor_col = 0
+        grid.scroll_row = 0
+        grid.scroll_col = 0
+        grid.refresh_grid()
+        self.update_status()
+        self.update_title()
+
+        self.notify(f"Imported from {Path(filename).name}")
+
     # ===== CSV Operations =====
 
     def import_csv(self) -> None:
@@ -32,39 +112,11 @@ class ImportExportHandler(BaseHandler):
 
     def _do_import_csv(self, result: str | None) -> None:
         """Handle CSV import dialog result."""
-        if not result:
-            return
-
-        try:
-            from ..io import ImportOptions, TextImporter
-            from ..io.text_import import ImportFormat
-
-            # Clear and import
-            self.spreadsheet.clear()
-            importer = TextImporter(self.spreadsheet)
-            options = ImportOptions(format=ImportFormat.CSV)
-            row_count = importer.import_file(result, options)
-
-            # Update state
-            self.spreadsheet.filename = ""  # Not a native file
-            self.is_dirty = True
-            self.undo_manager.clear()
-
-            # Refresh UI
-            self.reset_view()
-
-            self.notify(f"Imported {row_count} rows from CSV")
-
-        except FileNotFoundError:
-            self.notify(f"File not found: {result}", severity="error")
-        except PermissionError:
-            self.notify(f"Permission denied: {result}", severity="error")
-        except Exception as e:
-            self.notify(f"Error importing CSV: {e}", severity="error")
+        if result:
+            self._import_text_file(result, ImportFormat.CSV, "CSV")
 
     def export_csv(self) -> None:
         """Show file dialog to export to CSV."""
-        self._pending_export_format = "csv"
         self._app.push_screen(
             FileDialog(mode="save", title="Export CSV", file_extensions=[".csv"]),
             self._do_export_csv,
@@ -72,36 +124,11 @@ class ImportExportHandler(BaseHandler):
 
     def _do_export_csv(self, result: str | None) -> None:
         """Handle CSV export dialog result."""
-        if not result:
-            return
-
-        # Ensure .csv extension
-        if not result.lower().endswith(".csv"):
-            result += ".csv"
-
-        self.confirm_overwrite(
-            result, self._perform_export_csv, cancel_message="Export cancelled"
-        )
+        self._handle_export_dialog(result, ".csv", self._perform_export_csv)
 
     def _perform_export_csv(self, filepath: str) -> None:
         """Actually perform the CSV export."""
-        try:
-            from ..io import ExportOptions, TextExporter
-            from ..io.text_export import ExportFormat
-
-            exporter = TextExporter(self.spreadsheet)
-            options = ExportOptions(
-                format=ExportFormat.CSV,
-                use_formulas=False,  # Export calculated values
-            )
-            row_count = exporter.export_file(filepath, options)
-
-            self.notify(f"Exported {row_count} rows to {Path(filepath).name}")
-
-        except PermissionError:
-            self.notify(f"Permission denied: {filepath}", severity="error")
-        except Exception as e:
-            self.notify(f"Error exporting CSV: {e}", severity="error")
+        self._export_text_file(filepath, ExportFormat.CSV, "CSV")
 
     # ===== TSV Operations =====
 
@@ -114,39 +141,11 @@ class ImportExportHandler(BaseHandler):
 
     def _do_import_tsv(self, result: str | None) -> None:
         """Handle TSV import dialog result."""
-        if not result:
-            return
-
-        try:
-            from ..io import ImportOptions, TextImporter
-            from ..io.text_import import ImportFormat
-
-            # Clear and import
-            self.spreadsheet.clear()
-            importer = TextImporter(self.spreadsheet)
-            options = ImportOptions(format=ImportFormat.TSV)
-            row_count = importer.import_file(result, options)
-
-            # Update state
-            self.spreadsheet.filename = ""
-            self.is_dirty = True
-            self.undo_manager.clear()
-
-            # Refresh UI
-            self.reset_view()
-
-            self.notify(f"Imported {row_count} rows from TSV")
-
-        except FileNotFoundError:
-            self.notify(f"File not found: {result}", severity="error")
-        except PermissionError:
-            self.notify(f"Permission denied: {result}", severity="error")
-        except Exception as e:
-            self.notify(f"Error importing TSV: {e}", severity="error")
+        if result:
+            self._import_text_file(result, ImportFormat.TSV, "TSV")
 
     def export_tsv(self) -> None:
         """Show file dialog to export to TSV."""
-        self._pending_export_format = "tsv"
         self._app.push_screen(
             FileDialog(mode="save", title="Export TSV", file_extensions=[".tsv"]),
             self._do_export_tsv,
@@ -154,43 +153,20 @@ class ImportExportHandler(BaseHandler):
 
     def _do_export_tsv(self, result: str | None) -> None:
         """Handle TSV export dialog result."""
-        if not result:
-            return
-
-        # Ensure .tsv extension
-        if not result.lower().endswith(".tsv"):
-            result += ".tsv"
-
-        self.confirm_overwrite(
-            result, self._perform_export_tsv, cancel_message="Export cancelled"
-        )
+        self._handle_export_dialog(result, ".tsv", self._perform_export_tsv)
 
     def _perform_export_tsv(self, filepath: str) -> None:
         """Actually perform the TSV export."""
-        try:
-            from ..io import ExportOptions, TextExporter
-            from ..io.text_export import ExportFormat
-
-            exporter = TextExporter(self.spreadsheet)
-            options = ExportOptions(
-                format=ExportFormat.TSV,
-                use_formulas=False,
-            )
-            row_count = exporter.export_file(filepath, options)
-
-            self.notify(f"Exported {row_count} rows to {Path(filepath).name}")
-
-        except PermissionError:
-            self.notify(f"Permission denied: {filepath}", severity="error")
-        except Exception as e:
-            self.notify(f"Error exporting TSV: {e}", severity="error")
+        self._export_text_file(filepath, ExportFormat.TSV, "TSV")
 
     # ===== WK1 Operations =====
 
     def import_wk1(self) -> None:
         """Show file dialog to import a Lotus WK1 file."""
         self._app.push_screen(
-            FileDialog(mode="open", title="Import Lotus 1-2-3", file_extensions=[".wk1", ".wks"]),
+            FileDialog(
+                mode="open", title="Import Lotus 1-2-3", file_extensions=[".wk1", ".wks"]
+            ),
             self._do_import_wk1,
         )
 
@@ -204,23 +180,7 @@ class ImportExportHandler(BaseHandler):
 
             reader = Wk1Reader(self.spreadsheet)
             reader.load(result)
-
-            # Update state - keep filename empty since it's not native format
-            self.spreadsheet.filename = ""
-            self.is_dirty = True
-            self.undo_manager.clear()
-
-            # Refresh UI
-            grid = self.get_grid()
-            grid.cursor_row = 0
-            grid.cursor_col = 0
-            grid.scroll_row = 0
-            grid.scroll_col = 0
-            grid.refresh_grid()
-            self.update_status()
-            self.update_title()
-
-            self.notify(f"Imported from {Path(result).name}")
+            self._refresh_after_binary_import(result)
 
         except FileNotFoundError:
             self.notify(f"File not found: {result}", severity="error")
@@ -233,7 +193,6 @@ class ImportExportHandler(BaseHandler):
 
     def export_wk1(self) -> None:
         """Show file dialog to export to Lotus WK1 format."""
-        self._pending_export_format = "wk1"
         self._app.push_screen(
             FileDialog(mode="save", title="Export Lotus 1-2-3", file_extensions=[".wk1"]),
             self._do_export_wk1,
@@ -241,16 +200,7 @@ class ImportExportHandler(BaseHandler):
 
     def _do_export_wk1(self, result: str | None) -> None:
         """Handle WK1 export dialog result."""
-        if not result:
-            return
-
-        # Ensure .wk1 extension
-        if not result.lower().endswith(".wk1"):
-            result += ".wk1"
-
-        self.confirm_overwrite(
-            result, self._perform_export_wk1, cancel_message="Export cancelled"
-        )
+        self._handle_export_dialog(result, ".wk1", self._perform_export_wk1)
 
     def _perform_export_wk1(self, filepath: str) -> None:
         """Actually perform the WK1 export."""
@@ -272,7 +222,9 @@ class ImportExportHandler(BaseHandler):
     def import_xlsx(self) -> None:
         """Show file dialog to import an Excel XLSX file."""
         self._app.push_screen(
-            FileDialog(mode="open", title="Import Excel XLSX", file_extensions=[".xlsx", ".xls"]),
+            FileDialog(
+                mode="open", title="Import Excel XLSX", file_extensions=[".xlsx", ".xls"]
+            ),
             self._do_import_xlsx_file,
         )
 
@@ -289,13 +241,11 @@ class ImportExportHandler(BaseHandler):
             sheet_names = get_xlsx_sheet_names(result)
 
             if len(sheet_names) > 1:
-                # Multiple sheets - show selection dialog
                 self._app.push_screen(
                     SheetSelectDialog(sheet_names),
                     self._do_import_xlsx_sheet,
                 )
             else:
-                # Single sheet - import directly
                 self._perform_import_xlsx(result, sheet_names[0] if sheet_names else None)
 
         except ImportError as e:
@@ -323,12 +273,10 @@ class ImportExportHandler(BaseHandler):
             reader = XlsxReader(self.spreadsheet)
             warnings = reader.load(filepath, sheet_name)
 
-            # Update state
-            self.spreadsheet.filename = ""  # Not a native file
+            self.spreadsheet.filename = ""
             self.is_dirty = True
             self.undo_manager.clear()
 
-            # Refresh UI
             grid = self.get_grid()
             grid.cursor_row = 0
             grid.cursor_col = 0
@@ -338,7 +286,6 @@ class ImportExportHandler(BaseHandler):
             self.update_status()
             self.update_title()
 
-            # Show result with warnings
             if warnings.has_warnings():
                 self.notify(
                     f"Imported from XLSX. {warnings.to_message()}",
@@ -358,7 +305,6 @@ class ImportExportHandler(BaseHandler):
 
     def export_xlsx(self) -> None:
         """Show file dialog to export to Excel XLSX format."""
-        self._pending_export_format = "xlsx"
         self._app.push_screen(
             FileDialog(mode="save", title="Export Excel XLSX", file_extensions=[".xlsx"]),
             self._do_export_xlsx,
@@ -366,16 +312,7 @@ class ImportExportHandler(BaseHandler):
 
     def _do_export_xlsx(self, result: str | None) -> None:
         """Handle XLSX export dialog result."""
-        if not result:
-            return
-
-        # Ensure .xlsx extension
-        if not result.lower().endswith(".xlsx"):
-            result += ".xlsx"
-
-        self.confirm_overwrite(
-            result, self._perform_export_xlsx, cancel_message="Export cancelled"
-        )
+        self._handle_export_dialog(result, ".xlsx", self._perform_export_xlsx)
 
     def _perform_export_xlsx(self, filepath: str) -> None:
         """Actually perform the XLSX export."""

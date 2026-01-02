@@ -158,8 +158,11 @@ class XlsxReader:
         # Select sheet
         if sheet_name and sheet_name in wb.sheetnames:
             ws = wb[sheet_name]
-        else:
+        elif wb.active is not None:
             ws = wb.active
+        else:
+            # Fallback to first sheet if no active sheet
+            ws = wb[wb.sheetnames[0]]
 
         self.warnings.imported_sheet_name = ws.title
 
@@ -321,7 +324,8 @@ class XlsxReader:
 
     def _check_conditional_formatting(self, ws: "Worksheet") -> None:
         """Check for conditional formatting."""
-        if ws.conditional_formatting._cf_rules:
+        # Check if there are any conditional formatting rules
+        if len(ws.conditional_formatting) > 0:
             self.warnings.conditional_formatting = True
 
     def _check_data_validations(self, ws: "Worksheet") -> None:
@@ -357,6 +361,7 @@ class XlsxWriter:
 
         wb = Workbook()
         ws = wb.active
+        assert ws is not None, "New workbook should have an active sheet"
         ws.title = "Sheet1"
 
         # Export cells

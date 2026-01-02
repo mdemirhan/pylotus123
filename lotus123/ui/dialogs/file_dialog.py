@@ -215,9 +215,12 @@ class FileDialog(ModalScreen[str | None]):
         if event.value:
             ext_label.update("(*)")
         else:
-            ext_display = ", ".join(f"*{ext}" if ext.startswith(".") else f"*.{ext}"
-                                    for ext in self._file_extensions)
-            ext_label.update(f"({ext_display})")
+            if self._file_extensions:
+                ext_display = ", ".join(f"*{ext}" if ext.startswith(".") else f"*.{ext}"
+                                        for ext in self._file_extensions)
+                ext_label.update(f"({ext_display})")
+            else:
+                ext_label.update("(*)")
 
     @on(DirectoryTree.FileSelected)
     def on_file_selected(self, event: DirectoryTree.FileSelected) -> None:

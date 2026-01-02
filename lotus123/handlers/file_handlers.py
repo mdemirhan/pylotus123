@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Literal
 
 from ..ui import THEMES, CommandInput, FileDialog, ThemeDialog, ThemeType
 from .base import BaseHandler
@@ -19,7 +19,7 @@ class FileHandler(BaseHandler):
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)
         self._pending_xlsx_import_path: str = ""
-        self._pending_action: callable | None = None  # Callback for after save confirmation
+        self._pending_action: Callable[[], None] | None = None  # Callback for after save confirmation
 
     def _sync_global_settings_to_spreadsheet(self) -> None:
         """Sync app global settings to spreadsheet before save."""
@@ -43,7 +43,7 @@ class FileHandler(BaseHandler):
         grid.show_zero = self._app.global_zero_display
         grid.default_col_width = self._app.global_col_width
 
-    def _confirm_save_if_dirty(self, prompt: str, on_proceed: callable) -> None:
+    def _confirm_save_if_dirty(self, prompt: str, on_proceed: Callable[[], None]) -> None:
         """Prompt to save if dirty, then call on_proceed.
 
         Args:
@@ -276,7 +276,9 @@ class FileHandler(BaseHandler):
         except Exception as e:
             self.notify(f"Error importing XLSX: {e}", severity="error")
 
-    def _finalize_import(self, message: str, severity: str = "information") -> None:
+    def _finalize_import(
+        self, message: str, severity: Literal["information", "warning", "error"] = "information"
+    ) -> None:
         """Finalize an import operation and refresh the UI."""
         self.spreadsheet.filename = ""  # Not a native file
         self.is_dirty = True
