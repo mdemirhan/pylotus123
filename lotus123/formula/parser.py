@@ -73,6 +73,15 @@ class FormulaParser:
         "<=": operator.le,
         ">=": operator.ge,
     }
+    ERROR_VALUES = {
+        "#DIV/0!",
+        "#ERR!",
+        "#NUM!",
+        "#CIRC!",
+        "#REF!",
+        "#NAME?",
+        "#N/A",
+    }
 
     # Regex patterns
     CELL_PATTERN = re.compile(r"\$?[A-Za-z]+\$?\d+")
@@ -258,12 +267,38 @@ class FormulaParser:
         return token
 
     def _is_error(self, value: Any) -> bool:
-        """Check if a value is an error string."""
-        return isinstance(value, str) and value.startswith("#") and value.endswith("!")
+        """Check if a value is a known error string."""
+        return isinstance(value, str) and value in self.ERROR_VALUES
 
-    def _parse_expression(self, min_prec: int = 0) -> Any:
-        """Parse expression with operator precedence."""
-        left = self._parse_comparison()
+    def _parse_expression(self) -> Any:
+        """Parse a full expression."""
+        return self._parse_comparison()
+
+    def _parse_comparison(self) -> Any:
+        """Parse comparison operators."""
+        left = self._parse_arithmetic()
+
+        # Propagate errors immediately
+        if self._is_error(left):
+            return left
+
+        while self._current().type == TokenType.COMPARISON:
+            op_str = self._advance().value
+            right = self._parse_arithmetic()
+
+            # Propagate errors from right operand
+            if self._is_error(right):
+                return right
+
+            cmp_fn = self.COMPARISONS.get(op_str)
+            if cmp_fn:
+                left = cmp_fn(left, right)
+
+        return left
+
+    def _parse_arithmetic(self, min_prec: int = 0) -> Any:
+        """Parse arithmetic with operator precedence."""
+        left = self._parse_atom()
 
         # Propagate errors immediately
         if self._is_error(left):
@@ -283,7 +318,7 @@ class FormulaParser:
                 break
 
             self._advance()
-            right = self._parse_expression(prec + 1)
+            right = self._parse_arithmetic(prec + 1)
 
             # Propagate errors from right operand
             if self._is_error(right):
@@ -299,28 +334,6 @@ class FormulaParser:
             # Propagate errors from operation result
             if self._is_error(left):
                 return left
-
-        return left
-
-    def _parse_comparison(self) -> Any:
-        """Parse comparison operators."""
-        left = self._parse_atom()
-
-        # Propagate errors
-        if self._is_error(left):
-            return left
-
-        while self._current().type == TokenType.COMPARISON:
-            op_str = self._advance().value
-            right = self._parse_atom()
-
-            # Propagate errors from right operand
-            if self._is_error(right):
-                return right
-
-            cmp_fn = self.COMPARISONS.get(op_str)
-            if cmp_fn:
-                left = cmp_fn(left, right)
 
         return left
 

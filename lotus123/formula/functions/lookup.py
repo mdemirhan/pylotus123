@@ -17,6 +17,37 @@ if TYPE_CHECKING:
 # They're called with the spreadsheet as the first hidden argument
 
 
+def _try_float(value: Any) -> float | None:
+    """Try to parse a value as float."""
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def _compare_for_sort(a: Any, b: Any) -> int:
+    """Compare two values for sorting (numeric if possible, else string)."""
+    a_num = _try_float(a)
+    b_num = _try_float(b)
+    if a_num is not None and b_num is not None:
+        return (a_num > b_num) - (a_num < b_num)
+    a_str = str(a).upper()
+    b_str = str(b).upper()
+    return (a_str > b_str) - (a_str < b_str)
+
+
+def _is_sorted(values: list[Any]) -> bool:
+    """Check if values are sorted ascending for range lookups."""
+    if len(values) < 2:
+        return True
+    last = values[0]
+    for value in values[1:]:
+        if _compare_for_sort(last, value) > 0:
+            return False
+        last = value
+    return True
+
+
 def _is_match(lookup_value: Any, table_value: Any, range_lookup: bool = True) -> bool:
     """Check if values match for lookup.
 
@@ -27,10 +58,11 @@ def _is_match(lookup_value: Any, table_value: Any, range_lookup: bool = True) ->
     """
     if range_lookup:
         # Range lookup - find largest value <= lookup_value
-        try:
-            return float(table_value) <= float(lookup_value)
-        except (ValueError, TypeError):
-            return str(table_value).upper() <= str(lookup_value).upper()
+        table_num = _try_float(table_value)
+        lookup_num = _try_float(lookup_value)
+        if table_num is not None and lookup_num is not None:
+            return table_num <= lookup_num
+        return str(table_value).upper() <= str(lookup_value).upper()
     else:
         # Exact match
         if isinstance(lookup_value, str) and isinstance(table_value, str):
@@ -51,7 +83,8 @@ def fn_vlookup(
         lookup_value: Value to search for
         table: 2D list of values (the table range)
         col_index: Column to return (1-based)
-        range_lookup: True for approximate match (default), False for exact
+    range_lookup: True for approximate match (default), False for exact.
+                  Approximate match requires a sorted first column.
     """
     if not isinstance(table, list) or not table:
         return "#N/A"
@@ -66,6 +99,15 @@ def fn_vlookup(
     if col_idx < 0 or (table and col_idx >= len(table[0])):
         return "#REF!"
 
+    if range_match:
+        first_col = [
+            row[0] if isinstance(row, list) else row
+            for row in table
+            if row is not None
+        ]
+        if not _is_sorted(first_col):
+            return "#N/A"
+
     last_match_row = None
 
     for row_idx, row in enumerate(table):
@@ -77,8 +119,6 @@ def fn_vlookup(
         if range_match:
             if _is_match(lookup_value, cell_value, True):
                 last_match_row = row_idx
-            else:
-                break  # Table is sorted, stop when we pass the value
         else:
             if _is_match(lookup_value, cell_value, False):
                 if isinstance(row, list) and col_idx < len(row):
@@ -102,6 +142,7 @@ def fn_hlookup(
     Searches first row of table for lookup_value, returns value from row_index.
 
     Usage: @HLOOKUP(lookup_value, table_range, row_index, range_lookup)
+    Approximate match requires a sorted first row.
     """
     if not isinstance(table, list) or not table:
         return "#N/A"
@@ -117,14 +158,14 @@ def fn_hlookup(
         return "#REF!"
 
     first_row = table[0]
+    if range_match and not _is_sorted(first_row):
+        return "#N/A"
     last_match_col = None
 
     for col_idx, cell_value in enumerate(first_row):
         if range_match:
             if _is_match(lookup_value, cell_value, True):
                 last_match_col = col_idx
-            else:
-                break
         else:
             if _is_match(lookup_value, cell_value, False):
                 if row_idx < len(table) and col_idx < len(table[row_idx]):

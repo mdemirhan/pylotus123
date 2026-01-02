@@ -13,6 +13,7 @@ from textual.widgets import Footer, Input, Static
 
 from .charting import Chart, ChartType
 from .core import Spreadsheet, make_cell_ref
+from .formula.recalc import RecalcMode, create_recalc_engine
 
 # Handler classes
 from .handlers import (
@@ -138,6 +139,8 @@ class LotusApp(App[None]):
         self._initial_file = initial_file
         self.config = AppConfig.load()
         self.spreadsheet = Spreadsheet()
+        self.recalc_engine = create_recalc_engine(self.spreadsheet)
+        self.recalc_engine.set_mode(RecalcMode.AUTOMATIC)
         self.current_theme_type = get_theme_type(self.config.theme)
         self.color_theme = THEMES[self.current_theme_type]
         self.editing = False
@@ -487,7 +490,7 @@ class LotusApp(App[None]):
                 cell_input.value = new_value
 
     def action_recalculate(self) -> None:
-        self.spreadsheet.invalidate_cache()
+        self.spreadsheet.recalculate()
         grid = self.query_one("#grid", SpreadsheetGrid)
         grid.refresh_grid()
         self._update_status()

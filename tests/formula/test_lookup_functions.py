@@ -67,6 +67,12 @@ class TestVLOOKUP:
         result = fn_vlookup("Banana", table, 2, False)
         assert result == 2
 
+    def test_vlookup_range_unsorted(self):
+        """Approximate match requires sorted data."""
+        table = [[2, "Banana"], [1, "Apple"], [3, "Cherry"]]
+        result = fn_vlookup(2, table, 2, True)
+        assert result == "#N/A"
+
 
 class TestHLOOKUP:
     """Tests for HLOOKUP function."""
@@ -108,6 +114,12 @@ class TestHLOOKUP:
         """Test HLOOKUP with 1D table."""
         result = fn_hlookup(2, [1, 2, 3], 1, False)
         assert result == 2
+
+    def test_hlookup_range_unsorted(self):
+        """Approximate match requires sorted data."""
+        table = [[2, 1, 3], ["Banana", "Apple", "Cherry"]]
+        result = fn_hlookup(2, table, 2, True)
+        assert result == "#N/A"
 
 
 class TestINDEX:

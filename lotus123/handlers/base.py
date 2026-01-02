@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
     from ..charting import Chart
     from ..core import Spreadsheet
+    from ..formula.recalc import RecalcEngine
     from ..ui import SpreadsheetGrid
     from ..utils.undo import UndoManager
 
@@ -24,6 +25,7 @@ class AppProtocol(Protocol):
     spreadsheet: "Spreadsheet"
     chart: "Chart"
     undo_manager: "UndoManager"
+    recalc_engine: "RecalcEngine"
     config: Any  # AppConfig
 
     # State flags

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ..core.reference import index_to_col
+from ..formula.recalc import RecalcMode
 from ..ui import CommandInput
 from ..utils.undo import (
     Command,
@@ -254,10 +255,12 @@ class WorksheetHandler(BaseHandler):
         """Toggle between automatic and manual recalculation."""
         if self._app.recalc_mode == "auto":
             self._app.recalc_mode = "manual"
+            self._app.recalc_engine.set_mode(RecalcMode.MANUAL)
             self.notify("Recalculation: Manual (press F9 to recalculate)")
         else:
             self._app.recalc_mode = "auto"
-            self.spreadsheet.invalidate_cache()
+            self._app.recalc_engine.set_mode(RecalcMode.AUTOMATIC)
+            self.spreadsheet.recalculate()
             grid = self.get_grid()
             grid.refresh_grid()
             self.notify("Recalculation: Automatic")

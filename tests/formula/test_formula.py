@@ -253,6 +253,11 @@ class TestComparisons:
         assert self.parser.evaluate("6>=5") is True
         assert self.parser.evaluate("5>=6") is False
 
+    def test_comparison_precedence(self):
+        assert self.parser.evaluate("1+2=3") is True
+        assert self.parser.evaluate("1+2=4") is False
+        assert self.parser.evaluate("1+2*3=7") is True
+
 
 class TestComplexFormulas:
     def setup_method(self):
@@ -399,3 +404,8 @@ class TestErrorPropagation:
         assert result.startswith("#")
         assert result.endswith("!")
         assert len(result) < 20
+
+    def test_name_error_propagation(self):
+        """Test #NAME? propagates through arithmetic."""
+        result = self.parser.evaluate("NOTAFUNC(1)+1")
+        assert result == "#NAME?"

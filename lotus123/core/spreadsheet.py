@@ -372,7 +372,7 @@ class Spreadsheet:
         """Force recalculation of all cells."""
         self._invalidate_cache()
         if self._recalc_engine:
-            self._recalc_engine.recalculate()
+            self._recalc_engine.recalculate(full=True)
 
     def update_cell_dependency(self, row: int, col: int, formula: str | None) -> None:
         """Update the dependency graph for a cell.
@@ -406,6 +406,8 @@ class Spreadsheet:
     @property
     def needs_recalc(self) -> bool:
         """Check if spreadsheet needs recalculation."""
+        if self._recalc_engine:
+            return self._recalc_engine.needs_recalc
         # In manual mode, check if cache is invalid
         return len(self._cache) == 0 and any(
             c.is_formula for c in self._cells.values() if not c.is_empty
@@ -414,6 +416,8 @@ class Spreadsheet:
     @property
     def has_circular_refs(self) -> bool:
         """Check if circular references were detected."""
+        if self._recalc_engine:
+            return len(self._recalc_engine.get_circular_references()) > 0
         return len(self._circular_refs) > 0
 
     # -------------------------------------------------------------------------
