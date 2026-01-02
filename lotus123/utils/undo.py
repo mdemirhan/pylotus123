@@ -60,7 +60,7 @@ class CellChangeCommand(Command):
         formula = cell.formula if cell.is_formula else None
         self.spreadsheet.update_cell_dependency(self.row, self.col, formula)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     def undo(self) -> None:
         """Restore the old value."""
@@ -72,7 +72,7 @@ class CellChangeCommand(Command):
         formula = cell.formula if cell.is_formula else None
         self.spreadsheet.update_cell_dependency(self.row, self.col, formula)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     def redo(self) -> None:
         """Set the new value again."""
@@ -85,7 +85,7 @@ class CellChangeCommand(Command):
         formula = cell.formula if cell.is_formula else None
         self.spreadsheet.update_cell_dependency(self.row, self.col, formula)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     @property
     def description(self) -> str:
@@ -110,7 +110,7 @@ class RangeChangeCommand(Command):
             # Update dependencies
             formula = cell.formula if cell.is_formula else None
             self.spreadsheet.update_cell_dependency(row, col, formula)
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     def undo(self) -> None:
         """Restore all old values."""
@@ -120,7 +120,7 @@ class RangeChangeCommand(Command):
             # Update dependencies
             formula = cell.formula if cell.is_formula else None
             self.spreadsheet.update_cell_dependency(row, col, formula)
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     def redo(self) -> None:
         """Apply all changes again."""
@@ -169,13 +169,12 @@ class DeleteRowCommand(Command):
         """Delete the row, saving its data."""
         # Save all cells in this row
         self.saved_data = {}
-        for (r, c), cell in list(self.spreadsheet._cells.items()):
-            if r == self.row:
-                self.saved_data[c] = cell.to_dict()
+        for col, cell in self.spreadsheet.get_cells_in_row(self.row):
+            self.saved_data[col] = cell.to_dict()
 
         # Save ALL formula cells before deletion (they may be modified by adjust_for_structural_change)
         self.saved_formulas = {}
-        for (r, c), cell in self.spreadsheet._cells.items():
+        for r, c, cell in self.spreadsheet.iter_cells():
             if cell.is_formula:
                 self.saved_formulas[(r, c)] = cell.raw_value
 
@@ -186,20 +185,18 @@ class DeleteRowCommand(Command):
         # First insert the row back
         self.spreadsheet.insert_row(self.row)
 
-        # Restore saved cells - use the Cell class from spreadsheet module
-        from ..core.cell import Cell
-
+        # Restore saved cells
         for col, cell_data in self.saved_data.items():
-            self.spreadsheet._cells[(self.row, col)] = Cell.from_dict(cell_data)
+            self.spreadsheet.set_cell_data(self.row, col, cell_data)
 
         # Restore all formulas to their original state
         # After insert_row, cells are back to their original positions
         for (r, c), formula in self.saved_formulas.items():
-            cell = self.spreadsheet._cells.get((r, c))
+            cell = self.spreadsheet.get_cell_if_exists(r, c)
             if cell and cell.is_formula:
                 cell.set_value(formula)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
         self.spreadsheet.rebuild_dependency_graph()
 
     def redo(self) -> None:
@@ -251,16 +248,15 @@ class DeleteColCommand(Command):
         """Delete the column, saving its data."""
         # Save all cells in this column
         self.saved_data = {}
-        for (r, c), cell in list(self.spreadsheet._cells.items()):
-            if c == self.col:
-                self.saved_data[r] = cell.to_dict()
+        for row, cell in self.spreadsheet.get_cells_in_col(self.col):
+            self.saved_data[row] = cell.to_dict()
 
         # Save column width
         self.saved_width = self.spreadsheet.get_col_width(self.col)
 
         # Save ALL formula cells before deletion (they may be modified by adjust_for_structural_change)
         self.saved_formulas = {}
-        for (r, c), cell in self.spreadsheet._cells.items():
+        for r, c, cell in self.spreadsheet.iter_cells():
             if cell.is_formula:
                 self.saved_formulas[(r, c)] = cell.raw_value
 
@@ -271,11 +267,9 @@ class DeleteColCommand(Command):
         # First insert the column back
         self.spreadsheet.insert_col(self.col)
 
-        # Restore saved cells - use the Cell class from spreadsheet module
-        from ..core.cell import Cell
-
+        # Restore saved cells
         for row, cell_data in self.saved_data.items():
-            self.spreadsheet._cells[(row, self.col)] = Cell.from_dict(cell_data)
+            self.spreadsheet.set_cell_data(row, self.col, cell_data)
 
         # Restore width
         if self.saved_width is not None:
@@ -284,11 +278,11 @@ class DeleteColCommand(Command):
         # Restore all formulas to their original state
         # After insert_col, cells are back to their original positions
         for (r, c), formula in self.saved_formulas.items():
-            cell = self.spreadsheet._cells.get((r, c))
+            cell = self.spreadsheet.get_cell_if_exists(r, c)
             if cell and cell.is_formula:
                 cell.set_value(formula)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
         self.spreadsheet.rebuild_dependency_graph()
 
     def redo(self) -> None:
@@ -325,19 +319,18 @@ class ClearRangeCommand(Command):
                     # Update dependencies (remove)
                     self.spreadsheet.update_cell_dependency(r, c, None)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     def undo(self) -> None:
         """Restore the cleared data."""
-        from ..core.cell import Cell
-
         for (r, c), cell_data in self.saved_data.items():
-            self.spreadsheet._cells[(r, c)] = cell = Cell.from_dict(cell_data)
+            self.spreadsheet.set_cell_data(r, c, cell_data)
+            cell = self.spreadsheet.get_cell(r, c)
             # Update dependencies
             formula = cell.formula if cell.is_formula else None
             self.spreadsheet.update_cell_dependency(r, c, formula)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     def redo(self) -> None:
         """Clear the range again."""
@@ -349,7 +342,7 @@ class ClearRangeCommand(Command):
                     # Update dependencies (remove)
                     self.spreadsheet.update_cell_dependency(r, c, None)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     @property
     def description(self) -> str:

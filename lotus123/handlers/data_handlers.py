@@ -59,8 +59,8 @@ class DataHandler(BaseHandler):
                 cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
                 self.undo_manager.execute(cmd)
                 grid.refresh_grid()
-                self._app._update_status()
-                self._app._mark_dirty()
+                self.update_status()
+                self.mark_dirty()
                 self.notify(f"Filled {len(changes)} cell(s)")
         except ValueError as e:
             self.notify(f"Invalid fill value: {e}", severity="error")
@@ -127,8 +127,8 @@ class DataHandler(BaseHandler):
                 cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
                 self.undo_manager.execute(cmd)
                 grid.refresh_grid()
-                self._app._update_status()
-                self._app._mark_dirty()
+                self.update_status()
+                self.mark_dirty()
                 order_name = "descending" if reverse else "ascending"
                 self.notify(
                     f"Sorted {len(rows_data)} rows by column {sort_col_letter} ({order_name})"

@@ -259,7 +259,7 @@ class QueryHandler(BaseHandler):
         )
         grid = self.get_grid()
         grid.refresh_grid()
-        self._app._mark_dirty()
+        self.mark_dirty()
         self.notify(f"Extracted {count} record(s)")
 
     def unique(self) -> None:
@@ -300,7 +300,7 @@ class QueryHandler(BaseHandler):
         )
         grid = self.get_grid()
         grid.refresh_grid()
-        self._app._mark_dirty()
+        self.mark_dirty()
         self.notify(f"Extracted {count} unique record(s)")
 
     def delete(self) -> None:
@@ -325,7 +325,7 @@ class QueryHandler(BaseHandler):
         count = db.delete_matching(self.input_range, matching_rows)
         grid = self.get_grid()
         grid.refresh_grid()
-        self._app._mark_dirty()
+        self.mark_dirty()
         self.notify(f"Deleted {count} record(s)")
 
     def reset(self) -> None:

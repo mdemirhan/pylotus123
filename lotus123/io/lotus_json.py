@@ -25,11 +25,11 @@ class LotusJsonSerializer:
             "version": 2,
             "rows": spreadsheet.rows,
             "cols": spreadsheet.cols,
-            "col_widths": spreadsheet._col_widths,
-            "row_heights": spreadsheet._row_heights,
+            "col_widths": spreadsheet.get_all_col_widths(),
+            "row_heights": spreadsheet.get_all_row_heights(),
             "cells": {
                 f"{r},{c}": cell.to_dict()
-                for (r, c), cell in spreadsheet._cells.items()
+                for r, c, cell in spreadsheet.iter_cells()
                 if not cell.is_empty
             },
             "named_ranges": spreadsheet.named_ranges.to_dict(),
@@ -43,8 +43,6 @@ class LotusJsonSerializer:
     @staticmethod
     def load(spreadsheet: Spreadsheet, filename: str) -> None:
         """Load spreadsheet from JSON file."""
-        from ..core.cell import Cell
-
         with open(filename, "r") as f:
             data = json.load(f)
 
@@ -60,12 +58,12 @@ class LotusJsonSerializer:
 
         spreadsheet.rows = loaded_rows
         spreadsheet.cols = loaded_cols
-        spreadsheet._col_widths = {int(k): v for k, v in data.get("col_widths", {}).items()}
-        spreadsheet._row_heights = {int(k): v for k, v in data.get("row_heights", {}).items()}
+        spreadsheet.set_all_col_widths({int(k): v for k, v in data.get("col_widths", {}).items()})
+        spreadsheet.set_all_row_heights({int(k): v for k, v in data.get("row_heights", {}).items()})
 
         for key, cell_data in data.get("cells", {}).items():
             r, c = map(int, key.split(","))
-            spreadsheet._cells[(r, c)] = Cell.from_dict(cell_data)
+            spreadsheet.set_cell_data(r, c, cell_data)
 
         if "named_ranges" in data:
             spreadsheet.named_ranges.from_dict(data["named_ranges"])

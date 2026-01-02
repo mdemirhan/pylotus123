@@ -256,6 +256,118 @@ class Spreadsheet:
         self._cache.clear()
         self._circular_refs.clear()
 
+    def invalidate_cache(self) -> None:
+        """Public method to clear the computation cache.
+
+        Call this after making changes that affect computed values.
+        """
+        self._invalidate_cache()
+
+    # -------------------------------------------------------------------------
+    # Cell Store Interface (for undo system and I/O)
+    # -------------------------------------------------------------------------
+
+    def get_cell_data(self, row: int, col: int) -> dict | None:
+        """Get cell data as a dictionary for serialization.
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+
+        Returns:
+            Dictionary representation of cell, or None if cell doesn't exist
+        """
+        cell = self._cells.get((row, col))
+        if cell is None:
+            return None
+        return cell.to_dict()
+
+    def set_cell_data(self, row: int, col: int, data: dict) -> None:
+        """Set cell from dictionary representation.
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+            data: Dictionary with cell data (from Cell.to_dict())
+        """
+        self._cells[(row, col)] = Cell.from_dict(data)
+
+    def remove_cell(self, row: int, col: int) -> None:
+        """Remove a cell from the spreadsheet.
+
+        Args:
+            row: 0-based row index
+            col: 0-based column index
+        """
+        self._cells.pop((row, col), None)
+
+    def iter_cells(self) -> "Iterator[tuple[int, int, Cell]]":
+        """Iterate over all cells.
+
+        Yields:
+            Tuples of (row, col, cell) for each cell
+        """
+        for (r, c), cell in self._cells.items():
+            yield r, c, cell
+
+    def get_cells_in_row(self, row: int) -> list[tuple[int, Cell]]:
+        """Get all cells in a specific row.
+
+        Args:
+            row: 0-based row index
+
+        Returns:
+            List of (col, cell) tuples for cells in the row
+        """
+        return [(c, cell) for (r, c), cell in self._cells.items() if r == row]
+
+    def get_cells_in_col(self, col: int) -> list[tuple[int, Cell]]:
+        """Get all cells in a specific column.
+
+        Args:
+            col: 0-based column index
+
+        Returns:
+            List of (row, cell) tuples for cells in the column
+        """
+        return [(r, cell) for (r, c), cell in self._cells.items() if c == col]
+
+    # -------------------------------------------------------------------------
+    # Bulk Accessors (for I/O)
+    # -------------------------------------------------------------------------
+
+    def get_all_col_widths(self) -> dict[int, int]:
+        """Get all custom column widths.
+
+        Returns:
+            Dictionary mapping column index to width
+        """
+        return dict(self._col_widths)
+
+    def set_all_col_widths(self, widths: dict[int, int]) -> None:
+        """Set all column widths.
+
+        Args:
+            widths: Dictionary mapping column index to width
+        """
+        self._col_widths = dict(widths)
+
+    def get_all_row_heights(self) -> dict[int, int]:
+        """Get all custom row heights.
+
+        Returns:
+            Dictionary mapping row index to height
+        """
+        return dict(self._row_heights)
+
+    def set_all_row_heights(self, heights: dict[int, int]) -> None:
+        """Set all row heights.
+
+        Args:
+            heights: Dictionary mapping row index to height
+        """
+        self._row_heights = dict(heights)
+
     def recalculate(self) -> None:
         """Force recalculation of all cells."""
         self._invalidate_cache()
@@ -714,16 +826,6 @@ class Spreadsheet:
     # -------------------------------------------------------------------------
     # Iteration
     # -------------------------------------------------------------------------
-
-    def iter_cells(self) -> Iterator[tuple[int, int, Cell]]:
-        """Iterate over all non-empty cells.
-
-        Yields:
-            Tuples of (row, col, cell)
-        """
-        for (row, col), cell in sorted(self._cells.items()):
-            if not cell.is_empty:
-                yield row, col, cell
 
     def get_used_range(self) -> tuple[tuple[int, int], tuple[int, int]] | None:
         """Get the bounding box of used cells.

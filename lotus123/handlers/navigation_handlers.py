@@ -43,7 +43,7 @@ class NavigationHandler(BaseHandler):
         grid.cursor_col = 0
         grid.scroll_col = 0
         grid.refresh_grid()
-        self._app._update_status()
+        self.update_status()
 
     def go_end(self) -> None:
         """Go to end of current row (last used cell)."""
@@ -56,7 +56,7 @@ class NavigationHandler(BaseHandler):
                 last_col = col
         grid.cursor_col = last_col
         grid.refresh_grid()
-        self._app._update_status()
+        self.update_status()
 
     def go_start(self) -> None:
         """Go to cell A1 (Ctrl+Home)."""
@@ -66,7 +66,7 @@ class NavigationHandler(BaseHandler):
         grid.scroll_row = 0
         grid.scroll_col = 0
         grid.refresh_grid()
-        self._app._update_status()
+        self.update_status()
 
     def go_last(self) -> None:
         """Go to last used cell (Ctrl+End)."""
@@ -82,7 +82,7 @@ class NavigationHandler(BaseHandler):
         grid.cursor_row = last_row
         grid.cursor_col = last_col
         grid.refresh_grid()
-        self._app._update_status()
+        self.update_status()
 
     def goto(self) -> None:
         """Show the goto dialog."""
@@ -91,4 +91,4 @@ class NavigationHandler(BaseHandler):
     def _do_goto(self, result: str | None) -> None:
         if result:
             self.get_grid().goto_cell(result.upper())
-            self._app._update_status()
+            self.update_status()

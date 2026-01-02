@@ -56,7 +56,7 @@ class WorksheetHandler(BaseHandler):
             composite = CompositeCommand(commands, f"Insert {count} rows")
             self.undo_manager.execute(composite)
         grid.refresh_grid()
-        self._app._mark_dirty()
+        self.mark_dirty()
         self.notify(f"{count} row(s) inserted at row {grid.cursor_row + 1}")
 
     def insert_columns(self) -> None:
@@ -90,7 +90,7 @@ class WorksheetHandler(BaseHandler):
             self.undo_manager.execute(composite)
         grid.recalculate_visible_area()
         grid.refresh_grid()
-        self._app._mark_dirty()
+        self.mark_dirty()
         self.notify(f"{count} column(s) inserted at column {index_to_col(grid.cursor_col)}")
 
     def delete_rows(self) -> None:
@@ -123,8 +123,8 @@ class WorksheetHandler(BaseHandler):
             composite = CompositeCommand(commands, f"Delete {count} rows")
             self.undo_manager.execute(composite)
         grid.refresh_grid()
-        self._app._update_status()
-        self._app._mark_dirty()
+        self.update_status()
+        self.mark_dirty()
         self.notify(f"{count} row(s) deleted starting at row {grid.cursor_row + 1}")
 
     def delete_columns(self) -> None:
@@ -158,8 +158,8 @@ class WorksheetHandler(BaseHandler):
             self.undo_manager.execute(composite)
         grid.recalculate_visible_area()
         grid.refresh_grid()
-        self._app._update_status()
-        self._app._mark_dirty()
+        self.update_status()
+        self.mark_dirty()
         self.notify(f"{count} column(s) deleted starting at column {index_to_col(grid.cursor_col)}")
 
     def set_column_width(self) -> None:
@@ -179,7 +179,7 @@ class WorksheetHandler(BaseHandler):
                 _, c1, _, c2 = grid.selection_range
                 for col in range(c1, c2 + 1):
                     self.spreadsheet.set_col_width(col, width)
-                self._app._mark_dirty()
+                self.mark_dirty()
                 grid.recalculate_visible_area()
                 grid.refresh_grid()
             except ValueError:
@@ -202,7 +202,7 @@ class WorksheetHandler(BaseHandler):
             self.notify(f"Invalid format: {result}", severity="error")
             return
         self._app.global_format_code = format_code
-        self._app._mark_dirty()
+        self.mark_dirty()
         self.notify(f"Default format set to {self._app.global_format_code}")
 
     def global_label_prefix(self) -> None:
@@ -218,7 +218,7 @@ class WorksheetHandler(BaseHandler):
         align_char = result.upper()[0] if result else "L"
         prefix_map = {"L": "'", "R": '"', "C": "^"}
         self._app.global_label_prefix = prefix_map.get(align_char, "'")
-        self._app._mark_dirty()
+        self.mark_dirty()
         align_names = {"'": "Left", '"': "Right", "^": "Center"}
         self.notify(
             f"Default label alignment set to {align_names.get(self._app.global_label_prefix, 'Left')}"
@@ -245,7 +245,7 @@ class WorksheetHandler(BaseHandler):
             grid.default_col_width = width
             grid.recalculate_visible_area()
             grid.refresh_grid()
-            self._app._mark_dirty()
+            self.mark_dirty()
             self.notify(f"Default column width set to {width}")
         except ValueError:
             self.notify("Invalid width", severity="error")
@@ -257,7 +257,7 @@ class WorksheetHandler(BaseHandler):
             self.notify("Recalculation: Manual (press F9 to recalculate)")
         else:
             self._app.recalc_mode = "auto"
-            self.spreadsheet._invalidate_cache()
+            self.spreadsheet.invalidate_cache()
             grid = self.get_grid()
             grid.refresh_grid()
             self.notify("Recalculation: Automatic")
@@ -268,7 +268,7 @@ class WorksheetHandler(BaseHandler):
         grid = self.get_grid()
         grid.show_zero = self._app.global_zero_display
         grid.refresh_grid()
-        self._app._mark_dirty()
+        self.mark_dirty()
         if self._app.global_zero_display:
             self.notify("Zero values: Displayed")
         else:
@@ -286,8 +286,8 @@ class WorksheetHandler(BaseHandler):
             self.undo_manager.clear()
             grid = self.get_grid()
             grid.refresh_grid()
-            self._app._update_status()
-            self._app._mark_dirty()
+            self.update_status()
+            self.mark_dirty()
             self.notify("Worksheet erased")
 
     def _normalize_format_code(self, code: str) -> str | None:

@@ -48,7 +48,7 @@ class ImportExportHandler(BaseHandler):
 
             # Update state
             self.spreadsheet.filename = ""  # Not a native file
-            self._app._dirty = True
+            self.is_dirty = True
             self.undo_manager.clear()
 
             # Refresh UI
@@ -58,8 +58,8 @@ class ImportExportHandler(BaseHandler):
             grid.scroll_row = 0
             grid.scroll_col = 0
             grid.refresh_grid()
-            self._app._update_status()
-            self._app._update_title()
+            self.update_status()
+            self.update_title()
 
             self.notify(f"Imported {row_count} rows from CSV")
 
@@ -150,7 +150,7 @@ class ImportExportHandler(BaseHandler):
 
             # Update state
             self.spreadsheet.filename = ""
-            self._app._dirty = True
+            self.is_dirty = True
             self.undo_manager.clear()
 
             # Refresh UI
@@ -160,8 +160,8 @@ class ImportExportHandler(BaseHandler):
             grid.scroll_row = 0
             grid.scroll_col = 0
             grid.refresh_grid()
-            self._app._update_status()
-            self._app._update_title()
+            self.update_status()
+            self.update_title()
 
             self.notify(f"Imported {row_count} rows from TSV")
 
@@ -248,7 +248,7 @@ class ImportExportHandler(BaseHandler):
 
             # Update state - keep filename empty since it's not native format
             self.spreadsheet.filename = ""
-            self._app._dirty = True
+            self.is_dirty = True
             self.undo_manager.clear()
 
             # Refresh UI
@@ -258,8 +258,8 @@ class ImportExportHandler(BaseHandler):
             grid.scroll_row = 0
             grid.scroll_col = 0
             grid.refresh_grid()
-            self._app._update_status()
-            self._app._update_title()
+            self.update_status()
+            self.update_title()
 
             self.notify(f"Imported from {Path(result).name}")
 
@@ -379,7 +379,7 @@ class ImportExportHandler(BaseHandler):
 
             # Update state
             self.spreadsheet.filename = ""  # Not a native file
-            self._app._dirty = True
+            self.is_dirty = True
             self.undo_manager.clear()
 
             # Refresh UI
@@ -389,8 +389,8 @@ class ImportExportHandler(BaseHandler):
             grid.scroll_row = 0
             grid.scroll_col = 0
             grid.refresh_grid()
-            self._app._update_status()
-            self._app._update_title()
+            self.update_status()
+            self.update_title()
 
             # Show result with warnings
             if warnings.has_warnings():

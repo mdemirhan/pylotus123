@@ -50,8 +50,8 @@ class RangeHandler(BaseHandler):
             cmd = RangeFormatCommand(spreadsheet=self.spreadsheet, changes=changes)
             self.undo_manager.execute(cmd)
         grid.refresh_grid()
-        self._app._update_status()
-        self._app._mark_dirty()
+        self.update_status()
+        self.mark_dirty()
         self.notify(f"Format set to {format_code}")
 
     def range_label(self) -> None:
@@ -83,8 +83,8 @@ class RangeHandler(BaseHandler):
             cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
             self.undo_manager.execute(cmd)
             grid.refresh_grid()
-            self._app._update_status()
-            self._app._mark_dirty()
+            self.update_status()
+            self.mark_dirty()
         align_names = {"L": "Left", "R": "Right", "C": "Center"}
         self.notify(f"Label alignment set to {align_names.get(align_char, 'Left')}")
 
@@ -106,7 +106,7 @@ class RangeHandler(BaseHandler):
             return
         try:
             self.spreadsheet.named_ranges.add_from_string(name, self.pending_range)
-            self._app._mark_dirty()
+            self.mark_dirty()
             self.notify(f"Named range '{name}' created for {self.pending_range}")
         except ValueError as e:
             self.notify(str(e), severity="error")

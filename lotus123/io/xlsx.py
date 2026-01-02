@@ -7,14 +7,12 @@ with bidirectional translation to ensure round-trip fidelity.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from .xlsx_format_translator import FormatTranslator
 from .xlsx_formula_translator import FormulaTranslator
 
 try:
-    import openpyxl
     from openpyxl import Workbook, load_workbook
     from openpyxl.styles import Alignment
     from openpyxl.utils import column_index_from_string, get_column_letter
@@ -206,12 +204,10 @@ class XlsxReader:
                 # Determine if this is a formula
                 # Note: Only treat as formula if data_type is "f" (formula)
                 # Don't treat strings starting with "=" as formulas if data_type is "s"
-                is_formula = False
                 raw_value = ""
 
                 if cell.data_type == "f":
                     # Formula cell
-                    is_formula = True
                     formula = (
                         cell.value
                         if isinstance(cell.value, str)

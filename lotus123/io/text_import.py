@@ -154,7 +154,7 @@ class TextImporter:
 
                 rows_imported += 1
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
         return rows_imported
 
     def _import_fixed_width(self, path: Path, options: ImportOptions) -> int:
@@ -197,7 +197,7 @@ class TextImporter:
 
                 rows_imported += 1
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
         return rows_imported
 
     def _detect_field_widths(self, path: Path) -> list[int]:
@@ -290,5 +290,5 @@ class TextImporter:
 
             rows_imported += 1
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
         return rows_imported

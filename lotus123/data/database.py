@@ -180,7 +180,7 @@ class DatabaseOperations:
                 cell.set_value(raw_val)
                 cell.format_code = fmt
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     def query(
         self,
@@ -259,7 +259,7 @@ class DatabaseOperations:
                     dest_cell.set_value(cell.raw_value)
                     dest_cell.format_code = cell.format_code
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
         return len(matching_rows)
 
     def delete_matching(

@@ -82,7 +82,7 @@ class FillOperations:
         else:  # AUTO
             self._fill_auto(start_row, start_col, end_row, end_col, direction)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     def _fill_linear(
         self,
@@ -368,7 +368,7 @@ class FillOperations:
                 # Copy with formula adjustment
                 self.spreadsheet.copy_cell(start_row, c, r, c, adjust_refs=True)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
 
     def fill_right(self, start_row: int, start_col: int, end_row: int, end_col: int) -> None:
         """Fill right from first column to remaining columns."""
@@ -381,4 +381,4 @@ class FillOperations:
                 # Copy with formula adjustment
                 self.spreadsheet.copy_cell(r, start_col, r, c, adjust_refs=True)
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()

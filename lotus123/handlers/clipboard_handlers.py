@@ -85,10 +85,10 @@ class ClipboardHandler(BaseHandler):
             if changes:
                 cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
                 self.undo_manager.execute(cmd)
-                self._app._mark_dirty()
+                self.mark_dirty()
                 grid = self.get_grid()
                 grid.refresh_grid()
-                self._app._update_status()
+                self.update_status()
                 self.notify(f"Copied {len(changes)} cell(s)")
         except ValueError as e:
             self.notify(f"Invalid destination: {e}", severity="error")
@@ -127,13 +127,13 @@ class ClipboardHandler(BaseHandler):
             if changes:
                 cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
                 self.undo_manager.execute(cmd)
-                self._app._mark_dirty()
+                self.mark_dirty()
                 grid = self.get_grid()
                 grid.clear_selection()
                 grid.cursor_row = dest_row
                 grid.cursor_col = dest_col
                 grid.refresh_grid()
-                self._app._update_status()
+                self.update_status()
                 self.notify(f"Moved cells to {make_cell_ref(dest_row, dest_col)}")
         except ValueError as e:
             self.notify(f"Invalid destination: {e}", severity="error")
@@ -197,9 +197,9 @@ class ClipboardHandler(BaseHandler):
                     old_value=old_value,
                 )
                 self.undo_manager.execute(cmd)
-                self._app._mark_dirty()
+                self.mark_dirty()
                 grid.refresh_grid()
-                self._app._update_status()
+                self.update_status()
                 self.notify("Pasted")
             return
 
@@ -235,7 +235,7 @@ class ClipboardHandler(BaseHandler):
                 spreadsheet=self.spreadsheet, changes=changes
             )
             self.undo_manager.execute(range_cmd)
-            self._app._mark_dirty()
+            self.mark_dirty()
         if self.clipboard_is_cut:
             clear_changes = []
             for r_offset, row_data in enumerate(self.range_clipboard):
@@ -249,10 +249,10 @@ class ClipboardHandler(BaseHandler):
                     spreadsheet=self.spreadsheet, changes=clear_changes
                 )
                 self.undo_manager.execute(clear_cmd)
-                self._app._mark_dirty()
+                self.mark_dirty()
             self.clipboard_is_cut = False
         grid.refresh_grid()
-        self._app._update_status()
+        self.update_status()
         cells_count = (
             len(self.range_clipboard) * len(self.range_clipboard[0])
             if self.range_clipboard

@@ -478,7 +478,7 @@ class LotusApp(App[None]):
                 cell_input.value = new_value
 
     def action_recalculate(self) -> None:
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
         grid = self.query_one("#grid", SpreadsheetGrid)
         grid.refresh_grid()
         self._update_status()

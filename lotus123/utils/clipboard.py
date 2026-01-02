@@ -179,7 +179,7 @@ class Clipboard:
             # Clear clipboard after cut-paste
             self.clear()
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
         return modified
 
     def paste_special(
@@ -240,7 +240,7 @@ class Clipboard:
 
             modified.append((target_row, target_col))
 
-        self.spreadsheet._invalidate_cache()
+        self.spreadsheet.invalidate_cache()
         return modified
 
     def clear(self) -> None:

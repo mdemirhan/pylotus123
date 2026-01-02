@@ -51,7 +51,7 @@ class FileHandler(BaseHandler):
             prompt: The confirmation prompt message
             on_proceed: Callback to execute after saving or declining to save
         """
-        if self._app._dirty:
+        if self.is_dirty:
             self._pending_action = on_proceed
             self._app.push_screen(
                 CommandInput(prompt),
@@ -103,7 +103,7 @@ class FileHandler(BaseHandler):
         self.spreadsheet.clear()
         self.spreadsheet.filename = ""
         self.undo_manager.clear()
-        self._app._dirty = False
+        self.is_dirty = False
 
         # Reset global settings to defaults
         self._app.global_format_code = "G"
@@ -121,8 +121,8 @@ class FileHandler(BaseHandler):
         grid.recalculate_visible_area()
         grid.refresh_grid()
 
-        self._app._update_status()
-        self._app._update_title()
+        self.update_status()
+        self.update_title()
         self.notify("New spreadsheet created")
 
     def open_file(self) -> None:
@@ -141,13 +141,13 @@ class FileHandler(BaseHandler):
             if path.exists():
                 self.spreadsheet.load(str(path))
                 self.undo_manager.clear()
-                self._app._dirty = False
+                self.is_dirty = False
                 # Restore global settings from loaded file
                 self._sync_global_settings_from_spreadsheet()
                 grid = self.get_grid()
                 grid.refresh_grid()
-                self._app._update_status()
-                self._app._update_title()
+                self.update_status()
+                self.update_title()
                 self._app.config.add_recent_file(str(path))
                 self._app.config.save()
                 self.notify(f"Loaded: {path}")
@@ -179,7 +179,7 @@ class FileHandler(BaseHandler):
         try:
             self.spreadsheet.load(result)
             self.undo_manager.clear()
-            self._app._dirty = False
+            self.is_dirty = False
             # Restore global settings from loaded file
             self._sync_global_settings_from_spreadsheet()
             grid = self.get_grid()
@@ -191,8 +191,8 @@ class FileHandler(BaseHandler):
             grid.cursor_col = 0
             grid.recalculate_visible_area()
             grid.refresh_grid()
-            self._app._update_status()
-            self._app._update_title()
+            self.update_status()
+            self.update_title()
             self._app.config.add_recent_file(result)
             self._app.config.save()
             self.notify(f"Loaded: {result}")
@@ -299,7 +299,7 @@ class FileHandler(BaseHandler):
     def _finalize_import(self, message: str, severity: str = "information") -> None:
         """Finalize an import operation and refresh the UI."""
         self.spreadsheet.filename = ""  # Not a native file
-        self._app._dirty = True
+        self.is_dirty = True
         self.undo_manager.clear()
 
         grid = self.get_grid()
@@ -309,8 +309,8 @@ class FileHandler(BaseHandler):
         grid.scroll_col = 0
         grid.recalculate_visible_area()
         grid.refresh_grid()
-        self._app._update_status()
-        self._app._update_title()
+        self.update_status()
+        self.update_title()
 
         self.notify(message, severity=severity)
 
@@ -319,8 +319,8 @@ class FileHandler(BaseHandler):
         if self.spreadsheet.filename:
             self._sync_global_settings_to_spreadsheet()
             self.spreadsheet.save(self.spreadsheet.filename)
-            self._app._dirty = False
-            self._app._update_title()
+            self.is_dirty = False
+            self.update_title()
             self.notify(f"Saved: {self.spreadsheet.filename}")
         else:
             self.save_as()
@@ -353,8 +353,8 @@ class FileHandler(BaseHandler):
         try:
             self._sync_global_settings_to_spreadsheet()
             self.spreadsheet.save(filepath)
-            self._app._dirty = False
-            self._app._update_title()
+            self.is_dirty = False
+            self.update_title()
             self.notify(f"Saved: {filepath}")
         except PermissionError:
             self.notify(f"Permission denied: {filepath}", severity="error")
@@ -372,7 +372,7 @@ class FileHandler(BaseHandler):
             self._app.current_theme_type = result
             self._app.color_theme = THEMES[result]
             self._app.sub_title = f"Theme: {self._app.color_theme.name}"
-            self._app._apply_theme()
+            self.apply_theme()
             self._app.config.theme = result.name
             self._app.config.save()
             self.notify(f"Theme changed to {self._app.color_theme.name}")

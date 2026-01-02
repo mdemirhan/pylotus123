@@ -130,3 +130,33 @@ class BaseHandler:
         from ..ui import SpreadsheetGrid
 
         return self._app.query_one("#grid", SpreadsheetGrid)
+
+    # --- App state management methods ---
+    # These provide a clean interface for handlers to interact with app state
+    # without directly accessing protected members.
+
+    def update_status(self) -> None:
+        """Update the status bar and cell reference display."""
+        self._app._update_status()
+
+    def update_title(self) -> None:
+        """Update the window title."""
+        self._app._update_title()
+
+    def mark_dirty(self) -> None:
+        """Mark the spreadsheet as having unsaved changes."""
+        self._app._mark_dirty()
+
+    def apply_theme(self) -> None:
+        """Apply the current theme to all widgets."""
+        self._app._apply_theme()
+
+    @property
+    def is_dirty(self) -> bool:
+        """Check if the spreadsheet has unsaved changes."""
+        return self._app._dirty
+
+    @is_dirty.setter
+    def is_dirty(self, value: bool) -> None:
+        """Set the dirty state of the spreadsheet."""
+        self._app._dirty = value
