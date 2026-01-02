@@ -91,7 +91,7 @@ class LotusMenu(Static, can_focus=True):
                     ],
                 ),
                 (
-                    "E",
+                    "x",
                     "Export",
                     [
                         ("C", "CSV"),

@@ -16,9 +16,15 @@ if TYPE_CHECKING:
 class FileHandler(BaseHandler):
     """Handler for file operations (new, open, save, quit, theme)."""
 
+    # Extensions for importable formats (non-native)
+    IMPORT_EXTENSIONS = (".csv", ".tsv", ".wk1", ".wks", ".xlsx", ".xls")
+    # All supported extensions for open dialog
+    OPEN_EXTENSIONS = [".json"] + list(IMPORT_EXTENSIONS)
+
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)
         self._pending_xlsx_import_path: str = ""
+        self._pending_open_path: str = ""  # File path selected in open dialog
         self._pending_action: Callable[[], None] | None = None  # Callback for after save confirmation
 
     def _sync_global_settings_to_spreadsheet(self) -> None:
@@ -120,73 +126,68 @@ class FileHandler(BaseHandler):
 
     def open_file(self) -> None:
         """Show the file open dialog."""
-        # Supported formats: JSON (native), XLSX, CSV, TSV
-        supported_extensions = [".json", ".xlsx", ".xls", ".csv", ".tsv", ".wk1", ".wks"]
         self._app.push_screen(
-            FileDialog(mode="open", file_extensions=supported_extensions),
+            FileDialog(mode="open", file_extensions=self.OPEN_EXTENSIONS),
             self._do_open,
         )
 
     def load_initial_file(self, filepath: str) -> None:
-        """Load a file specified at startup."""
-        try:
-            path = Path(filepath)
-            if path.exists():
-                self.spreadsheet.load(str(path))
-                self.undo_manager.clear()
-                self.is_dirty = False
-                # Restore global settings from loaded file
-                self._sync_global_settings_from_spreadsheet()
-                self.reset_view()
-                self._app.config.add_recent_file(str(path))
-                self._app.config.save()
-                self.notify(f"Loaded: {path}")
-            else:
-                self.notify(f"File not found: {filepath}", severity="error")
-        except FileNotFoundError:
+        """Load a file specified at startup.
+
+        Supports JSON (native), XLSX, CSV, TSV, and WK1 formats.
+        """
+        if not Path(filepath).exists():
             self.notify(f"File not found: {filepath}", severity="error")
-        except PermissionError:
-            self.notify(f"Permission denied: {filepath}", severity="error")
-        except json.JSONDecodeError:
-            self.notify(f"Invalid file format: {filepath}", severity="error")
-        except (OSError, IOError) as e:
-            self.notify(f"Error reading file: {e}", severity="error")
+            return
+        self._load_file(filepath)
 
     def _do_open(self, result: str | None) -> None:
+        """Handle file open dialog result."""
         if not result:
             return
+        self._pending_open_path = result
+        self._confirm_save_if_dirty(
+            "Save changes before opening another file? (Y/N/C=Cancel):",
+            self._do_open_after_save,
+        )
 
-        # Detect file type by extension
-        path = Path(result)
+    def _do_open_after_save(self) -> None:
+        """Load the pending file after save confirmation."""
+        if self._pending_open_path:
+            self._load_file(self._pending_open_path)
+            self._pending_open_path = ""
+
+    def _load_file(self, filepath: str) -> None:
+        """Load a file by path, detecting format by extension."""
+        path = Path(filepath)
         ext = path.suffix.lower()
 
         # Handle non-JSON files as imports
-        if ext in (".csv", ".tsv", ".wk1", ".xlsx"):
-            self._import_non_json_file(result, ext)
+        if ext in self.IMPORT_EXTENSIONS:
+            self._import_non_json_file(filepath, ext)
             return
 
         # Handle JSON (native) format
         try:
-            self.spreadsheet.load(result)
+            self.spreadsheet.load(filepath)
             self.undo_manager.clear()
             self.is_dirty = False
-            # Restore global settings from loaded file
             self._sync_global_settings_from_spreadsheet()
             self.reset_view()
-            self._app.config.add_recent_file(result)
+            self._app.config.add_recent_file(filepath)
             self._app.config.save()
-            self.notify(f"Loaded: {result}")
+            self.notify(f"Loaded: {filepath}")
         except FileNotFoundError:
-            self.notify(f"File not found: {result}", severity="error")
+            self.notify(f"File not found: {filepath}", severity="error")
         except PermissionError:
-            self.notify(f"Permission denied: {result}", severity="error")
+            self.notify(f"Permission denied: {filepath}", severity="error")
         except (json.JSONDecodeError, UnicodeDecodeError):
-            self.notify(f"Invalid file format: {result}", severity="error")
+            self.notify(f"Invalid file format: {filepath}", severity="error")
         except (OSError, IOError) as e:
             self.notify(f"Error reading file: {e}", severity="error")
 
     def _import_non_json_file(self, filepath: str, ext: str) -> None:
-        """Import a non-JSON file format (CSV, TSV, WK1, XLSX).
+        """Import a non-JSON file format (CSV, TSV, WK1/WKS, XLSX/XLS).
 
         This is called when the user opens a non-JSON file.
         The file is imported, not opened - save will require Save As.
@@ -215,15 +216,15 @@ class FileHandler(BaseHandler):
                 importer.import_file(filepath, options)
                 self._finalize_import(f"Imported {filename}. Use 'Save As' to save as Lotus JSON.")
 
-            elif ext == ".wk1":
+            elif ext in (".wk1", ".wks"):
                 from ..io.wk1 import Wk1Reader
 
                 reader = Wk1Reader(self.spreadsheet)
                 reader.load(filepath)
                 self._finalize_import(f"Imported {filename}. Use 'Save As' to save as Lotus JSON.")
 
-            elif ext == ".xlsx":
-                # For XLSX, we may need to show sheet selection dialog
+            elif ext in (".xlsx", ".xls"):
+                # For XLSX/XLS, we may need to show sheet selection dialog
                 from ..io.xlsx import get_xlsx_sheet_names
 
                 self._pending_xlsx_import_path = filepath

@@ -432,19 +432,26 @@ class XlsxWriter:
                 else:
                     display_value = raw
 
-                # Try to convert to number
-                try:
-                    # Check for integer
-                    if "." not in display_value and "e" not in display_value.lower():
-                        excel_cell.value = int(display_value)
-                    else:
-                        excel_cell.value = float(display_value)
-                except (ValueError, TypeError):
-                    # For text that starts with formula-like characters,
-                    # set value and mark as string to prevent interpretation as formula
+                # If there's an explicit alignment prefix, treat as text
+                # (user intentionally marked this as a label, e.g., '2023 means text "2023")
+                if alignment_prefix:
                     excel_cell.value = display_value
                     if display_value and display_value[0] in ("=", "+", "-", "@"):
                         excel_cell.data_type = "s"  # Explicitly set as string
+                else:
+                    # Try to convert to number (no prefix = auto-detect type)
+                    try:
+                        # Check for integer
+                        if "." not in display_value and "e" not in display_value.lower():
+                            excel_cell.value = int(display_value)
+                        else:
+                            excel_cell.value = float(display_value)
+                    except (ValueError, TypeError):
+                        # For text that starts with formula-like characters,
+                        # set value and mark as string to prevent interpretation as formula
+                        excel_cell.value = display_value
+                        if display_value and display_value[0] in ("=", "+", "-", "@"):
+                            excel_cell.data_type = "s"  # Explicitly set as string
 
                 # Apply alignment
                 if alignment_prefix and alignment_prefix in PREFIX_TO_ALIGNMENT:
