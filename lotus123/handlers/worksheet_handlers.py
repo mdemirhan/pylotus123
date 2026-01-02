@@ -9,6 +9,7 @@ from ..core.formatting import normalize_format_code
 from ..formula.recalc import RecalcMode
 from ..ui import CommandInput
 from ..utils.undo import (
+    ColWidthCommand,
     Command,
     CompositeCommand,
     DeleteColCommand,
@@ -179,11 +180,18 @@ class WorksheetHandler(BaseHandler):
                     return
                 grid = self.get_grid()
                 _, c1, _, c2 = grid.selection_range
+                # Build changes dict: col -> (new_width, old_width)
+                changes: dict[int, tuple[int, int]] = {}
                 for col in range(c1, c2 + 1):
-                    self.spreadsheet.set_col_width(col, width)
-                self.mark_dirty()
-                grid.recalculate_visible_area()
-                grid.refresh_grid()
+                    old_width = self.spreadsheet.get_col_width(col)
+                    if old_width != width:
+                        changes[col] = (width, old_width)
+                if changes:
+                    cmd = ColWidthCommand(self.spreadsheet, changes)
+                    self.undo_manager.execute(cmd)
+                    self.mark_dirty()
+                    grid.recalculate_visible_area()
+                    grid.refresh_grid()
             except ValueError:
                 self.notify("Invalid width value", severity="error")
 

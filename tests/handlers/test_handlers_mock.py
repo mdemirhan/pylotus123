@@ -13,6 +13,8 @@ class MockApp:
         self.spreadsheet.cols = 26
         self.spreadsheet.get_cell.return_value = MagicMock(spec=Cell, raw_value="123")
         self.spreadsheet.get_cell_if_exists.return_value = MagicMock(spec=Cell, raw_value="123")
+        self.spreadsheet.get_col_width.return_value = 10  # Default column width
+        self.spreadsheet.modified = False
         # Global settings mock
         self.spreadsheet.global_settings = {
             "format_code": "G",
@@ -39,11 +41,10 @@ class MockApp:
         self.global_col_width = 9
         self.recalc_mode = "auto"
         self.global_zero_display = True
-        self._dirty = False
 
     def _update_status(self): pass
     def _update_title(self): pass
-    def _mark_dirty(self): self._dirty = True
+    def _mark_dirty(self): self.spreadsheet.modified = True
 
 class TestClipboardHandler:
     def setup_method(self):
@@ -187,36 +188,42 @@ class TestWorksheetHandler:
 
     def test_do_set_width_single_column(self):
         """Test setting width for a single column."""
+        from lotus123.utils.undo import ColWidthCommand
         # Set selection to single column (A1:A3)
         self.app.grid.selection_range = (0, 0, 2, 0)
         self.handler._do_set_width("15")
-        # Should set width for column 0
-        self.app.spreadsheet.set_col_width.assert_called_once_with(0, 15)
-        assert self.app._dirty is True
+        # Should execute a ColWidthCommand via undo manager
+        self.app.undo_manager.execute.assert_called_once()
+        cmd = self.app.undo_manager.execute.call_args[0][0]
+        assert isinstance(cmd, ColWidthCommand)
+        assert cmd.changes == {0: (15, 10)}  # new=15, old=10
+        assert self.app.spreadsheet.modified is True
 
     def test_do_set_width_multiple_columns(self):
         """Test setting width for multiple selected columns."""
+        from lotus123.utils.undo import ColWidthCommand
         # Set selection to columns A-C (A1:C3)
         self.app.grid.selection_range = (0, 0, 2, 2)
         self.handler._do_set_width("12")
-        # Should set width for columns 0, 1, 2
-        assert self.app.spreadsheet.set_col_width.call_count == 3
-        self.app.spreadsheet.set_col_width.assert_any_call(0, 12)
-        self.app.spreadsheet.set_col_width.assert_any_call(1, 12)
-        self.app.spreadsheet.set_col_width.assert_any_call(2, 12)
-        assert self.app._dirty is True
+        # Should execute a ColWidthCommand via undo manager
+        self.app.undo_manager.execute.assert_called_once()
+        cmd = self.app.undo_manager.execute.call_args[0][0]
+        assert isinstance(cmd, ColWidthCommand)
+        # All 3 columns should be in changes (new=12, old=10)
+        assert cmd.changes == {0: (12, 10), 1: (12, 10), 2: (12, 10)}
+        assert self.app.spreadsheet.modified is True
 
     def test_do_set_width_invalid_value(self):
         """Test setting width with invalid value."""
         self.handler._do_set_width("abc")
         self.app.notify.assert_called_with("Invalid width value", severity="error")
-        self.app.spreadsheet.set_col_width.assert_not_called()
+        self.app.undo_manager.execute.assert_not_called()
 
     def test_do_set_width_out_of_range(self):
         """Test setting width outside valid range."""
         self.handler._do_set_width("2")  # Less than 3
         self.app.notify.assert_called_with("Width must be between 3 and 50", severity="error")
-        self.app.spreadsheet.set_col_width.assert_not_called()
+        self.app.undo_manager.execute.assert_not_called()
 
         self.app.notify.reset_mock()
         self.handler._do_set_width("51")  # Greater than 50
@@ -233,7 +240,7 @@ class TestFileHandler:
         with patch('lotus123.handlers.file_handlers.FileDialog'):
             self.handler.save()
             # If filename set, simply notifies
-            assert self.app._dirty is False
+            assert self.app.spreadsheet.modified is False
 
     def test_retrieve(self):
         with patch('lotus123.handlers.file_handlers.FileDialog'):

@@ -378,6 +378,38 @@ class RangeFormatCommand(Command):
         return f"Format {len(self.changes)} cells"
 
 
+@dataclass
+class ColWidthCommand(Command):
+    """Command for changing column widths."""
+
+    spreadsheet: Spreadsheet
+    changes: dict[int, tuple[int, int]] = field(default_factory=dict)
+    # Dict mapping col -> (new_width, old_width)
+
+    def execute(self) -> None:
+        """Apply new widths."""
+        for col, (new_width, _) in self.changes.items():
+            self.spreadsheet.set_col_width(col, new_width)
+
+    def undo(self) -> None:
+        """Restore old widths."""
+        for col, (_, old_width) in self.changes.items():
+            self.spreadsheet.set_col_width(col, old_width)
+
+    def redo(self) -> None:
+        """Apply new widths again."""
+        self.execute()
+
+    @property
+    def description(self) -> str:
+        if len(self.changes) == 1:
+            col = next(iter(self.changes.keys()))
+            from ..core.reference import index_to_col
+
+            return f"Set column {index_to_col(col)} width"
+        return f"Set {len(self.changes)} column widths"
+
+
 class CompositeCommand(Command):
     """Command that groups multiple commands."""
 
