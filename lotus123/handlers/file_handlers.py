@@ -144,7 +144,7 @@ class FileHandler(BaseHandler):
             self.notify(f"File not found: {result}", severity="error")
         except PermissionError:
             self.notify(f"Permission denied: {result}", severity="error")
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, UnicodeDecodeError):
             self.notify(f"Invalid file format: {result}", severity="error")
         except (OSError, IOError) as e:
             self.notify(f"Error reading file: {e}", severity="error")
