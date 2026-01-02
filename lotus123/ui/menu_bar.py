@@ -151,6 +151,12 @@ class LotusMenu(Static, can_focus=True):
                 ),
             ],
         },
+        "System": {
+            "key": "S",
+            "items": [
+                ("T", "Theme"),
+            ],
+        },
         "Quit": {"key": "Q", "items": [("Y", "Yes"), ("N", "No")]},
     }
 
@@ -165,6 +171,7 @@ class LotusMenu(Static, can_focus=True):
     def set_theme(self, theme: Theme) -> None:
         """Update the menu's theme."""
         self.theme = theme
+        self.styles.background = theme.menu_bg
         self._update_display()
 
     def on_mount(self) -> None:

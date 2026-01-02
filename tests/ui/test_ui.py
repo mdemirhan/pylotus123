@@ -31,6 +31,7 @@ class TestLotusMenu:
         assert "File" in menu.MENU_STRUCTURE
         assert "Graph" in menu.MENU_STRUCTURE
         assert "Data" in menu.MENU_STRUCTURE
+        assert "System" in menu.MENU_STRUCTURE
         assert "Quit" in menu.MENU_STRUCTURE
 
     def test_menu_keys(self):
@@ -43,6 +44,7 @@ class TestLotusMenu:
         assert menu.MENU_STRUCTURE["Worksheet"]["key"] == "W"
         assert menu.MENU_STRUCTURE["Range"]["key"] == "R"
         assert menu.MENU_STRUCTURE["File"]["key"] == "F"
+        assert menu.MENU_STRUCTURE["System"]["key"] == "S"
         assert menu.MENU_STRUCTURE["Quit"]["key"] == "Q"
 
     def test_file_menu_items(self):
@@ -71,6 +73,10 @@ class TestThemeSystem:
         assert ThemeType.LOTUS in THEMES
         assert ThemeType.TOMORROW in THEMES
         assert ThemeType.MOCHA in THEMES
+        assert ThemeType.NORD in THEMES
+        assert ThemeType.GRUVBOX in THEMES
+        assert ThemeType.TOKYO_NIGHT in THEMES
+        assert ThemeType.TEXTUAL_DARK in THEMES
 
     def test_theme_has_all_colors(self):
         """Test each theme has all required color properties."""
@@ -117,6 +123,10 @@ class TestThemeSystem:
         assert get_theme_type("LOTUS") == ThemeType.LOTUS
         assert get_theme_type("TOMORROW") == ThemeType.TOMORROW
         assert get_theme_type("MOCHA") == ThemeType.MOCHA
+        assert get_theme_type("NORD") == ThemeType.NORD
+        assert get_theme_type("GRUVBOX") == ThemeType.GRUVBOX
+        assert get_theme_type("TOKYO_NIGHT") == ThemeType.TOKYO_NIGHT
+        assert get_theme_type("TEXTUAL_DARK") == ThemeType.TEXTUAL_DARK
         assert get_theme_type("INVALID") == ThemeType.LOTUS  # Default
 
 
@@ -475,3 +485,57 @@ class TestDialogs:
 
         save_dialog = FileDialog(mode="save")
         assert save_dialog.mode == "save"
+
+    def test_file_dialog_with_extensions(self):
+        """Test FileDialog with file extension filtering."""
+        from lotus123.ui import FileDialog
+
+        dialog = FileDialog(mode="open", file_extensions=[".json", ".chart"])
+        assert dialog._file_extensions == [".json", ".chart"]
+
+    def test_file_dialog_save_initial_filename(self):
+        """Test FileDialog save mode prepares initial filename with extension."""
+        from lotus123.ui import FileDialog
+
+        # When creating save dialog with extensions, it stores the extensions
+        dialog = FileDialog(mode="save", file_extensions=[".chart"])
+        assert dialog._file_extensions == [".chart"]
+        # The actual initial filename is set during compose
+
+    def test_file_dialog_initial_path(self):
+        """Test FileDialog respects initial path."""
+        from lotus123.ui import FileDialog
+
+        dialog = FileDialog(mode="open", initial_path="/tmp")
+        assert dialog.initial_path == "/tmp"
+
+        dialog2 = FileDialog(mode="open", initial_path=".")
+        assert dialog2.initial_path == "."
+
+    def test_filtered_directory_tree_extensions(self):
+        """Test FilteredDirectoryTree filters by file extension."""
+        from pathlib import Path
+
+        from lotus123.ui.dialogs.file_dialog import FilteredDirectoryTree
+
+        tree = FilteredDirectoryTree(".", extensions=[".json", "chart"])
+        # Extensions should be normalized with leading dot
+        assert tree._extensions == {".json", ".chart"}
+
+    def test_filtered_directory_tree_show_all(self):
+        """Test FilteredDirectoryTree show_all toggle."""
+        from lotus123.ui.dialogs.file_dialog import FilteredDirectoryTree
+
+        tree = FilteredDirectoryTree(".", extensions=[".json"])
+        assert tree._show_all is False
+        tree._show_all = True
+        assert tree._show_all is True
+
+    def test_file_dialog_tracks_current_path(self):
+        """Test FileDialog tracks current path."""
+        from pathlib import Path
+
+        from lotus123.ui import FileDialog
+
+        dialog = FileDialog(mode="open", initial_path="/tmp")
+        assert dialog._current_path == Path("/tmp").resolve()

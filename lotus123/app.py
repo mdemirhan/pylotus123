@@ -281,6 +281,8 @@ class LotusApp(App[None]):
 
     def _apply_theme(self) -> None:
         """Apply the current theme to all widgets."""
+        from textual.widgets import Footer
+
         t = THEMES[self.current_theme_type]
         self.color_theme = t
         self.stylesheet.add_source(self._generate_css())
@@ -297,10 +299,17 @@ class LotusApp(App[None]):
             grid = self.query_one("#grid", SpreadsheetGrid)
             grid.set_theme(t)
 
+            self.query_one("#grid-container").styles.background = t.cell_bg
+
             self.query_one("#status-bar").styles.background = t.status_bg
             self.query_one("#status-bar").styles.color = t.status_fg
 
             self.query_one("#cell-input-container").styles.background = t.background
+
+            # Update Footer (bottom bar with keyboard shortcuts)
+            footer = self.query_one(Footer)
+            footer.styles.background = t.menu_bg
+            footer.styles.color = t.menu_fg
         except NoMatches:
             pass
 
@@ -670,6 +679,9 @@ class LotusApp(App[None]):
             self._import_export_handler.export_wk1()
         elif result == "File:Export:XLSX":
             self._import_export_handler.export_xlsx()
+        # System menu
+        elif result == "System:Theme":
+            self._file_handler.change_theme()
 
     def on_key(self, event: events.Key) -> None:
         """Handle key presses for navigation and direct cell input."""

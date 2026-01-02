@@ -74,7 +74,7 @@ class ImportExportHandler(BaseHandler):
         """Show file dialog to export to CSV."""
         self._pending_export_format = "csv"
         self._app.push_screen(
-            FileDialog(mode="save", title="Export CSV"),
+            FileDialog(mode="save", title="Export CSV", file_extensions=[".csv"]),
             self._do_export_csv,
         )
 
@@ -176,7 +176,7 @@ class ImportExportHandler(BaseHandler):
         """Show file dialog to export to TSV."""
         self._pending_export_format = "tsv"
         self._app.push_screen(
-            FileDialog(mode="save", title="Export TSV"),
+            FileDialog(mode="save", title="Export TSV", file_extensions=[".tsv"]),
             self._do_export_tsv,
         )
 
@@ -276,7 +276,7 @@ class ImportExportHandler(BaseHandler):
         """Show file dialog to export to Lotus WK1 format."""
         self._pending_export_format = "wk1"
         self._app.push_screen(
-            FileDialog(mode="save", title="Export Lotus 1-2-3"),
+            FileDialog(mode="save", title="Export Lotus 1-2-3", file_extensions=[".wk1"]),
             self._do_export_wk1,
         )
 
@@ -414,7 +414,7 @@ class ImportExportHandler(BaseHandler):
         """Show file dialog to export to Excel XLSX format."""
         self._pending_export_format = "xlsx"
         self._app.push_screen(
-            FileDialog(mode="save", title="Export Excel XLSX"),
+            FileDialog(mode="save", title="Export Excel XLSX", file_extensions=[".xlsx"]),
             self._do_export_xlsx,
         )
 

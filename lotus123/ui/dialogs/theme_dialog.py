@@ -41,6 +41,10 @@ class ThemeDialog(ModalScreen[ThemeType | None]):
         Binding("1", "select_1", "1", show=False),
         Binding("2", "select_2", "2", show=False),
         Binding("3", "select_3", "3", show=False),
+        Binding("4", "select_4", "4", show=False),
+        Binding("5", "select_5", "5", show=False),
+        Binding("6", "select_6", "6", show=False),
+        Binding("7", "select_7", "7", show=False),
     ]
 
     CSS = """
@@ -50,7 +54,7 @@ class ThemeDialog(ModalScreen[ThemeType | None]):
 
     #theme-dialog-container {
         width: 50;
-        height: 15;
+        height: 20;
         padding: 1 2;
     }
 
@@ -79,14 +83,15 @@ class ThemeDialog(ModalScreen[ThemeType | None]):
         self._theme_types = list(THEMES.keys())
 
     def compose(self) -> ComposeResult:
+        num_themes = len(self._theme_types)
         with Container(id="theme-dialog-container"):
-            yield Label("[bold]Select Theme (1-3 or Enter)[/bold]", id="theme-title")
-            yield ListView(
-                ThemeItem(ThemeType.LOTUS, THEMES[ThemeType.LOTUS], id="theme-lotus"),
-                ThemeItem(ThemeType.TOMORROW, THEMES[ThemeType.TOMORROW], id="theme-tomorrow"),
-                ThemeItem(ThemeType.MOCHA, THEMES[ThemeType.MOCHA], id="theme-mocha"),
-                id="theme-list",
-            )
+            yield Label(f"[bold]Select Theme (1-{num_themes} or Enter)[/bold]", id="theme-title")
+            # Dynamically create theme items for all available themes
+            theme_items = [
+                ThemeItem(theme_type, THEMES[theme_type], id=f"theme-{theme_type.name.lower()}")
+                for theme_type in self._theme_types
+            ]
+            yield ListView(*theme_items, id="theme-list")
             with Horizontal(id="dialog-buttons"):
                 yield Button("OK", id="ok-btn", variant="primary")
                 yield Button("Cancel", id="cancel-btn")
@@ -123,14 +128,31 @@ class ThemeDialog(ModalScreen[ThemeType | None]):
     def action_cursor_down(self) -> None:
         self.query_one("#theme-list", ListView).action_cursor_down()
 
+    def _select_by_index(self, index: int) -> None:
+        """Select theme by index (0-based)."""
+        if 0 <= index < len(self._theme_types):
+            self.dismiss(self._theme_types[index])
+
     def action_select_1(self) -> None:
-        self.dismiss(ThemeType.LOTUS)
+        self._select_by_index(0)
 
     def action_select_2(self) -> None:
-        self.dismiss(ThemeType.TOMORROW)
+        self._select_by_index(1)
 
     def action_select_3(self) -> None:
-        self.dismiss(ThemeType.MOCHA)
+        self._select_by_index(2)
+
+    def action_select_4(self) -> None:
+        self._select_by_index(3)
+
+    def action_select_5(self) -> None:
+        self._select_by_index(4)
+
+    def action_select_6(self) -> None:
+        self._select_by_index(5)
+
+    def action_select_7(self) -> None:
+        self._select_by_index(6)
 
     @on(ListView.Selected)
     def on_list_selected(self, event: ListView.Selected) -> None:

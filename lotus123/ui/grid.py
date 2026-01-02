@@ -176,6 +176,7 @@ class SpreadsheetGrid(Static, can_focus=True):
     def set_theme(self, theme: Theme) -> None:
         """Update the grid's theme."""
         self.theme = theme
+        self.styles.background = theme.cell_bg
         self.refresh_grid()
 
     def _align_value(self, value: str, width: int, row: int, col: int) -> str:

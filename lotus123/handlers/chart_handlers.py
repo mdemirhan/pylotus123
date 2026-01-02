@@ -186,7 +186,10 @@ class ChartHandler(BaseHandler):
         if not self.chart.series:
             self.notify("No chart data to save. Define data ranges first.")
             return
-        self._app.push_screen(FileDialog(mode="save"), self._do_save_chart)
+        self._app.push_screen(
+            FileDialog(mode="save", file_extensions=[".chart"]),
+            self._do_save_chart,
+        )
 
     def _do_save_chart(self, result: str | None) -> None:
         """Handle the save chart dialog result."""
@@ -221,7 +224,10 @@ class ChartHandler(BaseHandler):
 
     def load_chart(self) -> None:
         """Load a chart configuration from a file."""
-        self._app.push_screen(FileDialog(mode="open"), self._do_load_chart)
+        self._app.push_screen(
+            FileDialog(mode="open", file_extensions=[".chart"]),
+            self._do_load_chart,
+        )
 
     def _do_load_chart(self, result: str | None) -> None:
         """Handle the load chart dialog result."""

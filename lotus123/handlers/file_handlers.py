@@ -73,7 +73,10 @@ class FileHandler(BaseHandler):
                 self._pending_action()
                 self._pending_action = None
             else:
-                self._app.push_screen(FileDialog(mode="save"), self._do_save_then_action)
+                self._app.push_screen(
+                    FileDialog(mode="save", file_extensions=[".json"]),
+                    self._do_save_then_action,
+                )
         elif response.startswith("N"):
             self._pending_action()
             self._pending_action = None
@@ -327,7 +330,10 @@ class FileHandler(BaseHandler):
 
     def save_as(self) -> None:
         """Show the save-as dialog."""
-        self._app.push_screen(FileDialog(mode="save", title="Save As"), self._do_save)
+        self._app.push_screen(
+            FileDialog(mode="save", title="Save As", file_extensions=[".json"]),
+            self._do_save,
+        )
 
     def _do_save(self, result: str | None) -> None:
         if result:
