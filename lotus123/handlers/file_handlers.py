@@ -18,7 +18,6 @@ class FileHandler(BaseHandler):
 
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)
-        self._pending_save_path: str = ""
         self._pending_xlsx_import_path: str = ""
         self._pending_action: callable | None = None  # Callback for after save confirmation
 
@@ -114,18 +113,9 @@ class FileHandler(BaseHandler):
         self._app.global_col_width = 10
         self._app.global_zero_display = True
 
-        grid = self.get_grid()
-        grid.cursor_row = 0
-        grid.cursor_col = 0
-        grid.scroll_row = 0
-        grid.scroll_col = 0
+        grid = self.reset_view()
         grid.show_zero = True
         grid.default_col_width = 10
-        grid.recalculate_visible_area()
-        grid.refresh_grid()
-
-        self.update_status()
-        self.update_title()
         self.notify("New spreadsheet created")
 
     def open_file(self) -> None:
@@ -147,10 +137,7 @@ class FileHandler(BaseHandler):
                 self.is_dirty = False
                 # Restore global settings from loaded file
                 self._sync_global_settings_from_spreadsheet()
-                grid = self.get_grid()
-                grid.refresh_grid()
-                self.update_status()
-                self.update_title()
+                self.reset_view()
                 self._app.config.add_recent_file(str(path))
                 self._app.config.save()
                 self.notify(f"Loaded: {path}")
@@ -185,17 +172,7 @@ class FileHandler(BaseHandler):
             self.is_dirty = False
             # Restore global settings from loaded file
             self._sync_global_settings_from_spreadsheet()
-            grid = self.get_grid()
-            grid.scroll_row = 1
-            grid.scroll_col = 1
-            grid.scroll_row = 0
-            grid.scroll_col = 0
-            grid.cursor_row = 0
-            grid.cursor_col = 0
-            grid.recalculate_visible_area()
-            grid.refresh_grid()
-            self.update_status()
-            self.update_title()
+            self.reset_view()
             self._app.config.add_recent_file(result)
             self._app.config.save()
             self.notify(f"Loaded: {result}")
@@ -304,16 +281,7 @@ class FileHandler(BaseHandler):
         self.spreadsheet.filename = ""  # Not a native file
         self.is_dirty = True
         self.undo_manager.clear()
-
-        grid = self.get_grid()
-        grid.cursor_row = 0
-        grid.cursor_col = 0
-        grid.scroll_row = 0
-        grid.scroll_col = 0
-        grid.recalculate_visible_area()
-        grid.refresh_grid()
-        self.update_status()
-        self.update_title()
+        self.reset_view()
 
         self.notify(message, severity=severity)
 
@@ -339,22 +307,7 @@ class FileHandler(BaseHandler):
         if result:
             if not result.endswith(".json"):
                 result += ".json"
-            # Check if file exists
-            if Path(result).exists():
-                self._pending_save_path = result
-                self._app.push_screen(
-                    CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
-                    self._do_overwrite_confirm,
-                )
-            else:
-                self._perform_save(result)
-
-    def _do_overwrite_confirm(self, result: str | None) -> None:
-        """Handle Y/N response for file overwrite confirmation."""
-        if result and result.strip().upper().startswith("Y"):
-            self._perform_save(self._pending_save_path)
-        else:
-            self.notify("Save cancelled", severity="warning")
+            self.confirm_overwrite(result, self._perform_save)
 
     def _perform_save(self, filepath: str) -> None:
         try:
@@ -395,10 +348,3 @@ class FileHandler(BaseHandler):
         """Actually quit the application."""
         self._app.config.save()
         self._app.exit()
-
-    def _do_save_and_quit_confirm(self, result: str | None) -> None:
-        if result and result.strip().upper().startswith("Y"):
-            self._sync_global_settings_to_spreadsheet()
-            self.spreadsheet.save(self._pending_save_path)
-            self._app.config.save()
-            self._app.exit()

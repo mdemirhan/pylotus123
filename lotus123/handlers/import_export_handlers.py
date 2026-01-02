@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ..ui import CommandInput, FileDialog
+from ..ui import FileDialog
 from ..ui.dialogs import SheetSelectDialog
 from .base import BaseHandler
 
@@ -19,7 +19,6 @@ class ImportExportHandler(BaseHandler):
     def __init__(self, app: "AppProtocol") -> None:
         super().__init__(app)
         self._pending_export_format: str = ""
-        self._pending_export_path: str = ""
         self._pending_xlsx_path: str = ""
 
     # ===== CSV Operations =====
@@ -52,14 +51,7 @@ class ImportExportHandler(BaseHandler):
             self.undo_manager.clear()
 
             # Refresh UI
-            grid = self.get_grid()
-            grid.cursor_row = 0
-            grid.cursor_col = 0
-            grid.scroll_row = 0
-            grid.scroll_col = 0
-            grid.refresh_grid()
-            self.update_status()
-            self.update_title()
+            self.reset_view()
 
             self.notify(f"Imported {row_count} rows from CSV")
 
@@ -87,22 +79,9 @@ class ImportExportHandler(BaseHandler):
         if not result.lower().endswith(".csv"):
             result += ".csv"
 
-        # Check if file exists
-        if Path(result).exists():
-            self._pending_export_path = result
-            self._app.push_screen(
-                CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
-                self._do_export_csv_confirm,
-            )
-        else:
-            self._perform_export_csv(result)
-
-    def _do_export_csv_confirm(self, result: str | None) -> None:
-        """Handle CSV overwrite confirmation."""
-        if result and result.strip().upper().startswith("Y"):
-            self._perform_export_csv(self._pending_export_path)
-        else:
-            self.notify("Export cancelled", severity="warning")
+        self.confirm_overwrite(
+            result, self._perform_export_csv, cancel_message="Export cancelled"
+        )
 
     def _perform_export_csv(self, filepath: str) -> None:
         """Actually perform the CSV export."""
@@ -154,14 +133,7 @@ class ImportExportHandler(BaseHandler):
             self.undo_manager.clear()
 
             # Refresh UI
-            grid = self.get_grid()
-            grid.cursor_row = 0
-            grid.cursor_col = 0
-            grid.scroll_row = 0
-            grid.scroll_col = 0
-            grid.refresh_grid()
-            self.update_status()
-            self.update_title()
+            self.reset_view()
 
             self.notify(f"Imported {row_count} rows from TSV")
 
@@ -189,22 +161,9 @@ class ImportExportHandler(BaseHandler):
         if not result.lower().endswith(".tsv"):
             result += ".tsv"
 
-        # Check if file exists
-        if Path(result).exists():
-            self._pending_export_path = result
-            self._app.push_screen(
-                CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
-                self._do_export_tsv_confirm,
-            )
-        else:
-            self._perform_export_tsv(result)
-
-    def _do_export_tsv_confirm(self, result: str | None) -> None:
-        """Handle TSV overwrite confirmation."""
-        if result and result.strip().upper().startswith("Y"):
-            self._perform_export_tsv(self._pending_export_path)
-        else:
-            self.notify("Export cancelled", severity="warning")
+        self.confirm_overwrite(
+            result, self._perform_export_tsv, cancel_message="Export cancelled"
+        )
 
     def _perform_export_tsv(self, filepath: str) -> None:
         """Actually perform the TSV export."""
@@ -289,22 +248,9 @@ class ImportExportHandler(BaseHandler):
         if not result.lower().endswith(".wk1"):
             result += ".wk1"
 
-        # Check if file exists
-        if Path(result).exists():
-            self._pending_export_path = result
-            self._app.push_screen(
-                CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
-                self._do_export_wk1_confirm,
-            )
-        else:
-            self._perform_export_wk1(result)
-
-    def _do_export_wk1_confirm(self, result: str | None) -> None:
-        """Handle WK1 overwrite confirmation."""
-        if result and result.strip().upper().startswith("Y"):
-            self._perform_export_wk1(self._pending_export_path)
-        else:
-            self.notify("Export cancelled", severity="warning")
+        self.confirm_overwrite(
+            result, self._perform_export_wk1, cancel_message="Export cancelled"
+        )
 
     def _perform_export_wk1(self, filepath: str) -> None:
         """Actually perform the WK1 export."""
@@ -427,22 +373,9 @@ class ImportExportHandler(BaseHandler):
         if not result.lower().endswith(".xlsx"):
             result += ".xlsx"
 
-        # Check if file exists
-        if Path(result).exists():
-            self._pending_export_path = result
-            self._app.push_screen(
-                CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
-                self._do_export_xlsx_confirm,
-            )
-        else:
-            self._perform_export_xlsx(result)
-
-    def _do_export_xlsx_confirm(self, result: str | None) -> None:
-        """Handle XLSX overwrite confirmation."""
-        if result and result.strip().upper().startswith("Y"):
-            self._perform_export_xlsx(self._pending_export_path)
-        else:
-            self.notify("Export cancelled", severity="warning")
+        self.confirm_overwrite(
+            result, self._perform_export_xlsx, cancel_message="Export cancelled"
+        )
 
     def _perform_export_xlsx(self, filepath: str) -> None:
         """Actually perform the XLSX export."""

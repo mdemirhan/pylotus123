@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from ..charting import Chart, ChartType, TextChartRenderer
 from ..core import make_cell_ref
@@ -42,117 +42,61 @@ class ChartHandler(BaseHandler):
 
     def set_x_range(self) -> None:
         """Set the X-axis range for the chart."""
-        grid = self.get_grid()
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
+        def apply_range(range_str: str) -> None:
             self.chart.set_x_range(range_str)
             self.notify(f"X-Range set to {range_str}")
-        else:
-            self._app.push_screen(
-                CommandInput("X-Range (e.g., A1:A10):"), self._do_set_x_range
-            )
 
-    def _do_set_x_range(self, result: str | None) -> None:
-        if result:
-            self.chart.set_x_range(result.upper())
-            self.notify(f"X-Range set to {result.upper()}")
+        self._set_range_from_selection("X-Range (e.g., A1:A10):", apply_range)
 
     def set_a_range(self) -> None:
         """Set the A data range."""
-        grid = self.get_grid()
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(0, "A", range_str)
-        else:
-            self._app.push_screen(
-                CommandInput("A-Range (e.g., B1:B10):"), self._do_set_a_range
-            )
-
-    def _do_set_a_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(0, "A", result.upper())
+        self._set_series_range(0, "A", "A-Range (e.g., B1:B10):")
 
     def set_b_range(self) -> None:
         """Set the B data range."""
-        grid = self.get_grid()
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(1, "B", range_str)
-        else:
-            self._app.push_screen(
-                CommandInput("B-Range (e.g., C1:C10):"), self._do_set_b_range
-            )
-
-    def _do_set_b_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(1, "B", result.upper())
+        self._set_series_range(1, "B", "B-Range (e.g., C1:C10):")
 
     def set_c_range(self) -> None:
         """Set the C data range."""
-        grid = self.get_grid()
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(2, "C", range_str)
-        else:
-            self._app.push_screen(
-                CommandInput("C-Range (e.g., D1:D10):"), self._do_set_c_range
-            )
-
-    def _do_set_c_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(2, "C", result.upper())
+        self._set_series_range(2, "C", "C-Range (e.g., D1:D10):")
 
     def set_d_range(self) -> None:
         """Set the D data range."""
-        grid = self.get_grid()
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(3, "D", range_str)
-        else:
-            self._app.push_screen(
-                CommandInput("D-Range (e.g., E1:E10):"), self._do_set_d_range
-            )
-
-    def _do_set_d_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(3, "D", result.upper())
+        self._set_series_range(3, "D", "D-Range (e.g., E1:E10):")
 
     def set_e_range(self) -> None:
         """Set the E data range."""
-        grid = self.get_grid()
-        if grid.has_selection:
-            r1, c1, r2, c2 = grid.selection_range
-            range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(4, "E", range_str)
-        else:
-            self._app.push_screen(
-                CommandInput("E-Range (e.g., F1:F10):"), self._do_set_e_range
-            )
-
-    def _do_set_e_range(self, result: str | None) -> None:
-        if result:
-            self._add_or_update_series(4, "E", result.upper())
+        self._set_series_range(4, "E", "E-Range (e.g., F1:F10):")
 
     def set_f_range(self) -> None:
         """Set the F data range."""
+        self._set_series_range(5, "F", "F-Range (e.g., G1:G10):")
+
+    def _set_series_range(self, index: int, name: str, prompt: str) -> None:
+        """Set a series range by index."""
+        self._set_range_from_selection(
+            prompt, lambda range_str: self._add_or_update_series(index, name, range_str)
+        )
+
+    def _set_range_from_selection(
+        self, prompt: str, on_set: Callable[[str], None]
+    ) -> None:
+        """Handle range selection or prompt input."""
         grid = self.get_grid()
         if grid.has_selection:
             r1, c1, r2, c2 = grid.selection_range
             range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
-            self._add_or_update_series(5, "F", range_str)
+            on_set(range_str)
         else:
             self._app.push_screen(
-                CommandInput("F-Range (e.g., G1:G10):"), self._do_set_f_range
+                CommandInput(prompt),
+                lambda result: self._do_set_range(result, on_set),
             )
 
-    def _do_set_f_range(self, result: str | None) -> None:
+    def _do_set_range(self, result: str | None, on_set: Callable[[str], None]) -> None:
+        """Handle prompted range input."""
         if result:
-            self._add_or_update_series(5, "F", result.upper())
+            on_set(result.upper())
 
     def _add_or_update_series(self, index: int, name: str, range_str: str) -> None:
         """Add or update a data series at the given index."""
@@ -196,21 +140,7 @@ class ChartHandler(BaseHandler):
         if result:
             if not result.endswith(".chart"):
                 result += ".chart"
-            if Path(result).exists():
-                self._pending_chart_path = result
-                self._app.push_screen(
-                    CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
-                    self._do_save_chart_confirm,
-                )
-            else:
-                self._perform_chart_save(result)
-
-    def _do_save_chart_confirm(self, result: str | None) -> None:
-        """Handle overwrite confirmation."""
-        if result and result.strip().upper().startswith("Y"):
-            self._perform_chart_save(self._pending_chart_path)
-        else:
-            self.notify("Save cancelled", severity="warning")
+            self.confirm_overwrite(result, self._perform_chart_save)
 
     def _perform_chart_save(self, filepath: str) -> None:
         """Actually save the chart to the file."""

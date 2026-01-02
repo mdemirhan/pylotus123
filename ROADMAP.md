@@ -7,10 +7,10 @@
 - [x] Require sorted data for approximate VLOOKUP/HLOOKUP.
 
 ## P1 (Maintainability)
-- [ ] Extract format code normalization into a shared helper.
-- [ ] Refactor chart range setters to use a single helper.
-- [ ] Centralize overwrite confirmation dialogs.
-- [ ] Add a shared view reset helper for grid state.
+- [x] Extract format code normalization into a shared helper.
+- [x] Refactor chart range setters to use a single helper.
+- [x] Centralize overwrite confirmation dialogs.
+- [x] Add a shared view reset helper for grid state.
 
 ## P2 (Performance)
 - [ ] Optimize topological ordering in the recalc engine.

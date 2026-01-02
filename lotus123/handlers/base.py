@@ -107,6 +107,9 @@ class BaseHandler:
 
     def __init__(self, app: AppProtocol) -> None:
         self._app = app
+        self._pending_overwrite_path: str | None = None
+        self._pending_overwrite_callback: Callable[[str], None] | None = None
+        self._pending_overwrite_cancel: str = ""
 
     @property
     def spreadsheet(self) -> "Spreadsheet":
@@ -132,6 +135,56 @@ class BaseHandler:
         from ..ui import SpreadsheetGrid
 
         return self._app.query_one("#grid", SpreadsheetGrid)
+
+    def reset_view(self) -> "SpreadsheetGrid":
+        """Reset grid cursor and scroll state."""
+        grid = self.get_grid()
+        grid.cursor_row = 0
+        grid.cursor_col = 0
+        grid.scroll_row = 0
+        grid.scroll_col = 0
+        grid.recalculate_visible_area()
+        grid.refresh_grid()
+        self.update_status()
+        self.update_title()
+        return grid
+
+    def confirm_overwrite(
+        self,
+        filepath: str,
+        on_confirm: Callable[[str], None],
+        *,
+        cancel_message: str = "Save cancelled",
+    ) -> None:
+        """Confirm overwriting an existing file before calling on_confirm."""
+        from pathlib import Path
+        from ..ui import CommandInput
+
+        if Path(filepath).exists():
+            self._pending_overwrite_path = filepath
+            self._pending_overwrite_callback = on_confirm
+            self._pending_overwrite_cancel = cancel_message
+            self._app.push_screen(
+                CommandInput(f"File '{filepath}' exists. Overwrite? (Y/N):"),
+                self._do_overwrite_confirm,
+            )
+        else:
+            on_confirm(filepath)
+
+    def _do_overwrite_confirm(self, result: str | None) -> None:
+        """Handle overwrite confirmation response."""
+        callback = self._pending_overwrite_callback
+        path = self._pending_overwrite_path
+        cancel_message = self._pending_overwrite_cancel
+
+        self._pending_overwrite_path = None
+        self._pending_overwrite_callback = None
+        self._pending_overwrite_cancel = ""
+
+        if result and result.strip().upper().startswith("Y") and callback and path:
+            callback(path)
+        else:
+            self.notify(cancel_message, severity="warning")
 
     # --- App state management methods ---
     # These provide a clean interface for handlers to interact with app state

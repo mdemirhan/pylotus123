@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ..core import make_cell_ref
+from ..core.formatting import normalize_format_code
 from ..ui import CommandInput
 from ..utils.undo import RangeChangeCommand, RangeFormatCommand
 from .base import BaseHandler
@@ -33,7 +34,7 @@ class RangeHandler(BaseHandler):
     def _do_range_format(self, result: str | None) -> None:
         if not result:
             return
-        format_code = self._normalize_format_code(result)
+        format_code = normalize_format_code(result)
         if format_code is None:
             self.notify(f"Invalid format: {result}", severity="error")
             return
@@ -110,70 +111,3 @@ class RangeHandler(BaseHandler):
             self.notify(f"Named range '{name}' created for {self.pending_range}")
         except ValueError as e:
             self.notify(str(e), severity="error")
-
-    def _normalize_format_code(self, code: str) -> str | None:
-        """Normalize and validate a format code.
-
-        Args:
-            code: User-entered format code
-
-        Returns:
-            Normalized format code, or None if invalid
-        """
-        code = code.strip().upper()
-        if not code:
-            return None
-
-        # Single character formats
-        if code in ("G", "H", "+"):
-            return code
-
-        # Formats with decimal places: F, S, C, P (0-15)
-        if code[0] in ("F", "S", "C", "P"):
-            if len(code) == 1:
-                return code + "2"  # Default to 2 decimal places
-            try:
-                decimals = int(code[1:])
-                if 0 <= decimals <= 15:
-                    return f"{code[0]}{decimals}"
-            except ValueError:
-                pass
-            return None
-
-        # Comma format (,0-,15)
-        if code.startswith(","):
-            if len(code) == 1:
-                return ",2"  # Default to 2 decimal places
-            try:
-                decimals = int(code[1:])
-                if 0 <= decimals <= 15:
-                    return f",{decimals}"
-            except ValueError:
-                pass
-            return None
-
-        # Date formats (D1-D9)
-        if code[0] == "D":
-            if len(code) == 1:
-                return "D1"  # Default to D1
-            try:
-                variant = int(code[1:])
-                if 1 <= variant <= 9:
-                    return f"D{variant}"
-            except ValueError:
-                pass
-            return None
-
-        # Time formats (T1-T4)
-        if code[0] == "T":
-            if len(code) == 1:
-                return "T1"  # Default to T1
-            try:
-                variant = int(code[1:])
-                if 1 <= variant <= 4:
-                    return f"T{variant}"
-            except ValueError:
-                pass
-            return None
-
-        return None
