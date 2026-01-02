@@ -194,20 +194,22 @@ class RecalcEngine:
         # Filter to only requested cells
         relevant = {c: self._dependency_graph.get(c, set()) & cells for c in cells}
 
-        # Kahn's algorithm
+        # Kahn's algorithm using reverse edges for efficiency
+        from collections import deque
+
         in_degree = {c: len(deps) for c, deps in relevant.items()}
-        queue = [c for c, d in in_degree.items() if d == 0]
+        queue = deque([c for c, d in in_degree.items() if d == 0])
         result = []
 
         while queue:
-            cell = queue.pop(0)
+            cell = queue.popleft()
             result.append(cell)
 
-            for other in cells:
-                if cell in relevant.get(other, set()):
-                    in_degree[other] -= 1
-                    if in_degree[other] == 0:
-                        queue.append(other)
+            for dependent in self._dependents.get(cell, set()):
+                if dependent in in_degree:
+                    in_degree[dependent] -= 1
+                    if in_degree[dependent] == 0:
+                        queue.append(dependent)
 
         # Add any remaining cells (possibly in cycles)
         for cell in cells:

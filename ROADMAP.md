@@ -13,7 +13,7 @@
 - [x] Add a shared view reset helper for grid state.
 
 ## P2 (Performance)
-- [ ] Optimize topological ordering in the recalc engine.
+- [x] Optimize topological ordering in the recalc engine.
 
 ## P3 (Testing)
 - [ ] Add shared pytest fixtures in `tests/conftest.py`.
