@@ -338,12 +338,13 @@ class FileHandler(BaseHandler):
                 self._pending_save_path = result
                 self._app.push_screen(
                     CommandInput(f"File '{result}' exists. Overwrite? (Y/N):"),
-                    self._do_save_confirm,
+                    self._do_overwrite_confirm,
                 )
             else:
                 self._perform_save(result)
 
-    def _do_save_confirm(self, result: str | None) -> None:
+    def _do_overwrite_confirm(self, result: str | None) -> None:
+        """Handle Y/N response for file overwrite confirmation."""
         if result and result.strip().upper().startswith("Y"):
             self._perform_save(self._pending_save_path)
         else:
