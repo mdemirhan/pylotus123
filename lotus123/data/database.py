@@ -40,6 +40,112 @@ class DatabaseOperations:
     def __init__(self, spreadsheet: Spreadsheet) -> None:
         self.spreadsheet = spreadsheet
 
+    @staticmethod
+    def _parse_sort_value(raw_val: str) -> float | str:
+        """Parse a raw string value for sorting comparison.
+
+        Numbers (with commas) are converted to floats for numeric sorting.
+        Non-numeric values are lowercased for case-insensitive string sorting.
+        """
+        if not raw_val:
+            return 0.0
+        try:
+            return float(raw_val.replace(",", ""))
+        except ValueError:
+            return raw_val.lower()
+
+    @staticmethod
+    def _is_numeric_string(value: str) -> bool:
+        """Check if a string represents a numeric value."""
+        if not value:
+            return False
+        cleaned = value.replace(",", "").replace(".", "").replace("-", "")
+        return cleaned.isdigit()
+
+    def _extract_cell_data(
+        self,
+        data_start: int,
+        end_row: int,
+        start_col: int,
+        end_col: int,
+        values_only: bool,
+    ) -> list[list[tuple[str, str]]]:
+        """Extract cell data (raw_value, format_code) for sorting.
+
+        When values_only=True, formulas are converted to their computed values.
+        """
+        cell_data = []
+        for r in range(data_start, end_row + 1):
+            row_data = []
+            for c in range(start_col, end_col + 1):
+                cell = self.spreadsheet.get_cell_if_exists(r, c)
+                if cell:
+                    if values_only and cell.is_formula:
+                        computed = self.spreadsheet.get_value(r, c)
+                        raw_val = str(computed) if computed else ""
+                    else:
+                        raw_val = cell.raw_value
+                    row_data.append((raw_val, cell.format_code))
+                else:
+                    row_data.append(("", "G"))
+            cell_data.append(row_data)
+        return cell_data
+
+    def _create_sort_key(
+        self, keys: list[SortKey]
+    ) -> Callable[[list[tuple[str, str]]], tuple[Any, ...]]:
+        """Create a sort key function for the given sort keys.
+
+        Handles numeric negation for descending order on numeric columns.
+        """
+
+        def sort_key(row_data: list[tuple[str, str]]) -> tuple[Any, ...]:
+            key_values: list[Any] = []
+            for sk in keys:
+                if 0 <= sk.column < len(row_data):
+                    raw_val = row_data[sk.column][0]
+                    sort_val = self._parse_sort_value(raw_val)
+
+                    if sk.order == SortOrder.DESCENDING and isinstance(
+                        sort_val, (int, float)
+                    ):
+                        sort_val = -sort_val
+                    key_values.append(sort_val)
+            return tuple(key_values)
+
+        return sort_key
+
+    def _apply_descending_string_sorts(
+        self, sorted_data: list[list[tuple[str, str]]], keys: list[SortKey]
+    ) -> list[list[tuple[str, str]]]:
+        """Apply reverse sorting for descending string columns.
+
+        Numeric columns are handled by negation in the primary sort,
+        but string columns need a secondary reverse sort.
+        """
+        for sk in reversed(keys):
+            if sk.order != SortOrder.DESCENDING:
+                continue
+
+            # Check if this column has any non-numeric values
+            has_strings = any(
+                not self._is_numeric_string(row_data[sk.column][0])
+                for row_data in sorted_data
+                if sk.column < len(row_data) and row_data[sk.column][0]
+            )
+
+            if has_strings:
+                col = sk.column
+
+                def string_key(
+                    rd: list[tuple[str, str]], c: int = col
+                ) -> str:
+                    return rd[c][0].lower() if c < len(rd) else ""
+
+                sorted_data = sorted(sorted_data, key=string_key, reverse=True)
+
+        return sorted_data
+
     def sort_range(
         self,
         start_row: int,
@@ -61,131 +167,30 @@ class DatabaseOperations:
                         before sorting. If False, formulas are moved as-is (but
                         their references won't be adjusted, which may break them).
         """
-        # Normalize range
+        # Normalize range (handle reversed indices)
         if start_row > end_row:
             start_row, end_row = end_row, start_row
         if start_col > end_col:
             start_col, end_col = end_col, start_col
 
-        # Determine data rows
+        # Determine data rows (skip header if present)
         data_start = start_row + 1 if has_header else start_row
-
         if data_start > end_row:
             return  # No data to sort
 
-        # Extract rows as list of (row_idx, values)
-        rows = []
-        for r in range(data_start, end_row + 1):
-            row_values = []
-            for c in range(start_col, end_col + 1):
-                row_values.append(self.spreadsheet.get_value(r, c))
-            rows.append((r, row_values))
+        # Extract cell data for sorting
+        cell_data = self._extract_cell_data(
+            data_start, end_row, start_col, end_col, values_only
+        )
 
-        # Sort using the keys
-        def sort_key(item: tuple[int, list[Any]]) -> tuple[Any, ...]:
-            row_idx, values = item
-            key_values = []
-            for sk in keys:
-                if 0 <= sk.column < len(values):
-                    val = values[sk.column]
-                    # Handle sort order
-                    if sk.order == SortOrder.DESCENDING:
-                        # For descending, we negate numbers or reverse strings
-                        if isinstance(val, (int, float)):
-                            val = -val
-                        elif isinstance(val, str):
-                            # Use tuple with reverse flag
-                            val = (1, val)  # Will be sorted in reverse
-                    else:
-                        if isinstance(val, str):
-                            val = (0, val)
-                    key_values.append(val)
-                else:
-                    key_values.append("")
-            return tuple(key_values)
+        # Primary sort with numeric descending handled by negation
+        sort_key = self._create_sort_key(keys)
+        sorted_data = sorted(cell_data, key=sort_key)
 
-        # Sort rows
-        sorted_rows = sorted(rows, key=sort_key)
+        # Apply reverse sorts for descending string columns
+        sorted_data = self._apply_descending_string_sorts(sorted_data, keys)
 
-        # Handle descending order for strings
-        for sk in reversed(keys):
-            if sk.order == SortOrder.DESCENDING:
-                # Re-sort with this key in reverse
-                def desc_key(item: tuple[int, list[Any]], col: int = sk.column) -> str:
-                    row_idx, values = item
-                    if 0 <= col < len(values):
-                        val = values[col]
-                        if isinstance(val, str):
-                            return val
-                    return ""
-
-                sorted_rows = sorted(sorted_rows, key=desc_key, reverse=True)
-
-        # Collect all cell data for sorting
-        # When values_only=True, convert formulas to their computed values
-        cell_data = []
-        for r in range(data_start, end_row + 1):
-            row_data = []
-            for c in range(start_col, end_col + 1):
-                cell = self.spreadsheet.get_cell_if_exists(r, c)
-                if cell:
-                    if values_only and cell.is_formula:
-                        # Convert formula to its computed value
-                        computed = self.spreadsheet.get_value(r, c)
-                        if isinstance(computed, (int, float)):
-                            raw_val = str(computed)
-                        else:
-                            raw_val = str(computed) if computed else ""
-                        row_data.append((raw_val, cell.format_code))
-                    else:
-                        row_data.append((cell.raw_value, cell.format_code))
-                else:
-                    row_data.append(("", "G"))
-            cell_data.append(row_data)
-
-        # Sort cell data
-        def cell_sort_key(row_data: list[tuple[str, str]]) -> tuple[Any, ...]:
-            key_values: list[Any] = []
-            for sk in keys:
-                if 0 <= sk.column < len(row_data):
-                    raw_val = row_data[sk.column][0]
-                    # Parse value for comparison
-                    sort_val: float | str
-                    try:
-                        sort_val = float(raw_val.replace(",", "")) if raw_val else 0.0
-                    except ValueError:
-                        sort_val = raw_val.lower() if raw_val else ""
-
-                    if sk.order == SortOrder.DESCENDING:
-                        if isinstance(sort_val, (int, float)):
-                            sort_val = -sort_val
-                    key_values.append(sort_val)
-            return tuple(key_values)
-
-        sorted_data = sorted(cell_data, key=cell_sort_key)
-
-        # For descending string columns, reverse sort
-        for sk in reversed(keys):
-            if sk.order == SortOrder.DESCENDING:
-                # Check if this column has strings
-                has_strings = any(
-                    not row_data[sk.column][0]
-                    .replace(",", "")
-                    .replace(".", "")
-                    .replace("-", "")
-                    .isdigit()
-                    for row_data in sorted_data
-                    if sk.column < len(row_data) and row_data[sk.column][0]
-                )
-                if has_strings:
-                    col = sk.column
-
-                    def string_sort_key(rd: list[tuple[str, str]]) -> str:
-                        return rd[col][0].lower() if col < len(rd) else ""
-
-                    sorted_data = sorted(sorted_data, key=string_sort_key, reverse=True)
-
-        # Write back
+        # Write sorted data back to cells
         for i, row_data in enumerate(sorted_data):
             r = data_start + i
             for j, (raw_val, fmt) in enumerate(row_data):
@@ -195,7 +200,6 @@ class DatabaseOperations:
                 cell.format_code = fmt
 
         self.spreadsheet.invalidate_cache()
-        # Rebuild dependency graph since cell contents changed
         self.spreadsheet.rebuild_dependency_graph()
 
     def query(
