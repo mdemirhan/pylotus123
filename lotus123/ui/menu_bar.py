@@ -78,6 +78,7 @@ class LotusMenu(Static, can_focus=True):
             "items": [
                 ("R", "Retrieve"),
                 ("S", "Save"),
+                ("A", "Save As"),
                 ("N", "New"),
                 (
                     "I",
@@ -230,8 +231,21 @@ class LotusMenu(Static, can_focus=True):
                     key = item[0]
                     label = item[1]
                     has_submenu = len(item) >= 3
-                    text.append(key, highlight)
-                    text.append(label[1:], style)
+                    # Find the key in the label (case-insensitive) and highlight it
+                    key_idx = label.upper().find(key.upper())
+                    if key_idx == 0:
+                        # Key is first character
+                        text.append(key, highlight)
+                        text.append(label[1:], style)
+                    elif key_idx > 0:
+                        # Key is in the middle of the label
+                        text.append(label[:key_idx], style)
+                        text.append(label[key_idx], highlight)
+                        text.append(label[key_idx + 1:], style)
+                    else:
+                        # Key not found in label, show key in brackets
+                        text.append(f"[{key}]", highlight)
+                        text.append(label, style)
                     if has_submenu:
                         text.append(">", highlight)
                     text.append("  ", style)

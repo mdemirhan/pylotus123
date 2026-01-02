@@ -266,7 +266,7 @@ class FileHandler(BaseHandler):
 
     def save_as(self) -> None:
         """Show the save-as dialog."""
-        self._app.push_screen(FileDialog(mode="save"), self._do_save)
+        self._app.push_screen(FileDialog(mode="save", title="Save As"), self._do_save)
 
     def _do_save(self, result: str | None) -> None:
         if result:

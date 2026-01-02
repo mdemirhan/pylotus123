@@ -560,6 +560,8 @@ class LotusApp(App[None]):
             self._file_handler.open_file()
         elif result == "File:Save":
             self._file_handler.save()
+        elif result == "File:Save As":
+            self._file_handler.save_as()
         elif result == "File:Quit" or result == "Quit:Yes":
             self._file_handler.quit_app()
         elif result == "Quit:No":
