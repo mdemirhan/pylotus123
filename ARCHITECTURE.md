@@ -72,9 +72,11 @@ lotus123/
 │
 ├── io/                      # File I/O operations
 │   ├── __init__.py
-│   ├── lotus_json.py        # JSON save/load (enhanced)
-│   ├── text_import.py       # Import structured/unstructured text
-│   └── text_export.py       # Export to text formats
+│   ├── lotus_json.py        # JSON save/load (native format)
+│   ├── text_import.py       # CSV/TSV import
+│   ├── text_export.py       # CSV/TSV export
+│   ├── xlsx.py              # XLSX/XLS import/export (via openpyxl)
+│   └── wk1.py               # WK1/WKS import (Lotus 1-2-3 binary format)
 │
 ├── charting/                # Graphics/charting module
 │   ├── __init__.py
@@ -291,7 +293,10 @@ class RecalcEngine:
 | Window splitting | ui/window.py | ✓ Complete |
 | Frozen titles | ui/window.py | ✓ Complete |
 | Charting (7 types) | charting/ | ✓ Complete |
-| Text import/export | io/ | ✓ Complete |
+| JSON save/load | io/lotus_json.py | ✓ Complete |
+| CSV/TSV import/export | io/text_import.py, text_export.py | ✓ Complete |
+| XLSX/XLS import/export | io/xlsx.py | ✓ Complete |
+| WK1/WKS import | io/wk1.py | ✓ Complete |
 | Status indicators | ui/status_bar.py | ✓ Complete |
 | Theme support | ui/themes.py | ✓ Complete |
 | Clipboard operations | utils/clipboard.py | ✓ Complete |

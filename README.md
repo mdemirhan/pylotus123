@@ -59,7 +59,8 @@ Numbers are right-aligned by default, text is left-aligned.
 | Format | Extension | Description |
 |--------|-----------|-------------|
 | JSON | `.json` | Native format with full feature support |
-| WK1 | `.wk1` | Lotus 1-2-3 binary format (read/write) |
+| XLSX/XLS | `.xlsx`, `.xls` | Microsoft Excel format (import/export) |
+| WK1/WKS | `.wk1`, `.wks` | Lotus 1-2-3 binary format (import only) |
 | CSV | `.csv` | Comma-separated values |
 | TSV | `.tsv` | Tab-separated values |
 
@@ -242,7 +243,7 @@ Press `/` to access the Lotus-style menu:
 - **Range**: Format cells, set labels, name ranges, justify text
 - **Copy**: Copy cells to new location (Lotus-style: prompts for destination)
 - **Move**: Move cells to new location
-- **File**: New, open, save, import/export (CSV, TSV, WK1)
+- **File**: New, open, save, import/export (XLSX, CSV, TSV, WK1)
 - **Graph**: Create and view charts (line, bar, pie, etc.)
 - **Data**: Sort, query, fill operations
 - **Quit**: Exit application
@@ -544,37 +545,54 @@ The default format with full feature support:
 uv run python main.py myfile.json
 ```
 
-### WK1 Format (Lotus 1-2-3 Binary)
+### XLSX Format (Microsoft Excel)
+
+Import and export Excel files via the menu:
+- Press `/` → `File` → `Import` → `XLSX`
+- Press `/` → `File` → `Export` → `XLSX`
+
+Or open XLSX files directly from the command line:
+```bash
+uv run python main.py spreadsheet.xlsx
+```
+
+**What is preserved in XLSX:**
+- Cell values (numbers, text, dates)
+- Formulas (converted to Excel syntax)
+- Column widths
+- Text alignment (left, right, center)
+- Basic number formatting
+
+**What is NOT preserved in XLSX:**
+- Named ranges
+- Charts (not embedded in XLSX)
+- Lotus-style label prefixes (converted to alignment)
+- Complex conditional formatting
+
+### WK1/WKS Format (Lotus 1-2-3 Binary)
 
 > **Note on WK1 Support**: The WK1 file format support was implemented to help preserve knowledge of this historical file format. The WK1 format was the native binary format used by Lotus 1-2-3 versions 1.x and 2.x, and represents an important piece of computing history.
 >
 > **Accuracy Disclaimer**: While we've made best efforts to implement the WK1 format correctly based on available documentation, **results may not be 100% accurate**. Some features may not be fully supported, and edge cases may exist. If you're working with important WK1 files, please verify the imported data carefully.
 
-Import/Export via menu:
+Import via menu:
 - Press `/` → `File` → `Import` → `WK1`
-- Press `/` → `File` → `Export` → `WK1`
 
-**What is preserved in WK1:**
+Or open WK1/WKS files directly from the command line:
+```bash
+uv run python main.py spreadsheet.wk1
+```
+
+**What is imported from WK1:**
 - Cell values (numbers, strings, formulas)
-- Formulas (compiled to WK1 bytecode format)
+- Formulas (converted from WK1 bytecode format)
 - Column widths
 - Named ranges
-- Calculation mode (manual/automatic)
-- Calculation order (natural/column/row)
 - Cell format codes (fixed, scientific, currency, percent, comma, date/time)
-
-**What is NOT preserved in WK1:**
-- **Row heights** - WK1 format does not support custom row heights
-- **Frozen rows/columns** - Window settings are not exported
-- **Charts** - WK1 does not support embedded charts
-- **Modern functions** - Only functions available in Lotus 1-2-3 R2 can be exported; modern functions will be saved as their calculated values
-- **Cell protection** - Protection flags are decoded but not fully implemented
-- **Hidden columns** - Column visibility settings are not preserved
 
 **WK1 Format Limitations:**
 - Maximum grid size: 256 columns × 8,192 rows (original Lotus 1-2-3 limits)
-- String literals in formula bytecode are not fully supported
-- Some complex formula expressions may not round-trip perfectly
+- Some complex formula expressions may not import perfectly
 
 ### CSV/TSV Import/Export
 
@@ -630,7 +648,7 @@ lotus123/
 ├── formula/            # Formula engine (parser, evaluator, functions)
 ├── ui/                 # UI components (grid, menus, dialogs, themes)
 ├── data/               # Data operations (sort, query, fill)
-├── io/                 # File I/O (JSON, CSV, TSV, WK1)
+├── io/                 # File I/O (JSON, XLSX, CSV, TSV, WK1)
 ├── charting/           # Chart renderers
 ├── handlers/           # Application event handlers
 └── utils/              # Utilities (undo/redo, clipboard)
@@ -691,9 +709,10 @@ uv run pytest tests/core/test_spreadsheet.py::TestCellAlignment -v
 
 The `samples/` directory contains example spreadsheets:
 - `sales_dashboard.json` - Sales report with formatting examples
+- `sample1.json` - Sample spreadsheet with various data types
+- `sample1.xlsx` / `sales_dashboard.xlsx` - Excel format examples
 - `sample1.wk1` - Lotus 1-2-3 WK1 format example
 - `sample1.csv` / `sample1.tsv` - Delimited text format examples
-- `example.wk1` - Additional WK1 test file
 
 ---
 
