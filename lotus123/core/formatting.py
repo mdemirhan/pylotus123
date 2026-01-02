@@ -21,7 +21,6 @@ class FormatCode(Enum):
     PERCENT = "P"  # Percentage (P0-P15)
     DATE = "D"  # Date formats (D1-D9)
     TIME = "T"  # Time formats (T1-T4)
-    TEXT = "T"  # Display formula as text
     HIDDEN = "H"  # Hidden (suppressed display)
     PLUSMINUS = "+"  # Horizontal bar graph
     LABEL = "L"  # Label prefix handling

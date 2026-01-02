@@ -48,6 +48,7 @@ class DatabaseOperations:
         end_col: int,
         keys: list[SortKey],
         has_header: bool = True,
+        values_only: bool = True,
     ) -> None:
         """Sort a range of data.
 
@@ -56,6 +57,9 @@ class DatabaseOperations:
             end_row, end_col: Bottom-right of range
             keys: List of SortKey specifying sort columns and order
             has_header: If True, first row is header and not sorted
+            values_only: If True, formulas are converted to their computed values
+                        before sorting. If False, formulas are moved as-is (but
+                        their references won't be adjusted, which may break them).
         """
         # Normalize range
         if start_row > end_row:
@@ -117,14 +121,24 @@ class DatabaseOperations:
 
                 sorted_rows = sorted(sorted_rows, key=desc_key, reverse=True)
 
-        # Simple approach: collect all cell data, sort, put back
+        # Collect all cell data for sorting
+        # When values_only=True, convert formulas to their computed values
         cell_data = []
         for r in range(data_start, end_row + 1):
             row_data = []
             for c in range(start_col, end_col + 1):
                 cell = self.spreadsheet.get_cell_if_exists(r, c)
                 if cell:
-                    row_data.append((cell.raw_value, cell.format_code))
+                    if values_only and cell.is_formula:
+                        # Convert formula to its computed value
+                        computed = self.spreadsheet.get_value(r, c)
+                        if isinstance(computed, (int, float)):
+                            raw_val = str(computed)
+                        else:
+                            raw_val = str(computed) if computed else ""
+                        row_data.append((raw_val, cell.format_code))
+                    else:
+                        row_data.append((cell.raw_value, cell.format_code))
                 else:
                     row_data.append(("", "G"))
             cell_data.append(row_data)
@@ -181,6 +195,8 @@ class DatabaseOperations:
                 cell.format_code = fmt
 
         self.spreadsheet.invalidate_cache()
+        # Rebuild dependency graph since cell contents changed
+        self.spreadsheet.rebuild_dependency_graph()
 
     def query(
         self,

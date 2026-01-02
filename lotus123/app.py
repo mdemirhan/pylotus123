@@ -153,7 +153,8 @@ class LotusApp(App[None]):
         self.global_label_prefix = "'"
         self.global_col_width = 10
         self.global_zero_display = True
-        self._dirty = False
+        # Note: Use spreadsheet.modified as single source of truth for dirty state
+        self._theme_css_added = False  # Track if dynamic theme CSS has been added
 
         # Initialize handlers with explicit dependency injection
         # Note: type: ignore needed because Textual's overloaded methods
@@ -175,7 +176,7 @@ class LotusApp(App[None]):
 
     def _mark_dirty(self) -> None:
         """Mark the spreadsheet as having unsaved changes."""
-        self._dirty = True
+        self.spreadsheet.modified = True
         self._update_title()
 
     def _generate_css(self) -> str:
@@ -279,7 +280,7 @@ class LotusApp(App[None]):
         filename = self.spreadsheet.filename or "Untitled"
         if "/" in filename or "\\" in filename:
             filename = Path(filename).name
-        dirty_indicator = " *" if self._dirty else ""
+        dirty_indicator = " *" if self.spreadsheet.modified else ""
         self.title = f"Lotus 1-2-3 Clone - {filename}{dirty_indicator}"
 
     def _apply_theme(self) -> None:
@@ -288,7 +289,12 @@ class LotusApp(App[None]):
 
         t = THEMES[self.current_theme_type]
         self.color_theme = t
-        self.stylesheet.add_source(self._generate_css())
+
+        # Only add dynamic CSS once to avoid accumulation
+        # Subsequent theme changes rely on inline style updates below
+        if not self._theme_css_added:
+            self.stylesheet.add_source(self._generate_css())
+            self._theme_css_added = True
 
         try:
             menu_bar = self.query_one("#menu-bar", LotusMenu)
@@ -353,7 +359,7 @@ class LotusApp(App[None]):
         status_bar = self.query_one("#status-bar", StatusBarWidget)
         status_bar.update_cell(grid.cursor_row, grid.cursor_col)
         status_bar.update_from_spreadsheet()
-        status_bar.set_modified(self._dirty)  # Must be after update_from_spreadsheet
+        status_bar.set_modified(self.spreadsheet.modified)  # Must be after update_from_spreadsheet
 
         if not self.editing:
             self.query_one("#cell-input", Input).value = cell.raw_value
@@ -380,14 +386,35 @@ class LotusApp(App[None]):
         grid = self.query_one("#grid", SpreadsheetGrid)
         cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
         old_value = cell.raw_value
+        old_format = cell.format_code
+
+        # Determine new value with global defaults applied
+        new_value = event.value
+
+        # Apply global label prefix for text entries (not formulas or numbers)
+        if new_value and not new_value.startswith(("=", "@", "+", "-", "'", '"', "^", "\\")):
+            # Check if it's not a number
+            try:
+                float(new_value.replace(",", ""))
+            except ValueError:
+                # It's a text label - apply global prefix if not default
+                if self.global_label_prefix != "'":
+                    new_value = self.global_label_prefix + new_value
+
         cmd = CellChangeCommand(
             spreadsheet=self.spreadsheet,
             row=grid.cursor_row,
             col=grid.cursor_col,
-            new_value=event.value,
+            new_value=new_value,
             old_value=old_value,
         )
         self.undo_manager.execute(cmd)
+
+        # Apply global format code to new cells (cells that were empty)
+        if not old_value and new_value and self.global_format_code != "G":
+            cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
+            cell.format_code = self.global_format_code
+
         self._mark_dirty()
         self.editing = False
         self.query_one("#status-bar", StatusBarWidget).set_mode(Mode.READY)

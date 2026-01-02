@@ -281,26 +281,6 @@ class FormulaParser:
             return "#NAME?"
 
         try:
-            # Special handling for aggregate functions that need flattened lists
-            aggregate_fns = {
-                "SUM",
-                "AVG",
-                "AVERAGE",
-                "MIN",
-                "MAX",
-                "COUNT",
-                "COUNTA",
-                "AND",
-                "OR",
-                "STD",
-                "VAR",
-                "STDEV",
-                "MEDIAN",
-                "MODE",
-            }
-
-            if name in aggregate_fns:
-                return fn(*args)
             return fn(*args)
         except (ValueError, TypeError, ZeroDivisionError, OverflowError, IndexError):
             return "#ERR!"

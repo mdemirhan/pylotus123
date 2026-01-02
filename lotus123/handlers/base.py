@@ -30,7 +30,6 @@ class AppProtocol(Protocol):
 
     # State flags
     editing: bool
-    _dirty: bool
     _menu_active: bool
 
     # Global settings (public - shared across handlers)
@@ -209,9 +208,10 @@ class BaseHandler:
     @property
     def is_dirty(self) -> bool:
         """Check if the spreadsheet has unsaved changes."""
-        return self._app._dirty
+        return self._app.spreadsheet.modified
 
     @is_dirty.setter
     def is_dirty(self, value: bool) -> None:
         """Set the dirty state of the spreadsheet."""
-        self._app._dirty = value
+        self._app.spreadsheet.modified = value
+        self._app._update_title()

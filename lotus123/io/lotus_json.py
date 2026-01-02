@@ -37,13 +37,13 @@ class LotusJsonSerializer:
             "frozen_cols": spreadsheet.frozen_cols,
             "global_settings": spreadsheet.global_settings,
         }
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
 
     @staticmethod
     def load(spreadsheet: Spreadsheet, filename: str) -> None:
         """Load spreadsheet from JSON file."""
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Validate dimensions to prevent loading excessively large files

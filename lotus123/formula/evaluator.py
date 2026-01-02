@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -31,10 +30,6 @@ class FormulaEvaluator:
     - Context awareness (current cell position)
     - Circular reference detection
     """
-
-    # Pattern to find cell references in formulas
-    CELL_REF_PATTERN = re.compile(r"\$?([A-Za-z]+)\$?(\d+)")
-    RANGE_PATTERN = re.compile(r"(\$?[A-Za-z]+\$?\d+):(\$?[A-Za-z]+\$?\d+)")
 
     def __init__(self, spreadsheet: Spreadsheet, context: EvaluationContext | None = None) -> None:
         self.spreadsheet = spreadsheet
@@ -78,31 +73,52 @@ class FormulaEvaluator:
     def get_dependencies(self, formula: str) -> set[tuple[int, int]]:
         """Extract cell dependencies from a formula.
 
+        Uses the Tokenizer to properly handle string literals and named ranges.
+
         Args:
             formula: Formula string
 
         Returns:
             Set of (row, col) tuples that the formula depends on
         """
-        deps = set()
+        from .tokenizer import Tokenizer, TokenType
 
-        # Find range references first
-        for match in self.RANGE_PATTERN.finditer(formula):
-            start_ref, end_ref = match.groups()
-            deps.update(self._expand_range(start_ref, end_ref))
+        deps: set[tuple[int, int]] = set()
 
-        # Find single cell references (not part of ranges)
-        # Remove range patterns first to avoid double-counting
-        formula_no_ranges = self.RANGE_PATTERN.sub("", formula)
-        for match in self.CELL_REF_PATTERN.finditer(formula_no_ranges):
-            col_str, row_str = match.groups()
-            try:
-                from ..core.reference import parse_cell_ref
+        # Use tokenizer to properly parse the formula (skips string literals)
+        tokenizer = Tokenizer(self.spreadsheet)
+        tokens = tokenizer.tokenize(formula)
 
-                row, col = parse_cell_ref(f"{col_str}{row_str}")
-                deps.add((row, col))
-            except ValueError:
-                pass
+        i = 0
+        while i < len(tokens):
+            token = tokens[i]
+
+            if token.type == TokenType.CELL:
+                # Check if this is part of a range (CELL:CELL or CELL..CELL)
+                if i + 2 < len(tokens) and tokens[i + 1].type == TokenType.COLON:
+                    next_token = tokens[i + 2]
+                    if next_token.type == TokenType.CELL:
+                        # It's a range
+                        deps.update(self._expand_range(token.value, next_token.value))
+                        i += 3
+                        continue
+                # Single cell reference
+                try:
+                    from ..core.reference import parse_cell_ref
+
+                    row, col = parse_cell_ref(token.value.replace("$", ""))
+                    deps.add((row, col))
+                except ValueError:
+                    pass
+
+            elif token.type == TokenType.RANGE:
+                # Named range resolved to range string like "A1:B10"
+                if ":" in token.value:
+                    parts = token.value.split(":")
+                    if len(parts) == 2:
+                        deps.update(self._expand_range(parts[0], parts[1]))
+
+            i += 1
 
         return deps
 

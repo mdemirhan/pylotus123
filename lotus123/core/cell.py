@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum, auto
 import re
-from typing import Any
 
 
 class CellType(Enum):
@@ -61,8 +60,6 @@ class Cell:
     Attributes:
         raw_value: The raw string value as entered by user
         format_code: Format code for display (e.g., 'F2' for 2 decimal fixed)
-        _cached_value: Cached computed value
-        _cached_display: Cached display string
     """
 
     # Pre-compiled regex for number detection in is_formula
@@ -73,13 +70,6 @@ class Cell:
 
     raw_value: str = ""
     format_code: str = "G"  # General format by default
-    _cached_value: Any = field(default=None, repr=False, compare=False)
-    _cached_display: str | None = field(default=None, repr=False, compare=False)
-
-    def __post_init__(self) -> None:
-        """Clear cache on initialization."""
-        self._cached_value = None
-        self._cached_display = None
 
     @property
     def is_empty(self) -> bool:
@@ -200,15 +190,9 @@ class Cell:
                 return value.rjust(width)
             return value.ljust(width)
 
-    def invalidate_cache(self) -> None:
-        """Clear cached computed values."""
-        self._cached_value = None
-        self._cached_display = None
-
     def set_value(self, value: str) -> None:
-        """Set raw value and invalidate cache."""
+        """Set raw value."""
         self.raw_value = value
-        self.invalidate_cache()
 
     def to_dict(self) -> dict:
         """Serialize cell to dictionary."""

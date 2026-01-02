@@ -47,7 +47,7 @@ class TestLotusAppInit:
         app = LotusApp()
         assert app.editing is False
         assert app._menu_active is False
-        assert app._dirty is False
+        assert app.spreadsheet.modified is False  # Dirty state now tracked in spreadsheet
         assert app.recalc_mode == "auto"
 
 
@@ -173,9 +173,9 @@ class TestLotusAppMethods:
     def test_mark_dirty(self):
         """Test _mark_dirty method."""
         app = LotusApp()
-        assert app._dirty is False
+        assert app.spreadsheet.modified is False
         app._mark_dirty()
-        assert app._dirty is True
+        assert app.spreadsheet.modified is True
 
     def test_generate_css(self):
         """Test _generate_css returns CSS string."""
@@ -317,12 +317,12 @@ class TestLotusAppActionsAsync:
         async with app.run_test() as pilot:
             # Set some data first
             app.spreadsheet.set_cell(0, 0, "test data")
-            app._dirty = False  # Not dirty, no confirmation needed
+            app.spreadsheet.modified = False  # Not dirty, no confirmation needed
             # Run new file action
             app.action_new_file()
             # Spreadsheet should be cleared
             assert app.spreadsheet.get_value(0, 0) == ""
-            assert app._dirty is False
+            assert app.spreadsheet.modified is False
 
     @pytest.mark.asyncio
     async def test_action_new_file_dirty_prompts(self):
@@ -331,13 +331,13 @@ class TestLotusAppActionsAsync:
         async with app.run_test() as pilot:
             # Set some data first
             app.spreadsheet.set_cell(0, 0, "test data")
-            app._dirty = True
+            app.spreadsheet.modified = True
             # Run new file action - should prompt for save
             app.action_new_file()
             await pilot.pause()
             # Dialog should be shown, data should still exist
             assert app.spreadsheet.get_value(0, 0) == "test data"
-            assert app._dirty is True
+            assert app.spreadsheet.modified is True
             # Cancel the dialog
             await pilot.press("escape")
 
@@ -348,12 +348,12 @@ class TestLotusAppActionsAsync:
         async with app.run_test() as pilot:
             # Set some data first
             app.spreadsheet.set_cell(0, 0, "test data")
-            app._dirty = True
+            app.spreadsheet.modified = True
             # Call the internal method directly
             app._file_handler._do_new_file()
             # Spreadsheet should be cleared
             assert app.spreadsheet.get_value(0, 0) == ""
-            assert app._dirty is False
+            assert app.spreadsheet.modified is False
 
     @pytest.mark.asyncio
     async def test_action_undo_nothing(self):
@@ -551,7 +551,7 @@ class TestLotusAppMenuHandling:
         async with app.run_test() as pilot:
             app._handle_menu("File:New")
             # Should clear the spreadsheet
-            assert app._dirty is False
+            assert app.spreadsheet.modified is False
 
     @pytest.mark.asyncio
     async def test_handle_menu_range_erase(self):
