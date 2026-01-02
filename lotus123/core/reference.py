@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Iterator
+from typing import Iterator, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    pass
 
 # Pattern for cell references: optional $ before column and/or row
 CELL_REF_PATTERN = re.compile(r"^(\$?)([A-Za-z]+)(\$?)(\d+)$")
@@ -265,6 +268,7 @@ def adjust_formula_references(
     """Adjust cell references in a formula for copy/paste.
 
     Relative references are adjusted, absolute references ($) are kept.
+    Strings and named ranges are preserved.
 
     Args:
         formula: Formula string (without leading =)
@@ -276,19 +280,51 @@ def adjust_formula_references(
     Returns:
         Formula with adjusted references
     """
+    from ..formula.tokenizer import Tokenizer, TokenType
 
-    def replace_ref(match: re.Match[str]) -> str:
-        ref_str = match.group(0)
-        try:
-            ref = CellReference.parse(ref_str)
-            adjusted = ref.adjust(row_delta, col_delta, max_row, max_col)
-            return adjusted.to_string()
-        except ValueError:
-            return str(ref_str)
+    tokenizer = Tokenizer()
+    tokens = tokenizer.tokenize(formula)
+    
+    result = []
+    last_pos = 0
 
-    # Match cell references but not function names
-    pattern = r"\$?[A-Za-z]+\$?\d+"
-    return re.sub(pattern, replace_ref, formula)
+    for token in tokens:
+        # Append skipped content (whitespace, etc.)
+        if token.position > last_pos:
+            result.append(formula[last_pos:token.position])
+        
+        # Determine replacement text
+        text = token.raw_text
+        
+        if token.type == TokenType.CELL:
+            try:
+                ref = CellReference.parse(token.raw_text)
+                text = ref.adjust(row_delta, col_delta, max_row, max_col).to_string()
+            except ValueError:
+                # Not a valid cell ref (e.g. named range or function looking like cell)
+                pass
+        
+        elif token.type == TokenType.RANGE:
+            # Tokenizer might classify named ranges as RANGE if we passed a spreadsheet,
+            # but here we pass None. So this usually won't trigger unless we handle ranges explicitly.
+            # However, our Tokenizer emits RANGE only if named range is resolved.
+            # Standard A1:B2 is parsed as CELL, COLON, CELL by our tokenizer?
+            # Let's check Tokenizer.tokenize loop.
+            # No, Tokenizer splits on special chars. A1:B2 -> A1 (CELL), : (COLON), B2 (CELL).
+            # So range adjustment happens automatically via cell adjustment!
+            pass
+
+        elif token.type == TokenType.EOF:
+            text = ""
+
+        result.append(text)
+        last_pos = token.position + len(token.raw_text)
+
+    # Append any trailing content
+    if last_pos < len(formula):
+        result.append(formula[last_pos:])
+
+    return "".join(result)
 
 
 def adjust_for_structural_change(
@@ -301,8 +337,6 @@ def adjust_for_structural_change(
 ) -> str:
     """Adjust references based on row/column insertion/deletion.
     
-    Handles both relative and absolute references equally (they all point to specific cells).
-    
     Args:
         formula: Formula string
         axis: 'row' or 'col'
@@ -314,35 +348,56 @@ def adjust_for_structural_change(
     Returns:
         Adjusted formula string
     """
-    def replace_ref(match: re.Match[str]) -> str:
-        ref_str = match.group(0)
-        try:
-            ref = CellReference.parse(ref_str)
-            
-            if axis == 'row':
-                if shift < 0 and ref.row == boundary:
-                    # Pointing to deleted row
-                    return "#REF!"
-                if ref.row >= boundary:
-                    new_row = ref.row + shift
-                    if 0 <= new_row <= max_row:
-                        ref.row = new_row
-                    else:
-                        return "#REF!"
-            elif axis == 'col':
-                if shift < 0 and ref.col == boundary:
-                    # Pointing to deleted col
-                    return "#REF!"
-                if ref.col >= boundary:
-                    new_col = ref.col + shift
-                    if 0 <= new_col <= max_col:
-                        ref.col = new_col
-                    else:
-                        return "#REF!"
-                        
-            return ref.to_string()
-        except ValueError:
-            return str(ref_str)
+    from ..formula.tokenizer import Tokenizer, TokenType
 
-    pattern = r"\$?[A-Za-z]+\$?\d+"
-    return re.sub(pattern, replace_ref, formula)
+    tokenizer = Tokenizer()
+    tokens = tokenizer.tokenize(formula)
+    
+    result = []
+    last_pos = 0
+
+    for token in tokens:
+        # Append skipped content
+        if token.position > last_pos:
+            result.append(formula[last_pos:token.position])
+            
+        text = token.raw_text
+        
+        if token.type == TokenType.CELL:
+            try:
+                ref = CellReference.parse(token.raw_text)
+                
+                if axis == 'row':
+                    if shift < 0 and ref.row == boundary:
+                        text = "#REF!"
+                    elif ref.row >= boundary:
+                        new_row = ref.row + shift
+                        if 0 <= new_row <= max_row:
+                            ref.row = new_row
+                            text = ref.to_string()
+                        else:
+                            text = "#REF!"
+                elif axis == 'col':
+                    if shift < 0 and ref.col == boundary:
+                        text = "#REF!"
+                    elif ref.col >= boundary:
+                        new_col = ref.col + shift
+                        if 0 <= new_col <= max_col:
+                            ref.col = new_col
+                            text = ref.to_string()
+                        else:
+                            text = "#REF!"
+                            
+            except ValueError:
+                pass
+
+        elif token.type == TokenType.EOF:
+            text = ""
+
+        result.append(text)
+        last_pos = token.position + len(token.raw_text)
+
+    if last_pos < len(formula):
+        result.append(formula[last_pos:])
+
+    return "".join(result)

@@ -140,7 +140,10 @@ class Spreadsheet:
         self.update_cell_dependency(row, col, new_formula)
 
         self.modified = True
-        self._invalidate_cache()
+        
+        # Only full invalidate if no engine (engine handles incremental invalidation)
+        if not self._recalc_engine:
+            self._invalidate_cache()
 
     def set_cell_by_ref(self, ref: str, value: str) -> None:
         """Set cell by reference string like 'A1'."""
@@ -162,7 +165,9 @@ class Spreadsheet:
             self.update_cell_dependency(row, col, None)
 
             self.modified = True
-            self._invalidate_cache()
+            
+            if not self._recalc_engine:
+                self._invalidate_cache()
 
     def cell_exists(self, row: int, col: int) -> bool:
         """Check if a cell has content."""
@@ -760,7 +765,9 @@ class Spreadsheet:
         self.update_cell_dependency(to_row, to_col, new_formula)
 
         self.modified = True
-        self._invalidate_cache()
+        
+        if not self._recalc_engine:
+            self._invalidate_cache()
 
     def copy_range(
         self,

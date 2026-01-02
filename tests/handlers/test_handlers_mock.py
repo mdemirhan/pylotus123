@@ -302,15 +302,19 @@ class TestChartHandler:
         
         # Test A-F
         ranges = ['a', 'b', 'c', 'd', 'e', 'f']
-        for r in ranges:
+        for idx, r in enumerate(ranges):
             method_name = f"set_{r}_range"
             getattr(self.handler, method_name)()
             # Should invoke add_series
             assert self.app.chart.add_series.call_count >= 1
             
-            # Test callback
-            callback_name = f"_do_set_{r}_range"
-            getattr(self.handler, callback_name)(f"{r.upper()}1:{r.upper()}10")
+            # Test callback via shared range handler
+            self.handler._do_set_range(
+                f"{r.upper()}1:{r.upper()}10",
+                lambda range_str, i=idx, name=r.upper(): self.handler._add_or_update_series(
+                    i, name, range_str
+                ),
+            )
 
     def test_view_chart(self):
         # With no series -> warning

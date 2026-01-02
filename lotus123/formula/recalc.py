@@ -72,11 +72,17 @@ class RecalcEngine:
         Also marks all cells that depend on this cell.
         """
         self._dirty_cells.add((row, col))
+        # Invalidate cache for this cell immediately
+        if (row, col) in self.spreadsheet._cache:
+            del self.spreadsheet._cache[(row, col)]
 
         # Mark dependents as dirty too
         for dependent in self._dependents.get((row, col), set()):
             if dependent not in self._dirty_cells:
                 self._dirty_cells.add(dependent)
+                # Invalidate cache for dependent
+                if dependent in self.spreadsheet._cache:
+                    del self.spreadsheet._cache[dependent]
                 # Recursively mark dependents
                 self.mark_dirty(*dependent)
 
@@ -141,19 +147,21 @@ class RecalcEngine:
             if not self._dependency_graph:
                 self._rebuild_dependency_graph()
             cells_to_calc = self._get_all_formula_cells()
+            # For full recalc, we DO clear the entire cache
+            self.spreadsheet._cache.clear()
         else:
             cells_to_calc = self._dirty_cells.copy()
+            # For partial recalc, cache invalidation happened in mark_dirty
 
         # Get calculation order
         ordered_cells = self._get_calculation_order(cells_to_calc)
 
-        # Clear cache and calculate
-        self.spreadsheet._cache.clear()
         self._circular_refs.clear()
 
         for row, col in ordered_cells:
             cell = self.spreadsheet.get_cell_if_exists(row, col)
             if cell and cell.is_formula:
+                # Value is computed and cached here
                 value = self.spreadsheet.get_value(row, col)
                 stats.cells_evaluated += 1
 
