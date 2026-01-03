@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
+from ..core.errors import FormulaError
+
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
 
@@ -73,16 +75,14 @@ class RecalcEngine:
         """
         self._dirty_cells.add((row, col))
         # Invalidate cache for this cell immediately
-        if (row, col) in self.spreadsheet._cache:
-            del self.spreadsheet._cache[(row, col)]
+        self.spreadsheet.invalidate_cell_cache(row, col)
 
         # Mark dependents as dirty too
         for dependent in self._dependents.get((row, col), set()):
             if dependent not in self._dirty_cells:
                 self._dirty_cells.add(dependent)
                 # Invalidate cache for dependent
-                if dependent in self.spreadsheet._cache:
-                    del self.spreadsheet._cache[dependent]
+                self.spreadsheet.invalidate_cell_cache(*dependent)
                 # Recursively mark dependents
                 self.mark_dirty(*dependent)
 
@@ -145,10 +145,10 @@ class RecalcEngine:
             # Only rebuild graph if explicitly requested (e.g. on load)
             # Otherwise assume graph is maintained incrementally
             if not self._dependency_graph:
-                self._rebuild_dependency_graph()
+                self.rebuild_dependency_graph()
             cells_to_calc = self._get_all_formula_cells()
             # For full recalc, we DO clear the entire cache
-            self.spreadsheet._cache.clear()
+            self.spreadsheet.clear_cache()
         else:
             cells_to_calc = self._dirty_cells.copy()
             # For partial recalc, cache invalidation happened in mark_dirty
@@ -166,10 +166,10 @@ class RecalcEngine:
                 stats.cells_evaluated += 1
 
                 if isinstance(value, str):
-                    if value == "#CIRC!":
+                    if value == FormulaError.CIRC:
                         self._circular_refs.add((row, col))
                         stats.circular_refs_found += 1
-                    elif value.startswith("#"):
+                    elif FormulaError.is_error(value):
                         stats.errors_found += 1
 
         self._dirty_cells.clear()
@@ -197,7 +197,7 @@ class RecalcEngine:
     def _topological_order(self, cells: set[tuple[int, int]]) -> list[tuple[int, int]]:
         """Sort cells by dependencies (dependencies first)."""
         if not self._dependency_graph:
-            self._rebuild_dependency_graph()
+            self.rebuild_dependency_graph()
 
         # Filter to only requested cells
         relevant = {c: self._dependency_graph.get(c, set()) & cells for c in cells}
@@ -226,7 +226,7 @@ class RecalcEngine:
 
         return result
 
-    def _rebuild_dependency_graph(self) -> None:
+    def rebuild_dependency_graph(self) -> None:
         """Rebuild the dependency graph from scratch."""
         from .evaluator import FormulaEvaluator
 

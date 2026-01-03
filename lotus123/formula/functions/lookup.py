@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from ...core.errors import FormulaError
+
 if TYPE_CHECKING:
     pass
 
@@ -87,7 +89,7 @@ def fn_vlookup(
                   Approximate match requires a sorted first column.
     """
     if not isinstance(table, list) or not table:
-        return "#N/A"
+        return FormulaError.NA
 
     col_idx = int(col_index) - 1  # Convert to 0-based
     range_match = range_lookup if isinstance(range_lookup, bool) else bool(range_lookup)
@@ -97,7 +99,7 @@ def fn_vlookup(
         table = [[v] for v in table]
 
     if col_idx < 0 or (table and col_idx >= len(table[0])):
-        return "#REF!"
+        return FormulaError.REF
 
     if range_match:
         first_col = [
@@ -106,7 +108,7 @@ def fn_vlookup(
             if row is not None
         ]
         if not _is_sorted(first_col):
-            return "#N/A"
+            return FormulaError.NA
 
     last_match_row = None
 
@@ -123,15 +125,15 @@ def fn_vlookup(
             if _is_match(lookup_value, cell_value, False):
                 if isinstance(row, list) and col_idx < len(row):
                     return row[col_idx]
-                return "#REF!"
+                return FormulaError.REF
 
     if range_match and last_match_row is not None:
         row = table[last_match_row]
         if isinstance(row, list) and col_idx < len(row):
             return row[col_idx]
-        return "#REF!"
+        return FormulaError.REF
 
-    return "#N/A"
+    return FormulaError.NA
 
 
 def fn_hlookup(
@@ -145,7 +147,7 @@ def fn_hlookup(
     Approximate match requires a sorted first row.
     """
     if not isinstance(table, list) or not table:
-        return "#N/A"
+        return FormulaError.NA
 
     row_idx = int(row_index) - 1  # Convert to 0-based
     range_match = range_lookup if isinstance(range_lookup, bool) else bool(range_lookup)
@@ -155,11 +157,11 @@ def fn_hlookup(
         table = [table]  # Make it a single row
 
     if row_idx < 0 or row_idx >= len(table):
-        return "#REF!"
+        return FormulaError.REF
 
     first_row = table[0]
     if range_match and not _is_sorted(first_row):
-        return "#N/A"
+        return FormulaError.NA
     last_match_col = None
 
     for col_idx, cell_value in enumerate(first_row):
@@ -170,14 +172,14 @@ def fn_hlookup(
             if _is_match(lookup_value, cell_value, False):
                 if row_idx < len(table) and col_idx < len(table[row_idx]):
                     return table[row_idx][col_idx]
-                return "#REF!"
+                return FormulaError.REF
 
     if range_match and last_match_col is not None:
         if row_idx < len(table) and last_match_col < len(table[row_idx]):
             return table[row_idx][last_match_col]
-        return "#REF!"
+        return FormulaError.REF
 
-    return "#N/A"
+    return FormulaError.NA
 
 
 def fn_index(array: Any, row_num: Any, col_num: Any = None) -> Any:
@@ -187,7 +189,7 @@ def fn_index(array: Any, row_num: Any, col_num: Any = None) -> Any:
     row_num and col_num are 1-based.
     """
     if not isinstance(array, list):
-        return array if row_num == 1 else "#REF!"
+        return array if row_num == 1 else FormulaError.REF
 
     row_idx = int(row_num) - 1
 
@@ -195,11 +197,11 @@ def fn_index(array: Any, row_num: Any, col_num: Any = None) -> Any:
     if not array or not isinstance(array[0], list):
         if 0 <= row_idx < len(array):
             return array[row_idx]
-        return "#REF!"
+        return FormulaError.REF
 
     # Handle 2D array
     if row_idx < 0 or row_idx >= len(array):
-        return "#REF!"
+        return FormulaError.REF
 
     if col_num is None:
         return array[row_idx]
@@ -207,7 +209,7 @@ def fn_index(array: Any, row_num: Any, col_num: Any = None) -> Any:
     col_idx = int(col_num) - 1
     row = array[row_idx]
     if col_idx < 0 or col_idx >= len(row):
-        return "#REF!"
+        return FormulaError.REF
 
     return row[col_idx]
 
@@ -284,7 +286,7 @@ def fn_lookup(
     If result_vector is omitted, returns value from lookup_vector.
     """
     if not isinstance(lookup_vector, list):
-        return "#N/A"
+        return FormulaError.NA
 
     # Flatten vectors
     lv = []
@@ -316,7 +318,7 @@ def fn_lookup(
 
     if last_match is not None and last_match < len(rv):
         return rv[last_match]
-    return "#N/A"
+    return FormulaError.NA
 
 
 def fn_rows(array: Any) -> int:
@@ -379,7 +381,7 @@ def fn_offset(reference: Any, rows: Any, cols: Any, height: Any = None, width: A
     Returns a placeholder in this simple implementation.
     """
     # This would need spreadsheet context to implement properly
-    return "#REF!"
+    return FormulaError.REF
 
 
 def fn_indirect(ref_text: Any) -> Any:
@@ -387,7 +389,7 @@ def fn_indirect(ref_text: Any) -> Any:
 
     Note: This is a reference function that requires spreadsheet context.
     """
-    return "#REF!"
+    return FormulaError.REF
 
 
 def fn_row(reference: Any = None) -> int:

@@ -1,6 +1,7 @@
 """Core data model components for the spreadsheet."""
 
 from .cell import Cell, CellType, TextAlignment
+from .errors import ERROR_TYPE_MAP, FormulaError
 from .formatting import DateFormat, FormatCode, TimeFormat, format_value, parse_format_code
 from .named_ranges import NamedRangeManager
 from .reference import (
@@ -34,4 +35,6 @@ __all__ = [
     "parse_format_code",
     "Spreadsheet",
     "NamedRangeManager",
+    "FormulaError",
+    "ERROR_TYPE_MAP",
 ]

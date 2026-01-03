@@ -138,23 +138,13 @@ def fn_error_type(error_val: Any) -> int:
         7 = #N/A
         8 = #CIRC!
     """
-    if not isinstance(error_val, str) or not error_val.startswith("#"):
+    from ...core.errors import ERROR_TYPE_MAP, FormulaError
+
+    if not FormulaError.is_error(error_val):
         return 0
 
-    error_map = {
-        "#NULL!": 1,
-        "#DIV/0!": 2,
-        "#VALUE!": 3,
-        "#REF!": 4,
-        "#NAME?": 5,
-        "#NUM!": 6,
-        "#N/A": 7,
-        "#CIRC!": 8,
-        "#ERR!": 3,
-    }
-
     # Check for partial matches
-    for err, num in error_map.items():
+    for err, num in ERROR_TYPE_MAP.items():
         if error_val.startswith(err.rstrip("!")):
             return num
     return 0

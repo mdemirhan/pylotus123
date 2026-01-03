@@ -10,6 +10,8 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from ...core.errors import FormulaError
+
 
 def fn_pmt(principal: Any, rate: Any, nper: Any) -> float:
     """@PMT - Calculate loan payment.
@@ -125,7 +127,7 @@ def fn_irr(guess: Any, *cash_flows: Any) -> float | str:
     ]
 
     if not float_flows:
-        return "#ERR!"
+        return FormulaError.ERR
 
     rate = float(guess) if guess else 0.1
 
@@ -216,7 +218,7 @@ def fn_cterm(rate: Any, fv: Any, pv: Any) -> float | str:
     present = float(pv)
 
     if r <= 0 or present <= 0 or future <= 0:
-        return "#ERR!"
+        return FormulaError.ERR
 
     return math.log(future / present) / math.log(1 + r)
 
@@ -250,7 +252,7 @@ def fn_sln(cost: Any, salvage: Any, life: Any) -> float | str:
     n = float(life)
 
     if n == 0:
-        return "#DIV/0!"
+        return FormulaError.DIV_ZERO
 
     return (c - s) / n
 
@@ -268,7 +270,7 @@ def fn_syd(cost: Any, salvage: Any, life: Any, period: Any) -> float | str:
     per = int(period)
 
     if n <= 0 or per <= 0 or per > n:
-        return "#ERR!"
+        return FormulaError.ERR
 
     sum_years = n * (n + 1) / 2
     return (c - s) * (n - per + 1) / sum_years
@@ -288,7 +290,7 @@ def fn_ddb(cost: Any, salvage: Any, life: Any, period: Any, factor: Any = 2) -> 
     f = float(factor) if factor else 2
 
     if n <= 0 or per <= 0:
-        return "#ERR!"
+        return FormulaError.ERR
 
     # Calculate book value at start of period
     rate = f / n
@@ -321,7 +323,7 @@ def fn_ipmt(rate: Any, period: Any, nper: Any, pv: Any) -> float | str:
     present = float(pv)
 
     if per < 1 or per > n:
-        return "#ERR!"
+        return FormulaError.ERR
 
     # Calculate payment
     if r == 0:
@@ -351,7 +353,7 @@ def fn_ppmt(rate: Any, period: Any, nper: Any, pv: Any) -> float | str:
     present = float(pv)
 
     if per < 1 or per > n:
-        return "#ERR!"
+        return FormulaError.ERR
 
     # Calculate payment
     if r == 0:

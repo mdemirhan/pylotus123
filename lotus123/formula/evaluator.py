@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from ..core.errors import FormulaError
+
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
 
@@ -54,7 +56,7 @@ class FormulaEvaluator:
 
         # Check for circular reference
         if (row, col) in self._context.computing:
-            return "#CIRC!"
+            return FormulaError.CIRC
 
         # Set up context
         self._context.current_row = row

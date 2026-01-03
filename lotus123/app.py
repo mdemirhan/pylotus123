@@ -134,6 +134,86 @@ class LotusApp(App[None]):
     }
     """
 
+    # Menu dispatch table: maps menu result strings to handler method calls
+    # Format: (handler_attr, method_name, *args) or None for no-op
+    MENU_DISPATCH: dict[str, tuple[str, ...] | None] = {
+        # Navigation
+        "Goto": ("_navigation_handler", "goto"),
+        "Worksheet:Goto": ("_navigation_handler", "goto"),
+        # Clipboard
+        "Copy": ("_clipboard_handler", "menu_copy"),
+        "Move": ("_clipboard_handler", "menu_move"),
+        # File
+        "File:New": ("_file_handler", "new_file"),
+        "File:Retrieve": ("_file_handler", "open_file"),
+        "File:Save": ("_file_handler", "save"),
+        "File:Save As": ("_file_handler", "save_as"),
+        "File:Quit": ("_file_handler", "quit_app"),
+        "Quit:Yes": ("_file_handler", "quit_app"),
+        "Quit:No": None,
+        # Range
+        "Range:Erase": ("self", "action_clear_cell"),
+        "Range:Format": ("_range_handler", "range_format"),
+        "Range:Label": ("_range_handler", "range_label"),
+        "Range:Name": ("_range_handler", "range_name"),
+        # Data
+        "Data:Fill": ("_data_handler", "data_fill"),
+        "Data:Sort": ("_data_handler", "data_sort"),
+        # Query
+        "Data:Query:Input": ("_query_handler", "set_input"),
+        "Data:Query:Criteria": ("_query_handler", "set_criteria"),
+        "Data:Query:Output": ("_query_handler", "set_output"),
+        "Data:Query:Find": ("_query_handler", "find"),
+        "Data:Query:Extract": ("_query_handler", "extract"),
+        "Data:Query:Unique": ("_query_handler", "unique"),
+        "Data:Query:Delete": ("_query_handler", "delete"),
+        "Data:Query:Reset": ("_query_handler", "reset"),
+        # Worksheet
+        "Worksheet:Insert:Rows": ("_worksheet_handler", "insert_rows"),
+        "Worksheet:Insert:Columns": ("_worksheet_handler", "insert_columns"),
+        "Worksheet:Delete:Rows": ("_worksheet_handler", "delete_rows"),
+        "Worksheet:Delete:Columns": ("_worksheet_handler", "delete_columns"),
+        "Worksheet:Column": ("_worksheet_handler", "set_column_width"),
+        "Worksheet:Erase": ("_worksheet_handler", "worksheet_erase"),
+        "Worksheet:Global:Format": ("_worksheet_handler", "global_format"),
+        "Worksheet:Global:Label-Prefix": ("_worksheet_handler", "global_label_prefix"),
+        "Worksheet:Global:Column-Width": ("_worksheet_handler", "global_column_width"),
+        "Worksheet:Global:Recalculation": ("_worksheet_handler", "global_recalculation"),
+        "Worksheet:Global:Zero": ("_worksheet_handler", "global_zero"),
+        # Graph - types handled separately via _CHART_TYPES
+        "Graph:X-Range": ("_chart_handler", "set_x_range"),
+        "Graph:A-Range": ("_chart_handler", "set_a_range"),
+        "Graph:B-Range": ("_chart_handler", "set_b_range"),
+        "Graph:C-Range": ("_chart_handler", "set_c_range"),
+        "Graph:D-Range": ("_chart_handler", "set_d_range"),
+        "Graph:E-Range": ("_chart_handler", "set_e_range"),
+        "Graph:F-Range": ("_chart_handler", "set_f_range"),
+        "Graph:View": ("_chart_handler", "view_chart"),
+        "Graph:Reset": ("_chart_handler", "reset_chart"),
+        "Graph:Save": ("_chart_handler", "save_chart"),
+        "Graph:Load": ("_chart_handler", "load_chart"),
+        # Import/Export
+        "File:Import:CSV": ("_import_export_handler", "import_csv"),
+        "File:Import:TSV": ("_import_export_handler", "import_tsv"),
+        "File:Import:WK1": ("_import_export_handler", "import_wk1"),
+        "File:Import:XLSX": ("_import_export_handler", "import_xlsx"),
+        "File:Export:CSV": ("_import_export_handler", "export_csv"),
+        "File:Export:TSV": ("_import_export_handler", "export_tsv"),
+        "File:Export:WK1": ("_import_export_handler", "export_wk1"),
+        "File:Export:XLSX": ("_import_export_handler", "export_xlsx"),
+        # System
+        "System:Theme": ("_file_handler", "change_theme"),
+    }
+
+    # Chart type mappings (separate since they need ChartType enum values)
+    _CHART_TYPES: dict[str, "ChartType"] = {
+        "Graph:Type:Line": ChartType.LINE,
+        "Graph:Type:Bar": ChartType.BAR,
+        "Graph:Type:XY": ChartType.XY_SCATTER,
+        "Graph:Type:Stacked": ChartType.STACKED_BAR,
+        "Graph:Type:Pie": ChartType.PIE,
+    }
+
     def __init__(self, initial_file: str | None = None):
         super().__init__()
         self._initial_file = initial_file
@@ -583,134 +663,19 @@ class LotusApp(App[None]):
         if not result:
             return
 
-        # Navigation
-        if result == "Goto" or result == "Worksheet:Goto":
-            self._navigation_handler.goto()
-        # Clipboard
-        elif result == "Copy":
-            self._clipboard_handler.menu_copy()
-        elif result == "Move":
-            self._clipboard_handler.menu_move()
-        # File
-        elif result == "File:New":
-            self._file_handler.new_file()
-        elif result == "File:Retrieve":
-            self._file_handler.open_file()
-        elif result == "File:Save":
-            self._file_handler.save()
-        elif result == "File:Save As":
-            self._file_handler.save_as()
-        elif result == "File:Quit" or result == "Quit:Yes":
-            self._file_handler.quit_app()
-        elif result == "Quit:No":
-            pass
-        # Range
-        elif result == "Range:Erase":
-            self.action_clear_cell()
-        elif result == "Range:Format":
-            self._range_handler.range_format()
-        elif result == "Range:Label":
-            self._range_handler.range_label()
-        elif result == "Range:Name":
-            self._range_handler.range_name()
-        # Data
-        elif result == "Data:Fill":
-            self._data_handler.data_fill()
-        elif result == "Data:Sort":
-            self._data_handler.data_sort()
-        # Query
-        elif result == "Data:Query:Input":
-            self._query_handler.set_input()
-        elif result == "Data:Query:Criteria":
-            self._query_handler.set_criteria()
-        elif result == "Data:Query:Output":
-            self._query_handler.set_output()
-        elif result == "Data:Query:Find":
-            self._query_handler.find()
-        elif result == "Data:Query:Extract":
-            self._query_handler.extract()
-        elif result == "Data:Query:Unique":
-            self._query_handler.unique()
-        elif result == "Data:Query:Delete":
-            self._query_handler.delete()
-        elif result == "Data:Query:Reset":
-            self._query_handler.reset()
-        # Worksheet
-        elif result == "Worksheet:Insert:Rows":
-            self._worksheet_handler.insert_rows()
-        elif result == "Worksheet:Insert:Columns":
-            self._worksheet_handler.insert_columns()
-        elif result == "Worksheet:Delete:Rows":
-            self._worksheet_handler.delete_rows()
-        elif result == "Worksheet:Delete:Columns":
-            self._worksheet_handler.delete_columns()
-        elif result == "Worksheet:Column":
-            self._worksheet_handler.set_column_width()
-        elif result == "Worksheet:Erase":
-            self._worksheet_handler.worksheet_erase()
-        elif result == "Worksheet:Global:Format":
-            self._worksheet_handler.global_format()
-        elif result == "Worksheet:Global:Label-Prefix":
-            self._worksheet_handler.global_label_prefix()
-        elif result == "Worksheet:Global:Column-Width":
-            self._worksheet_handler.global_column_width()
-        elif result == "Worksheet:Global:Recalculation":
-            self._worksheet_handler.global_recalculation()
-        elif result == "Worksheet:Global:Zero":
-            self._worksheet_handler.global_zero()
-        # Graph/Chart
-        elif result == "Graph:Type:Line":
-            self._chart_handler.set_chart_type(ChartType.LINE)
-        elif result == "Graph:Type:Bar":
-            self._chart_handler.set_chart_type(ChartType.BAR)
-        elif result == "Graph:Type:XY":
-            self._chart_handler.set_chart_type(ChartType.XY_SCATTER)
-        elif result == "Graph:Type:Stacked":
-            self._chart_handler.set_chart_type(ChartType.STACKED_BAR)
-        elif result == "Graph:Type:Pie":
-            self._chart_handler.set_chart_type(ChartType.PIE)
-        elif result == "Graph:X-Range":
-            self._chart_handler.set_x_range()
-        elif result == "Graph:A-Range":
-            self._chart_handler.set_a_range()
-        elif result == "Graph:B-Range":
-            self._chart_handler.set_b_range()
-        elif result == "Graph:C-Range":
-            self._chart_handler.set_c_range()
-        elif result == "Graph:D-Range":
-            self._chart_handler.set_d_range()
-        elif result == "Graph:E-Range":
-            self._chart_handler.set_e_range()
-        elif result == "Graph:F-Range":
-            self._chart_handler.set_f_range()
-        elif result == "Graph:View":
-            self._chart_handler.view_chart()
-        elif result == "Graph:Reset":
-            self._chart_handler.reset_chart()
-        elif result == "Graph:Save":
-            self._chart_handler.save_chart()
-        elif result == "Graph:Load":
-            self._chart_handler.load_chart()
-        # Import/Export
-        elif result == "File:Import:CSV":
-            self._import_export_handler.import_csv()
-        elif result == "File:Import:TSV":
-            self._import_export_handler.import_tsv()
-        elif result == "File:Import:WK1":
-            self._import_export_handler.import_wk1()
-        elif result == "File:Import:XLSX":
-            self._import_export_handler.import_xlsx()
-        elif result == "File:Export:CSV":
-            self._import_export_handler.export_csv()
-        elif result == "File:Export:TSV":
-            self._import_export_handler.export_tsv()
-        elif result == "File:Export:WK1":
-            self._import_export_handler.export_wk1()
-        elif result == "File:Export:XLSX":
-            self._import_export_handler.export_xlsx()
-        # System menu
-        elif result == "System:Theme":
-            self._file_handler.change_theme()
+        # Check for chart type selection first
+        if result in self._CHART_TYPES:
+            self._chart_handler.set_chart_type(self._CHART_TYPES[result])
+            return
+
+        # Look up in dispatch table
+        action = self.MENU_DISPATCH.get(result)
+        if action is None:
+            return  # No-op or unknown menu item
+
+        handler_name, method_name = action[0], action[1]
+        handler = self if handler_name == "self" else getattr(self, handler_name)
+        getattr(handler, method_name)()
 
     def on_key(self, event: events.Key) -> None:
         """Handle key presses for navigation and direct cell input."""

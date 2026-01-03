@@ -12,6 +12,8 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from ...core.errors import FormulaError
+
 
 def _to_number(value: Any) -> float | None:
     """Convert value to number, returning None for non-numeric."""
@@ -373,13 +375,13 @@ def fn_dget(database: Any, field: Any, criteria: Any) -> Any:
     Returns error if more than one record matches.
     """
     if not isinstance(database, list) or len(database) < 2:
-        return "#VALUE!"
+        return FormulaError.VALUE
 
     headers = database[0] if isinstance(database[0], list) else [database[0]]
     field_idx = _get_field_index(database, field)
 
     if field_idx is None:
-        return "#VALUE!"
+        return FormulaError.VALUE
 
     crit = criteria if isinstance(criteria, list) else []
     matches = []
@@ -393,9 +395,9 @@ def fn_dget(database: Any, field: Any, criteria: Any) -> Any:
                 matches.append(row[field_idx])
 
     if len(matches) == 0:
-        return "#VALUE!"
+        return FormulaError.VALUE
     if len(matches) > 1:
-        return "#NUM!"  # Multiple matches
+        return FormulaError.NUM  # Multiple matches
 
     return matches[0]
 

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ...core.errors import FormulaError
+
 
 def _flatten_args(args: tuple) -> list:
     """Flatten nested lists in arguments."""
@@ -114,7 +116,7 @@ def fn_iserr(value: Any) -> bool:
     Returns TRUE for errors like #DIV/0!, #ERR!, #CIRC!, etc.
     """
     if isinstance(value, str) and value.startswith("#"):
-        return value != "#N/A"
+        return value != FormulaError.NA
     return False
 
 
@@ -125,7 +127,7 @@ def fn_iserror(value: Any) -> bool:
 
 def fn_isna(value: Any) -> bool:
     """@ISNA - Check if value is #N/A error."""
-    return bool(value == "#N/A")
+    return bool(value == FormulaError.NA)
 
 
 def fn_isnumber(value: Any) -> bool:
@@ -204,12 +206,12 @@ def fn_isref(value: Any) -> bool:
 
 def fn_na() -> str:
     """@NA - Return #N/A error value."""
-    return "#N/A"
+    return FormulaError.NA
 
 
 def fn_err() -> str:
     """@ERR - Return #ERR! error value."""
-    return "#ERR!"
+    return FormulaError.ERR
 
 
 def fn_iferror(value: Any, value_if_error: Any) -> Any:
@@ -227,7 +229,7 @@ def fn_ifna(value: Any, value_if_na: Any) -> Any:
 
     Usage: @IFNA(value, value_if_na)
     """
-    if value == "#N/A":
+    if value == FormulaError.NA:
         return value_if_na
     return value
 
@@ -262,7 +264,7 @@ def fn_choose(index: Any, *values: Any) -> Any:
             return values[idx - 1]
     except (ValueError, TypeError):
         pass
-    return "#N/A"
+    return FormulaError.NA
 
 
 # Function registry for this module

@@ -223,7 +223,7 @@ class TestRecalcOrder:
         self.ss.set_cell(0, 0, "10")
         self.ss.set_cell(0, 1, "=A1*2")
 
-        self.engine._rebuild_dependency_graph()
+        self.engine.rebuild_dependency_graph()
         cells = {(0, 0), (0, 1)}
 
         order = self.engine._get_calculation_order(cells)
@@ -245,7 +245,7 @@ class TestDependencyGraph:
         self.ss.set_cell(0, 0, "10")
         self.ss.set_cell(0, 1, "=A1*2")
 
-        self.engine._rebuild_dependency_graph()
+        self.engine.rebuild_dependency_graph()
 
         # B1 depends on A1
         assert (0, 0) in self.engine._dependency_graph.get((0, 1), set())
@@ -255,7 +255,7 @@ class TestDependencyGraph:
         self.ss.set_cell(0, 0, "10")
         self.ss.set_cell(0, 1, "=A1*2")
 
-        self.engine._rebuild_dependency_graph()
+        self.engine.rebuild_dependency_graph()
 
         # A1 has B1 as dependent
         assert (0, 1) in self.engine._dependents.get((0, 0), set())

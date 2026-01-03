@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ..core import col_to_index, index_to_col
+from ..data.database import DatabaseOperations, SortKey, SortOrder
 from ..ui import CommandInput
 from ..utils.undo import RangeChangeCommand
 from .base import BaseHandler
@@ -85,11 +86,15 @@ class DataHandler(BaseHandler):
         grid = self.get_grid()
         r1, c1, r2, c2 = grid.selection_range
         try:
+            # Parse user input: column letter + optional 'D' for descending
             result = result.strip().upper()
-            reverse = result.endswith("D")
+            descending = result.endswith("D")
             sort_col_letter = result.rstrip("D").rstrip("A") or result[0]
+
+            # Convert column letter to absolute index within selection
             sort_col_abs = col_to_index(sort_col_letter)
             if sort_col_abs < c1 or sort_col_abs > c2:
+                # Try as relative column (A=first col in selection)
                 sort_col_idx = ord(sort_col_letter) - ord("A")
                 sort_col_abs = c1 + sort_col_idx
             if sort_col_abs < c1 or sort_col_abs > c2:
@@ -98,41 +103,25 @@ class DataHandler(BaseHandler):
                     severity="error",
                 )
                 return
-            rows_data = []
-            for r in range(r1, r2 + 1):
-                row_values = []
-                for c in range(c1, c2 + 1):
-                    cell = self.spreadsheet.get_cell(r, c)
-                    row_values.append(cell.raw_value)
-                sort_val = self.spreadsheet.get_value(r, sort_col_abs)
-                sort_key: tuple[int, str | int | float]
-                if sort_val == "" or sort_val is None:
-                    sort_key = (2, "")
-                elif isinstance(sort_val, (int, float)):
-                    sort_key = (0, sort_val)
-                else:
-                    sort_key = (1, str(sort_val).lower())
-                rows_data.append((sort_key, row_values))
-            rows_data.sort(key=lambda x: x[0], reverse=reverse)
-            changes = []
-            for row_idx, (_, row_values) in enumerate(rows_data):
-                target_row = r1 + row_idx
-                for col_idx, value in enumerate(row_values):
-                    target_col = c1 + col_idx
-                    cell = self.spreadsheet.get_cell(target_row, target_col)
-                    old_value = cell.raw_value
-                    if value != old_value:
-                        changes.append((target_row, target_col, value, old_value))
+
+            # Create SortKey with column index relative to range start
+            order = SortOrder.DESCENDING if descending else SortOrder.ASCENDING
+            sort_key = SortKey(column=sort_col_abs - c1, order=order)
+
+            # Use DatabaseOperations for sorting with change tracking
+            db_ops = DatabaseOperations(self.spreadsheet)
+            changes = db_ops.sort_range_with_changes(
+                r1, c1, r2, c2, keys=[sort_key], has_header=False
+            )
+
             if changes:
                 cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
                 self.undo_manager.execute(cmd)
                 grid.refresh_grid()
                 self.update_status()
                 self.mark_dirty()
-                order_name = "descending" if reverse else "ascending"
-                self.notify(
-                    f"Sorted {len(rows_data)} rows by column {sort_col_letter} ({order_name})"
-                )
+                order_name = "descending" if descending else "ascending"
+                self.notify(f"Sorted by column {sort_col_letter} ({order_name})")
             else:
                 self.notify("Data already sorted")
         except Exception as e:

@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass
 from typing import Iterator, TYPE_CHECKING
 
+from .errors import FormulaError
+
 if TYPE_CHECKING:
     pass
 
@@ -369,24 +371,24 @@ def adjust_for_structural_change(
                 
                 if axis == 'row':
                     if shift < 0 and ref.row == boundary:
-                        text = "#REF!"
+                        text = FormulaError.REF
                     elif ref.row >= boundary:
                         new_row = ref.row + shift
                         if 0 <= new_row <= max_row:
                             ref.row = new_row
                             text = ref.to_string()
                         else:
-                            text = "#REF!"
+                            text = FormulaError.REF
                 elif axis == 'col':
                     if shift < 0 and ref.col == boundary:
-                        text = "#REF!"
+                        text = FormulaError.REF
                     elif ref.col >= boundary:
                         new_col = ref.col + shift
                         if 0 <= new_col <= max_col:
                             ref.col = new_col
                             text = ref.to_string()
                         else:
-                            text = "#REF!"
+                            text = FormulaError.REF
                             
             except ValueError:
                 pass

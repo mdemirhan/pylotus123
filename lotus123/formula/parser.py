@@ -6,6 +6,7 @@ import math
 import operator
 from typing import TYPE_CHECKING, Any
 
+from ..core.errors import FormulaError
 from .functions import REGISTRY
 from .tokenizer import Token, Tokenizer, TokenType
 
@@ -45,15 +46,6 @@ class FormulaParser:
         "<=": operator.le,
         ">=": operator.ge,
     }
-    ERROR_VALUES = {
-        "#DIV/0!",
-        "#ERR!",
-        "#NUM!",
-        "#CIRC!",
-        "#REF!",
-        "#NAME?",
-        "#N/A",
-    }
 
     def __init__(
         self, spreadsheet: Spreadsheet, context: "EvaluationContext | None" = None
@@ -86,15 +78,15 @@ class FormulaParser:
 
             # Handle NaN as error
             if isinstance(result, float) and math.isnan(result):
-                return "#NUM!"
+                return FormulaError.NUM
 
             return result
         except ZeroDivisionError:
-            return "#DIV/0!"
+            return FormulaError.DIV_ZERO
         except RecursionError:
-            return "#REF!"
+            return FormulaError.REF
         except (ValueError, TypeError, KeyError, IndexError, AttributeError, OverflowError):
-            return "#ERR!"
+            return FormulaError.ERR
 
     def _current(self) -> Token:
         """Get current token."""
@@ -111,7 +103,7 @@ class FormulaParser:
 
     def _is_error(self, value: Any) -> bool:
         """Check if a value is a known error string."""
-        return isinstance(value, str) and value in self.ERROR_VALUES
+        return FormulaError.is_error(value)
 
     def _parse_expression(self) -> Any:
         """Parse a full expression."""
@@ -170,9 +162,9 @@ class FormulaParser:
             try:
                 left = op_fn(left, right)
             except ZeroDivisionError:
-                left = "#DIV/0!"
+                left = FormulaError.DIV_ZERO
             except (ValueError, TypeError, OverflowError):
-                left = "#ERR!"
+                left = FormulaError.ERR
 
             # Propagate errors from operation result
             if self._is_error(left):
@@ -230,7 +222,7 @@ class FormulaParser:
             parts = token.value.split(":")
             if len(parts) == 2:
                 return self._get_range_values(parts[0], parts[1])
-            return "#REF!"
+            return FormulaError.REF
 
         # Function call
         if token.type == TokenType.FUNCTION:
@@ -251,7 +243,7 @@ class FormulaParser:
 
         # Unknown/unexpected token - malformed formula
         self._advance()
-        return "#ERR!"
+        return FormulaError.ERR
 
     def _parse_function(self, name: str) -> Any:
         """Parse and evaluate a function call."""
@@ -278,12 +270,12 @@ class FormulaParser:
         # Look up and call function
         fn = self.functions.get(name)
         if not fn:
-            return "#NAME?"
+            return FormulaError.NAME
 
         try:
             return fn(*args)
         except (ValueError, TypeError, ZeroDivisionError, OverflowError, IndexError):
-            return "#ERR!"
+            return FormulaError.ERR
 
     def _get_cell_value(self, ref: str) -> Any:
         """Get value of a cell reference."""
@@ -292,7 +284,7 @@ class FormulaParser:
             clean_ref = ref.replace("$", "")
             return self.spreadsheet.get_value_by_ref(clean_ref, context=self.context)
         except ValueError:
-            return "#REF!"
+            return FormulaError.REF
 
     def _get_range_values(self, start_ref: str, end_ref: str) -> list[Any]:
         """Get flat list of values from a range."""
@@ -301,4 +293,4 @@ class FormulaParser:
             end = end_ref.replace("$", "")
             return self.spreadsheet.get_range_flat(start, end, context=self.context)
         except ValueError:
-            return ["#REF!"]
+            return [FormulaError.REF]

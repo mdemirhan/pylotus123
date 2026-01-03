@@ -6,6 +6,7 @@ import math
 from typing import TYPE_CHECKING, Any, Iterator
 
 from .cell import Cell, TextAlignment
+from .errors import FormulaError
 from .formatting import format_value, parse_format_code
 from .named_ranges import NamedRangeManager
 from .reference import adjust_for_structural_change, adjust_formula_references, parse_cell_ref
@@ -56,6 +57,10 @@ class Spreadsheet:
         # Sparse cell storage
         self._cells: dict[tuple[int, int], Cell] = {}
 
+        # Sparse row/column indices for O(k) row/column access
+        self._row_index: dict[int, set[int]] = {}  # row -> set of col indices
+        self._col_index: dict[int, set[int]] = {}  # col -> set of row indices
+
         # Cache for computed values
         self._cache: dict[tuple[int, int], Any] = {}
 
@@ -94,6 +99,39 @@ class Spreadsheet:
         }
 
     # -------------------------------------------------------------------------
+    # Index Management (for O(k) row/column access)
+    # -------------------------------------------------------------------------
+
+    def _add_to_indices(self, row: int, col: int) -> None:
+        """Add a cell to the row/column indices."""
+        if row not in self._row_index:
+            self._row_index[row] = set()
+        self._row_index[row].add(col)
+
+        if col not in self._col_index:
+            self._col_index[col] = set()
+        self._col_index[col].add(row)
+
+    def _remove_from_indices(self, row: int, col: int) -> None:
+        """Remove a cell from the row/column indices."""
+        if row in self._row_index:
+            self._row_index[row].discard(col)
+            if not self._row_index[row]:
+                del self._row_index[row]
+
+        if col in self._col_index:
+            self._col_index[col].discard(row)
+            if not self._col_index[col]:
+                del self._col_index[col]
+
+    def _rebuild_indices(self) -> None:
+        """Rebuild row/column indices from cells dict."""
+        self._row_index.clear()
+        self._col_index.clear()
+        for row, col in self._cells:
+            self._add_to_indices(row, col)
+
+    # -------------------------------------------------------------------------
     # Cell Access
     # -------------------------------------------------------------------------
 
@@ -109,6 +147,7 @@ class Spreadsheet:
         """
         if (row, col) not in self._cells:
             self._cells[(row, col)] = Cell()
+            self._add_to_indices(row, col)
         return self._cells[(row, col)]
 
     def get_cell_if_exists(self, row: int, col: int) -> Cell | None:
@@ -159,13 +198,14 @@ class Spreadsheet:
         """Delete a cell (remove from sparse storage)."""
         if (row, col) in self._cells:
             del self._cells[(row, col)]
+            self._remove_from_indices(row, col)
 
             # Update dependency graph incrementally (remove dependencies)
             self.mark_cell_dirty(row, col)
             self.update_cell_dependency(row, col, None)
 
             self.modified = True
-            
+
             if not self._recalc_engine:
                 self._invalidate_cache()
 
@@ -243,7 +283,7 @@ class Spreadsheet:
         # Fallback for legacy/simple calls (like from RecalcEngine using topological sort order)
         if (row, col) in self._computing:
             self._circular_refs.add((row, col))
-            return "#CIRC!"
+            return FormulaError.CIRC
 
         self._computing.add((row, col))
         try:
@@ -252,7 +292,7 @@ class Spreadsheet:
             result = parser.evaluate(cell.formula)
             return result
         except (ValueError, TypeError, ZeroDivisionError, OverflowError, KeyError, IndexError):
-            return "#ERR!"
+            return FormulaError.ERR
         finally:
             self._computing.discard((row, col))
 
@@ -267,6 +307,21 @@ class Spreadsheet:
         Call this after making changes that affect computed values.
         """
         self._invalidate_cache()
+
+    def invalidate_cell_cache(self, row: int, col: int) -> None:
+        """Invalidate cache for a specific cell.
+
+        Part of CellStore protocol for RecalcEngine.
+        """
+        self._cache.pop((row, col), None)
+
+    def clear_cache(self) -> None:
+        """Clear the entire computation cache.
+
+        Part of CellStore protocol for RecalcEngine.
+        """
+        self._cache.clear()
+        self._circular_refs.clear()
 
     # -------------------------------------------------------------------------
     # Cell Store Interface (for undo system and I/O)
@@ -304,7 +359,9 @@ class Spreadsheet:
             row: 0-based row index
             col: 0-based column index
         """
-        self._cells.pop((row, col), None)
+        if (row, col) in self._cells:
+            self._cells.pop((row, col), None)
+            self._remove_from_indices(row, col)
 
     def iter_cells(self) -> "Iterator[tuple[int, int, Cell]]":
         """Iterate over all cells.
@@ -316,7 +373,7 @@ class Spreadsheet:
             yield r, c, cell
 
     def get_cells_in_row(self, row: int) -> list[tuple[int, Cell]]:
-        """Get all cells in a specific row.
+        """Get all cells in a specific row - O(k) where k = cells in row.
 
         Args:
             row: 0-based row index
@@ -324,10 +381,11 @@ class Spreadsheet:
         Returns:
             List of (col, cell) tuples for cells in the row
         """
-        return [(c, cell) for (r, c), cell in self._cells.items() if r == row]
+        cols = self._row_index.get(row, set())
+        return [(c, self._cells[(row, c)]) for c in cols if (row, c) in self._cells]
 
     def get_cells_in_col(self, col: int) -> list[tuple[int, Cell]]:
-        """Get all cells in a specific column.
+        """Get all cells in a specific column - O(k) where k = cells in column.
 
         Args:
             col: 0-based column index
@@ -335,7 +393,8 @@ class Spreadsheet:
         Returns:
             List of (row, cell) tuples for cells in the column
         """
-        return [(r, cell) for (r, c), cell in self._cells.items() if c == col]
+        rows = self._col_index.get(col, set())
+        return [(r, self._cells[(r, col)]) for r in rows if (r, col) in self._cells]
 
     # -------------------------------------------------------------------------
     # Bulk Accessors (for I/O)
@@ -396,7 +455,7 @@ class Spreadsheet:
         Call this after structural changes like inserting/deleting rows/columns.
         """
         if self._recalc_engine:
-            self._recalc_engine._rebuild_dependency_graph()
+            self._recalc_engine.rebuild_dependency_graph()
 
     def mark_cell_dirty(self, row: int, col: int) -> None:
         """Mark a cell as needing recalculation.
@@ -610,6 +669,7 @@ class Spreadsheet:
             elif r > row:
                 new_cells[(r - 1, c)] = cell
         self._cells = new_cells
+        self._rebuild_indices()
 
         # Adjust row heights
         new_heights = {}
@@ -643,6 +703,7 @@ class Spreadsheet:
             else:
                 new_cells[(r + 1, c)] = cell
         self._cells = new_cells
+        self._rebuild_indices()
 
         # Adjust row heights
         new_heights = {}
@@ -679,6 +740,7 @@ class Spreadsheet:
             elif c > col:
                 new_cells[(r, c - 1)] = cell
         self._cells = new_cells
+        self._rebuild_indices()
 
         # Adjust column widths
         new_widths = {}
@@ -712,6 +774,7 @@ class Spreadsheet:
             else:
                 new_cells[(r, c + 1)] = cell
         self._cells = new_cells
+        self._rebuild_indices()
 
         # Adjust column widths
         new_widths = {}
@@ -819,6 +882,8 @@ class Spreadsheet:
     def clear(self) -> None:
         """Clear all cells and reset to empty state."""
         self._cells.clear()
+        self._row_index.clear()
+        self._col_index.clear()
         self._cache.clear()
         self._col_widths.clear()
         self._row_heights.clear()

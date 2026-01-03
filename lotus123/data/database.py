@@ -202,6 +202,72 @@ class DatabaseOperations:
         self.spreadsheet.invalidate_cache()
         self.spreadsheet.rebuild_dependency_graph()
 
+    def sort_range_with_changes(
+        self,
+        start_row: int,
+        start_col: int,
+        end_row: int,
+        end_col: int,
+        keys: list[SortKey],
+        has_header: bool = True,
+        values_only: bool = True,
+    ) -> list[tuple[int, int, str, str]]:
+        """Sort a range of data and return the changes made.
+
+        This method is similar to sort_range but returns the changes for undo support.
+
+        Args:
+            start_row, start_col: Top-left of range
+            end_row, end_col: Bottom-right of range
+            keys: List of SortKey specifying sort columns and order
+            has_header: If True, first row is header and not sorted
+            values_only: If True, formulas are converted to their computed values
+
+        Returns:
+            List of (row, col, new_value, old_value) tuples for undo support.
+        """
+        # Normalize range (handle reversed indices)
+        if start_row > end_row:
+            start_row, end_row = end_row, start_row
+        if start_col > end_col:
+            start_col, end_col = end_col, start_col
+
+        # Determine data rows (skip header if present)
+        data_start = start_row + 1 if has_header else start_row
+        if data_start > end_row:
+            return []  # No data to sort
+
+        # Extract cell data for sorting
+        cell_data = self._extract_cell_data(
+            data_start, end_row, start_col, end_col, values_only
+        )
+
+        # Primary sort with numeric descending handled by negation
+        sort_key = self._create_sort_key(keys)
+        sorted_data = sorted(cell_data, key=sort_key)
+
+        # Apply reverse sorts for descending string columns
+        sorted_data = self._apply_descending_string_sorts(sorted_data, keys)
+
+        # Collect changes and write sorted data back to cells
+        # Format: (row, col, new_value, old_value) - matches RangeChangeCommand
+        changes: list[tuple[int, int, str, str]] = []
+        for i, row_data in enumerate(sorted_data):
+            r = data_start + i
+            for j, (raw_val, fmt) in enumerate(row_data):
+                c = start_col + j
+                cell = self.spreadsheet.get_cell(r, c)
+                old_value = cell.raw_value
+                if raw_val != old_value:
+                    changes.append((r, c, raw_val, old_value))
+                cell.set_value(raw_val)
+                cell.format_code = fmt
+
+        self.spreadsheet.invalidate_cache()
+        self.spreadsheet.rebuild_dependency_graph()
+
+        return changes
+
     def query(
         self,
         data_range: tuple[int, int, int, int],
