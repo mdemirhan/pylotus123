@@ -4,59 +4,61 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Lotus 1-2-3 clone - a fully-functional terminal-based spreadsheet application built with Python and the Textual TUI framework. Features a 256×65,536 cell grid, 180+ formula functions, Lotus-style menu system, charting, and full undo/redo support.
+Lotus 1-2-3 Clone - A terminal-based spreadsheet application built with Python and Textual TUI framework. Features 256x65536 grid, 180+ formula functions, charting, and support for multiple file formats (JSON, XLSX, CSV, WK1).
 
-## Tools
+## Commands
 
-### Python
-- Use `uv` for all Python projects:
-  - `uv sync` to install dependencies
-  - `uv run <command>` to run commands in the project environment
-  - `uv run main.py` to run the application
-  - `uv run pytest` to run all tests
-  - `uv run pytest tests/test_formula.py` to run a single test file
-  - `uv run pytest tests/test_formula.py::test_function_name -v` to run a specific test
-  - `uv add <package>` to add dependencies
-- Use `ruff` for linting and formatting (`ruff check`, `ruff format`)
-- Use `basedpyright` for type checking
-- Use `pytest` for testing 
+```bash
+# Install dependencies
+uv sync
 
-After your edits, run the following:
-- `uv run basedpyright` for type checks and fix errors
+# Run the application
+uv run python main.py
+uv run python main.py samples/sales_dashboard.json  # Open a file
+
+# Testing
+uv run pytest                                        # Run all tests
+uv run pytest tests/core/test_spreadsheet.py        # Run specific file
+uv run pytest tests/core/test_spreadsheet.py::TestCellAlignment -v  # Run specific test
+
+# Linting and formatting
+uv run ruff check                                    # Lint
+uv run ruff format                                   # Format
+
+# Type checking
+uv run basedpyright
+```
+
+## Development Workflow
+
+After making code changes, always run the type checker (`uv run basedpyright`) and address any issues before considering the work complete.
 
 ## Architecture
 
-The codebase follows a modular architecture with clear separation of concerns:
+The codebase follows separation of concerns with these main layers:
 
-- **lotus123/app.py** - Main TUI application using Textual framework
-- **lotus123/core/** - Core data model (cell, spreadsheet, reference, formatting, named ranges)
-- **lotus123/formula/** - Formula engine with parser, evaluator, recalc engine, and 180+ functions
-- **lotus123/ui/** - UI components (grid, menus, dialogs, status bar, themes, window management)
-- **lotus123/data/** - Data operations (sort, query, fill, criteria parsing)
-- **lotus123/io/** - File I/O (JSON native format, XLSX/XLS, CSV/TSV, WK1/WKS import)
-- **lotus123/charting/** - Chart data model and text-based renderers (line, bar, stacked bar, XY scatter, pie, area, horizontal bar)
-- **lotus123/utils/** - Utilities (undo/redo with command pattern, clipboard)
-- **lotus123/handlers/** - Application handlers using composition pattern (file, clipboard, data, navigation, chart, query, range, worksheet)
+- **core/**: Pure data model (Cell, Spreadsheet, CellReference, formatting) - no UI dependencies
+- **formula/**: Formula parsing and evaluation engine with function registry pattern
+- **handlers/**: Application logic using composition pattern via `AppProtocol` interface
+- **ui/**: Textual-based presentation layer (grid, menus, dialogs, themes)
+- **data/**: Business logic for sort, query, fill operations
+- **io/**: File format handlers (JSON, XLSX, CSV/TSV, WK1)
+- **charting/**: Text-based chart renderers
+- **utils/**: Undo/redo (command pattern), clipboard management
 
 ### Key Patterns
 
-**Function Registry** (`formula/functions/`): Functions are registered via decorators for extensibility. Organized into 9 categories: math, statistical, string, logical, lookup, datetime, financial, database, info.
+**Handler Composition**: Handlers extend `BaseHandler` and receive the app via `AppProtocol` dependency injection. This provides type-safe contracts and testability.
 
-**Command Pattern** (`utils/undo.py`): All undoable operations implement execute/undo protocol with CellChangeCommand, RangeChangeCommand, InsertRowCommand, DeleteRowCommand.
+**Function Registry**: Formula functions use a decorator-based registration pattern in `formula/functions/`.
 
-**Menu System** (`ui/menu_bar.py`): Lotus-style `/` menu with hierarchical menu structures supporting Worksheet, Range, Copy, Move, File, Graph, Data, System, and Quit menus.
+**Command Pattern**: Undo/redo uses the command pattern in `utils/undo.py`.
 
-## Formula System
+### Cell Model
 
-Supports 180+ functions across 9 categories:
-- **Math** (27): SUM, ABS, SQRT, EXP, LN, LOG, trig functions, etc.
-- **Statistical** (32): AVG, COUNT, MIN, MAX, MEDIAN, STD, VAR, etc.
-- **String** (29): LEFT, RIGHT, MID, LEN, TRIM, UPPER, LOWER, etc.
-- **Logical** (24): IF, AND, OR, NOT, ISERR, ISNUMBER, etc.
-- **Lookup** (14): VLOOKUP, HLOOKUP, INDEX, MATCH, etc.
-- **Date/Time** (17): DATE, NOW, TODAY, YEAR, MONTH, DAY, etc.
-- **Financial** (14): PMT, PV, FV, NPV, IRR, RATE, etc.
-- **Database** (13): DSUM, DAVG, DCOUNT, DMAX, DMIN, etc.
-- **Info** (10): TYPE, CELL, ISNUMBER, ISSTRING, etc.
+Cells support types (EMPTY, NUMBER, TEXT, FORMULA, DATE, TIME, ERROR) and Lotus-style alignment prefixes:
+- `'` = Left, `"` = Right, `^` = Center, `\` = Repeat/Fill
 
-Both `=SUM(...)` and Lotus-style `@SUM(...)` syntax are supported.
+### Formula Syntax
+
+Both `=SUM(A1:A10)` and Lotus-style `@SUM(A1:A10)` are supported.
