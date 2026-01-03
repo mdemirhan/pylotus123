@@ -1,6 +1,7 @@
 """Tests for main Lotus 1-2-3 TUI application."""
 
 import pytest
+from textual.binding import Binding
 
 from lotus123.app import LotusApp
 from lotus123.core import Spreadsheet
@@ -105,30 +106,30 @@ class TestLotusAppBindings:
 
     def test_save_binding(self):
         """Test save binding exists."""
-        bindings = {b.key: b for b in LotusApp.BINDINGS}
+        bindings = {b.key: b for b in LotusApp.BINDINGS if isinstance(b, Binding)}
         assert "ctrl+s" in bindings
 
     def test_open_binding(self):
         """Test open binding exists."""
-        bindings = {b.key: b for b in LotusApp.BINDINGS}
+        bindings = {b.key: b for b in LotusApp.BINDINGS if isinstance(b, Binding)}
         assert "ctrl+o" in bindings
 
     def test_undo_redo_bindings(self):
         """Test undo/redo bindings exist."""
-        bindings = {b.key: b for b in LotusApp.BINDINGS}
+        bindings = {b.key: b for b in LotusApp.BINDINGS if isinstance(b, Binding)}
         assert "ctrl+z" in bindings
         assert "ctrl+y" in bindings
 
     def test_copy_paste_bindings(self):
         """Test copy/paste bindings exist."""
-        bindings = {b.key: b for b in LotusApp.BINDINGS}
+        bindings = {b.key: b for b in LotusApp.BINDINGS if isinstance(b, Binding)}
         assert "ctrl+c" in bindings
         assert "ctrl+v" in bindings
         assert "ctrl+x" in bindings
 
     def test_navigation_bindings(self):
         """Test navigation bindings exist."""
-        bindings = {b.key: b for b in LotusApp.BINDINGS}
+        bindings = {b.key: b for b in LotusApp.BINDINGS if isinstance(b, Binding)}
         assert "ctrl+g" in bindings  # Goto
         assert "pageup" in bindings
         assert "pagedown" in bindings
@@ -137,7 +138,7 @@ class TestLotusAppBindings:
 
     def test_function_key_bindings(self):
         """Test function key bindings exist."""
-        bindings = {b.key: b for b in LotusApp.BINDINGS}
+        bindings = {b.key: b for b in LotusApp.BINDINGS if isinstance(b, Binding)}
         assert "f2" in bindings  # Edit
         assert "f5" in bindings  # Goto
 
@@ -171,10 +172,10 @@ class TestLotusAppMethods:
     """Tests for LotusApp methods."""
 
     def test_mark_dirty(self):
-        """Test _mark_dirty method."""
+        """Test mark_dirty method."""
         app = LotusApp()
         assert app.spreadsheet.modified is False
-        app._mark_dirty()
+        app.mark_dirty()
         assert app.spreadsheet.modified is True
 
     def test_generate_css(self):

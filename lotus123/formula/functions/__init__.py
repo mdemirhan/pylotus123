@@ -67,11 +67,16 @@ class FunctionRegistry:
     def __contains__(self, name: str) -> bool:
         return self.exists(name)
 
+    @property
+    def functions(self) -> dict[str, Callable]:
+        """Read-only access to the functions dictionary."""
+        return self._functions
+
 
 def get_all_functions() -> dict:
     """Get dictionary of all registered functions."""
     registry = FunctionRegistry()
-    return dict(registry._functions)
+    return dict(registry.functions)
 
 
 __all__ = [

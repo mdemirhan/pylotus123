@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .formula.recalc import RecalcMode, RecalcOrder
 
 from textual import events, on
 from textual.app import App, ComposeResult
@@ -13,7 +17,6 @@ from textual.widgets import Footer, Input, Static
 
 from .charting import Chart, ChartType
 from .core import Spreadsheet, make_cell_ref
-from .formula.recalc import RecalcMode, create_recalc_engine
 
 # Handler classes
 from .handlers import (
@@ -38,11 +41,7 @@ from .ui import (
     StatusBarWidget,
     get_theme_type,
 )
-from .utils.undo import (
-    CellChangeCommand,
-    RangeChangeCommand,
-    UndoManager,
-)
+from .utils.undo import CellChangeCommand, RangeChangeCommand, UndoManager
 
 
 class LotusApp(App[None]):
@@ -178,7 +177,10 @@ class LotusApp(App[None]):
         "Worksheet:Global:Format": ("_worksheet_handler", "global_format"),
         "Worksheet:Global:Label-Prefix": ("_worksheet_handler", "global_label_prefix"),
         "Worksheet:Global:Column-Width": ("_worksheet_handler", "global_column_width"),
-        "Worksheet:Global:Recalculation": ("_worksheet_handler", "global_recalculation"),
+        "Worksheet:Global:Recalculation": (
+            "_worksheet_handler",
+            "global_recalculation",
+        ),
         "Worksheet:Global:Zero": ("_worksheet_handler", "global_zero"),
         # Graph - types handled separately via _CHART_TYPES
         "Graph:X-Range": ("_chart_handler", "set_x_range"),
@@ -219,14 +221,12 @@ class LotusApp(App[None]):
         self._initial_file = initial_file
         self.config = AppConfig.load()
         self.spreadsheet = Spreadsheet()
-        self.recalc_engine = create_recalc_engine(self.spreadsheet)
-        self.recalc_engine.set_mode(RecalcMode.AUTOMATIC)
         self.current_theme_type = get_theme_type(self.config.theme)
         self.color_theme = THEMES[self.current_theme_type]
         self.editing = False
         self._menu_active = False
         self.undo_manager = UndoManager(max_history=100)
-        self.recalc_mode = "auto"
+        self.recalc_mode = "auto"  # Tracks UI state, spreadsheet manages actual mode
         self.chart = Chart()
         # Global worksheet settings (public - shared across handlers)
         self.global_format_code = "G"
@@ -254,10 +254,36 @@ class LotusApp(App[None]):
         """Check if a modal screen is currently open."""
         return len(self.screen_stack) > 1
 
-    def _mark_dirty(self) -> None:
+    def mark_dirty(self) -> None:
         """Mark the spreadsheet as having unsaved changes."""
         self.spreadsheet.modified = True
-        self._update_title()
+        self.update_title()
+
+    def set_recalc_mode(self, mode: "RecalcMode") -> None:
+        """Set the recalculation mode.
+
+        Args:
+            mode: RecalcMode.AUTOMATIC or RecalcMode.MANUAL
+        """
+        from .formula.recalc import RecalcMode
+        self.recalc_mode = "manual" if mode == RecalcMode.MANUAL else "auto"
+        self.spreadsheet.set_recalc_mode(mode)
+
+    def get_recalc_mode(self) -> "RecalcMode":
+        """Get the current recalculation mode."""
+        return self.spreadsheet.get_recalc_mode()
+
+    def set_recalc_order(self, order: "RecalcOrder") -> None:
+        """Set the recalculation order.
+
+        Args:
+            order: RecalcOrder.NATURAL, COLUMN_WISE, or ROW_WISE
+        """
+        self.spreadsheet.set_recalc_order(order)
+
+    def get_recalc_order(self) -> "RecalcOrder":
+        """Get the current recalculation order."""
+        return self.spreadsheet.get_recalc_order()
 
     def _generate_css(self) -> str:
         """Generate CSS based on current theme."""
@@ -346,16 +372,16 @@ class LotusApp(App[None]):
         yield Footer()
 
     def on_mount(self) -> None:
-        self._update_title()
+        self.update_title()
         self.sub_title = f"Theme: {self.color_theme.name}"
-        self._apply_theme()
-        self._update_status()
+        self.apply_theme()
+        self.update_status()
         self.query_one("#grid", SpreadsheetGrid).focus()
 
         if self._initial_file:
             self._file_handler.load_initial_file(self._initial_file)
 
-    def _update_title(self) -> None:
+    def update_title(self) -> None:
         """Update the window title with filename and dirty indicator."""
         filename = self.spreadsheet.filename or "Untitled"
         if "/" in filename or "\\" in filename:
@@ -363,7 +389,7 @@ class LotusApp(App[None]):
         dirty_indicator = " *" if self.spreadsheet.modified else ""
         self.title = f"Lotus 1-2-3 Clone - {filename}{dirty_indicator}"
 
-    def _apply_theme(self) -> None:
+    def apply_theme(self) -> None:
         """Apply the current theme to all widgets."""
         from textual.widgets import Footer
 
@@ -404,11 +430,11 @@ class LotusApp(App[None]):
 
     @on(SpreadsheetGrid.CellSelected)
     def on_cell_selected(self, event: SpreadsheetGrid.CellSelected) -> None:
-        self._update_status()
+        self.update_status()
 
     @on(SpreadsheetGrid.CellClicked)
     def on_cell_clicked(self, event: SpreadsheetGrid.CellClicked) -> None:
-        self._update_status()
+        self.update_status()
         if not self._menu_active:
             self.query_one("#grid", SpreadsheetGrid).focus()
 
@@ -429,7 +455,7 @@ class LotusApp(App[None]):
         self.query_one("#status-bar", StatusBarWidget).set_mode(Mode.READY)
         self.query_one("#grid", SpreadsheetGrid).focus()
 
-    def _update_status(self) -> None:
+    def update_status(self) -> None:
         grid = self.query_one("#grid", SpreadsheetGrid)
         ref = make_cell_ref(grid.cursor_row, grid.cursor_col)
         cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
@@ -439,7 +465,9 @@ class LotusApp(App[None]):
         status_bar = self.query_one("#status-bar", StatusBarWidget)
         status_bar.update_cell(grid.cursor_row, grid.cursor_col)
         status_bar.update_from_spreadsheet()
-        status_bar.set_modified(self.spreadsheet.modified)  # Must be after update_from_spreadsheet
+        status_bar.set_modified(
+            self.spreadsheet.modified
+        )  # Must be after update_from_spreadsheet
 
         if not self.editing:
             self.query_one("#cell-input", Input).value = cell.raw_value
@@ -455,7 +483,7 @@ class LotusApp(App[None]):
         if self.editing:
             self.editing = False
             self.query_one("#status-bar", StatusBarWidget).set_mode(Mode.READY)
-            self._update_status()
+            self.update_status()
             self.query_one("#grid", SpreadsheetGrid).focus()
         elif self._menu_active:
             menu = self.query_one("#menu-bar", LotusMenu)
@@ -471,7 +499,9 @@ class LotusApp(App[None]):
         new_value = event.value
 
         # Apply global label prefix for text entries (not formulas or numbers)
-        if new_value and not new_value.startswith(("=", "@", "+", "-", "'", '"', "^", "\\")):
+        if new_value and not new_value.startswith(
+            ("=", "@", "+", "-", "'", '"', "^", "\\")
+        ):
             # Check if it's not a number
             try:
                 float(new_value.replace(",", ""))
@@ -494,13 +524,13 @@ class LotusApp(App[None]):
             cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
             cell.format_code = self.global_format_code
 
-        self._mark_dirty()
+        self.mark_dirty()
         self.editing = False
         self.query_one("#status-bar", StatusBarWidget).set_mode(Mode.READY)
         grid.refresh_grid()
         grid.move_cursor(1, 0)
         grid.focus()
-        self._update_status()
+        self.update_status()
 
     def action_clear_cell(self) -> None:
         if not self.editing and not self._menu_active:
@@ -518,7 +548,7 @@ class LotusApp(App[None]):
                         spreadsheet=self.spreadsheet, changes=changes
                     )
                     self.undo_manager.execute(cmd)
-                    self._mark_dirty()
+                    self.mark_dirty()
                 grid.clear_selection()
             else:
                 cell = self.spreadsheet.get_cell(grid.cursor_row, grid.cursor_col)
@@ -531,9 +561,9 @@ class LotusApp(App[None]):
                         old_value=cell.raw_value,
                     )
                     self.undo_manager.execute(cell_cmd)
-                    self._mark_dirty()
+                    self.mark_dirty()
             grid.refresh_grid()
-            self._update_status()
+            self.update_status()
 
     def action_undo(self) -> None:
         if not self.editing and not self._menu_active:
@@ -541,8 +571,8 @@ class LotusApp(App[None]):
             if cmd:
                 grid = self.query_one("#grid", SpreadsheetGrid)
                 grid.refresh_grid()
-                self._update_status()
-                self._mark_dirty()
+                self.update_status()
+                self.mark_dirty()
                 self.notify(f"Undo: {cmd.description}")
             else:
                 self.notify("Nothing to undo")
@@ -553,8 +583,8 @@ class LotusApp(App[None]):
             if cmd:
                 grid = self.query_one("#grid", SpreadsheetGrid)
                 grid.refresh_grid()
-                self._update_status()
-                self._mark_dirty()
+                self.update_status()
+                self.mark_dirty()
                 self.notify(f"Redo: {cmd.description}")
             else:
                 self.notify("Nothing to redo")
@@ -599,7 +629,7 @@ class LotusApp(App[None]):
         self.spreadsheet.recalculate()
         grid = self.query_one("#grid", SpreadsheetGrid)
         grid.refresh_grid()
-        self._update_status()
+        self.update_status()
         self.notify("Recalculated")
 
     def action_show_menu(self) -> None:

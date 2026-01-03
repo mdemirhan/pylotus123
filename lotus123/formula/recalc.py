@@ -262,10 +262,3 @@ class RecalcEngine:
     def get_dependencies(self, row: int, col: int) -> set[tuple[int, int]]:
         """Get cells that the given cell depends on."""
         return self._dependency_graph.get((row, col), set()).copy()
-
-
-def create_recalc_engine(spreadsheet: Spreadsheet) -> RecalcEngine:
-    """Factory function to create and attach a recalc engine to a spreadsheet."""
-    engine = RecalcEngine(spreadsheet)
-    spreadsheet._recalc_engine = engine
-    return engine

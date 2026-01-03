@@ -305,6 +305,7 @@ def format_value(value: Any, spec: FormatSpec, width: int = 10) -> str:
         return value
 
     # Handle non-numeric values for numeric formats
+    numeric_value: float | None = None
     if spec.format_type in (
         FormatCode.FIXED,
         FormatCode.SCIENTIFIC,
@@ -313,9 +314,11 @@ def format_value(value: Any, spec: FormatSpec, width: int = 10) -> str:
         FormatCode.PERCENT,
         FormatCode.PLUSMINUS,
     ):
-        if not isinstance(value, (int, float)):
+        if isinstance(value, (int, float)):
+            numeric_value = float(value)
+        else:
             try:
-                value = float(value)
+                numeric_value = float(value)
             except (ValueError, TypeError):
                 return str(value)
 
@@ -324,28 +327,36 @@ def format_value(value: Any, spec: FormatSpec, width: int = 10) -> str:
         return _format_general(value)
 
     elif spec.format_type == FormatCode.FIXED:
-        return _format_fixed(value, spec.decimals)
+        assert numeric_value is not None
+        return _format_fixed(numeric_value, spec.decimals)
 
     elif spec.format_type == FormatCode.SCIENTIFIC:
-        return _format_scientific(value, spec.decimals)
+        assert numeric_value is not None
+        return _format_scientific(numeric_value, spec.decimals)
 
     elif spec.format_type == FormatCode.CURRENCY:
-        return _format_currency(value, spec.decimals, spec.currency_symbol)
+        assert numeric_value is not None
+        return _format_currency(numeric_value, spec.decimals, spec.currency_symbol)
 
     elif spec.format_type == FormatCode.COMMA:
-        return _format_comma(value, spec.decimals)
+        assert numeric_value is not None
+        return _format_comma(numeric_value, spec.decimals)
 
     elif spec.format_type == FormatCode.PERCENT:
-        return _format_percent(value, spec.decimals)
+        assert numeric_value is not None
+        return _format_percent(numeric_value, spec.decimals)
 
     elif spec.format_type == FormatCode.DATE:
-        return _format_date(value, spec.date_variant or DateFormat.D1)
+        date_value = float(value) if isinstance(value, (int, float)) else 0.0
+        return _format_date(date_value, spec.date_variant or DateFormat.D1)
 
     elif spec.format_type == FormatCode.TIME:
-        return _format_time(value, spec.time_variant or TimeFormat.T1)
+        time_value = float(value) if isinstance(value, (int, float)) else 0.0
+        return _format_time(time_value, spec.time_variant or TimeFormat.T1)
 
     elif spec.format_type == FormatCode.PLUSMINUS:
-        return _format_plusminus(value, width)
+        assert numeric_value is not None
+        return _format_plusminus(numeric_value, width)
 
     return str(value)
 

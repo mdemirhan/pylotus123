@@ -289,7 +289,7 @@ class FileDialog(ModalScreen[str | None]):
             id=f"file-tree-{self._tree_counter}",
             classes="file-tree",
         )
-        new_tree._show_all = show_all
+        new_tree.set_show_all(show_all)
 
         # Mount after the path-row
         path_row = self.query_one("#path-row", Horizontal)

@@ -78,7 +78,12 @@ class TestIORefactor:
         assert s2.get_value(1, 0) == "Test"
         
         # Verify named range
+        from lotus123.core.reference import RangeReference
+
         assert s2.named_ranges.exists("MyRange")
-        ref = s2.named_ranges.get("MyRange").reference
-        assert ref.start.row == 0 and ref.start.col == 0 # A1
-        assert ref.end.row == 0 and ref.end.col == 1     # B1
+        named_range = s2.named_ranges.get("MyRange")
+        assert named_range is not None
+        ref = named_range.reference
+        assert isinstance(ref, RangeReference)
+        assert ref.start.row == 0 and ref.start.col == 0  # A1
+        assert ref.end.row == 0 and ref.end.col == 1  # B1

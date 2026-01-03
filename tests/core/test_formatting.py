@@ -333,11 +333,6 @@ class TestFormatHelpers:
         result = _format_time(0.5, TimeFormat.T3)
         assert "12:" in result
 
-    def test_format_plusminus_non_numeric(self):
-        """Test plus/minus for non-numeric."""
-        result = _format_plusminus("hello", 10)
-        assert result == "hello"
-
 
 class TestFormatSpec:
     """Tests for FormatSpec dataclass."""

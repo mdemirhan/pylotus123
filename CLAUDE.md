@@ -6,24 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Lotus 1-2-3 clone - a fully-functional terminal-based spreadsheet application built with Python and the Textual TUI framework. Features a 256×65,536 cell grid, 180+ formula functions, Lotus-style menu system, charting, and full undo/redo support.
 
-## Commands
+## Tools
 
-```bash
-# Install dependencies
-uv sync
+### Python
+- Use `uv` for all Python projects:
+  - `uv sync` to install dependencies
+  - `uv run <command>` to run commands in the project environment
+  - `uv run main.py` to run the application
+  - `uv run pytest` to run all tests
+  - `uv run pytest tests/test_formula.py` to run a single test file
+  - `uv run pytest tests/test_formula.py::test_function_name -v` to run a specific test
+  - `uv add <package>` to add dependencies
+- Use `ruff` for linting and formatting (`ruff check`, `ruff format`)
+- Use `basedpyright` for type checking
+- Use `pytest` for testing 
 
-# Run the application
-uv run python main.py
-
-# Run all tests
-uv run pytest
-
-# Run a single test file
-uv run pytest tests/test_formula.py
-
-# Run a specific test
-uv run pytest tests/test_formula.py::test_function_name -v
-```
+After your edits, run the following:
+- `uv run basedpyright` for type checks and fix errors
 
 ## Architecture
 

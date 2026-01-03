@@ -7,7 +7,6 @@ from lotus123.formula.recalc import (
     RecalcMode,
     RecalcOrder,
     RecalcStats,
-    create_recalc_engine,
 )
 
 
@@ -189,7 +188,7 @@ class TestRecalcCalculation:
         assert stats.elapsed_ms >= 0
 
 
-class TestRecalcOrder:
+class TestRecalcOrderCalculation:
     """Tests for calculation order."""
 
     def setup_method(self):
@@ -342,20 +341,47 @@ class TestCircularReferences:
         assert (1, 1) not in self.engine._circular_refs
 
 
-class TestCreateRecalcEngine:
-    """Tests for create_recalc_engine factory function."""
+class TestSpreadsheetRecalcMethods:
+    """Tests for Spreadsheet recalc mode/order methods."""
 
-    def test_creates_engine(self):
-        """Test factory creates engine."""
+    def test_engine_created_automatically(self):
+        """Test recalc engine is created automatically."""
         ss = Spreadsheet()
-        engine = create_recalc_engine(ss)
 
-        assert isinstance(engine, RecalcEngine)
-        assert engine.spreadsheet is ss
+        assert ss._recalc_engine is not None
+        assert isinstance(ss._recalc_engine, RecalcEngine)
+        assert ss._recalc_engine.spreadsheet is ss
 
-    def test_attaches_to_spreadsheet(self):
-        """Test factory attaches engine to spreadsheet."""
+    def test_set_and_get_recalc_mode(self):
+        """Test set_recalc_mode and get_recalc_mode."""
         ss = Spreadsheet()
-        engine = create_recalc_engine(ss)
 
-        assert ss._recalc_engine is engine
+        # Default is automatic
+        assert ss.get_recalc_mode() == RecalcMode.AUTOMATIC
+
+        # Set to manual
+        ss.set_recalc_mode(RecalcMode.MANUAL)
+        assert ss.get_recalc_mode() == RecalcMode.MANUAL
+
+        # Set back to automatic
+        ss.set_recalc_mode(RecalcMode.AUTOMATIC)
+        assert ss.get_recalc_mode() == RecalcMode.AUTOMATIC
+
+    def test_set_and_get_recalc_order(self):
+        """Test set_recalc_order and get_recalc_order."""
+        ss = Spreadsheet()
+
+        # Default is natural
+        assert ss.get_recalc_order() == RecalcOrder.NATURAL
+
+        # Set to column-wise
+        ss.set_recalc_order(RecalcOrder.COLUMN_WISE)
+        assert ss.get_recalc_order() == RecalcOrder.COLUMN_WISE
+
+        # Set to row-wise
+        ss.set_recalc_order(RecalcOrder.ROW_WISE)
+        assert ss.get_recalc_order() == RecalcOrder.ROW_WISE
+
+        # Set back to natural
+        ss.set_recalc_order(RecalcOrder.NATURAL)
+        assert ss.get_recalc_order() == RecalcOrder.NATURAL

@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
@@ -413,8 +413,8 @@ class ColWidthCommand(Command):
 class CompositeCommand(Command):
     """Command that groups multiple commands."""
 
-    def __init__(self, commands: list[Command], description: str = "Multiple changes") -> None:
-        self._commands = commands
+    def __init__(self, commands: Sequence[Command], description: str = "Multiple changes") -> None:
+        self._commands = list(commands)
         self._description = description
 
     def execute(self) -> None:

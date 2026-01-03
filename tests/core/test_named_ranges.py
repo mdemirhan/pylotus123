@@ -299,7 +299,9 @@ class TestNamedRangeManager:
         mgr2.from_dict(data)
 
         assert len(mgr2) == 2
-        assert mgr2.get("Test_One").description == "First"
+        test_one = mgr2.get("Test_One")
+        assert test_one is not None
+        assert test_one.description == "First"
 
 
 class TestNamePattern:

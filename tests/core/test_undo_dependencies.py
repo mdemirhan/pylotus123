@@ -1,6 +1,6 @@
 
 from lotus123.core.spreadsheet import Spreadsheet
-from lotus123.formula.recalc import create_recalc_engine, RecalcMode
+from lotus123.formula.recalc import RecalcMode
 from lotus123.utils.undo import (
     CellChangeCommand,
     ClearRangeCommand,
@@ -15,8 +15,9 @@ class TestUndoDependencyIntegrity:
 
     def setup_method(self):
         self.sheet = Spreadsheet()
-        self.engine = create_recalc_engine(self.sheet)
-        self.engine.set_mode(RecalcMode.MANUAL)
+        assert self.sheet._recalc_engine is not None
+        self.engine = self.sheet._recalc_engine
+        self.sheet.set_recalc_mode(RecalcMode.MANUAL)
         self.undo_manager = UndoManager()
 
     def test_cell_change_undo_redo_dependencies(self):

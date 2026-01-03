@@ -167,6 +167,7 @@ class TestCTERM:
         """Test basic CTERM calculation."""
         result = fn_cterm(0.1, 2000, 1000)
         # Time to double at 10%
+        assert isinstance(result, float)
         assert abs(result - 7.27) < 0.1
 
     def test_cterm_error_negative_rate(self):
@@ -215,12 +216,14 @@ class TestSYD:
         """Test basic SYD calculation."""
         result = fn_syd(10000, 1000, 5, 1)
         # First year: (10000-1000) * 5/15
+        assert isinstance(result, float)
         assert abs(result - 3000) < 1
 
     def test_syd_last_year(self):
         """Test SYD for last year."""
         result = fn_syd(10000, 1000, 5, 5)
         # Last year: (10000-1000) * 1/15
+        assert isinstance(result, float)
         assert abs(result - 600) < 1
 
     def test_syd_invalid_period(self):
@@ -241,11 +244,13 @@ class TestDDB:
         """Test basic DDB calculation."""
         result = fn_ddb(10000, 1000, 5, 1)
         # First year at 2/5 rate
+        assert isinstance(result, float)
         assert abs(result - 4000) < 1
 
     def test_ddb_with_factor(self):
         """Test DDB with custom factor."""
         result = fn_ddb(10000, 1000, 5, 1, 1.5)
+        assert isinstance(result, float)
         assert result > 0
 
     def test_ddb_invalid_period(self):
@@ -266,6 +271,7 @@ class TestIPMT:
         """Test basic interest payment."""
         result = fn_ipmt(0.1, 1, 12, 10000)
         # First period interest on 10000 at 10%
+        assert isinstance(result, float)
         assert abs(result - 1000) < 1
 
     def test_ipmt_later_period(self):

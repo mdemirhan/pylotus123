@@ -12,7 +12,7 @@ from .named_ranges import NamedRangeManager
 from .reference import adjust_for_structural_change, adjust_formula_references, parse_cell_ref
 
 if TYPE_CHECKING:
-    from ..formula.recalc import RecalcEngine
+    from ..formula.recalc import RecalcEngine, RecalcMode, RecalcOrder
     from ..formula.evaluator import EvaluationContext
 
 
@@ -84,8 +84,9 @@ class Spreadsheet:
         self.frozen_rows: int = 0
         self.frozen_cols: int = 0
 
-        # Recalculation engine (set by formula module)
+        # Recalculation engine (created lazily to avoid circular imports)
         self._recalc_engine: RecalcEngine | None = None
+        self._init_recalc_engine()
 
         # Circular references detected
         self._circular_refs: set[tuple[int, int]] = set()
@@ -97,6 +98,73 @@ class Spreadsheet:
             "default_col_width": DEFAULT_COL_WIDTH,
             "zero_display": True,
         }
+
+    # -------------------------------------------------------------------------
+    # Public Accessors for Internal Data
+    # -------------------------------------------------------------------------
+
+    @property
+    def cells(self) -> dict[tuple[int, int], Cell]:
+        """Read-only access to the sparse cell storage."""
+        return self._cells
+
+    @property
+    def col_widths(self) -> dict[int, int]:
+        """Read-only access to column widths (sparse, non-default only)."""
+        return self._col_widths
+
+    @property
+    def row_heights(self) -> dict[int, int]:
+        """Read-only access to row heights (sparse, non-default only)."""
+        return self._row_heights
+
+    def _init_recalc_engine(self) -> None:
+        """Initialize the recalculation engine."""
+        from ..formula.recalc import RecalcEngine
+
+        self._recalc_engine = RecalcEngine(self)
+
+    def set_recalc_mode(self, mode: "RecalcMode") -> None:
+        """Set the recalculation mode.
+
+        Args:
+            mode: RecalcMode.AUTOMATIC or RecalcMode.MANUAL
+        """
+        if self._recalc_engine:
+            self._recalc_engine.set_mode(mode)
+
+    def get_recalc_mode(self) -> "RecalcMode":
+        """Get the current recalculation mode.
+
+        Returns:
+            Current RecalcMode
+        """
+        from ..formula.recalc import RecalcMode
+
+        if self._recalc_engine:
+            return self._recalc_engine.mode
+        return RecalcMode.AUTOMATIC
+
+    def set_recalc_order(self, order: "RecalcOrder") -> None:
+        """Set the recalculation order.
+
+        Args:
+            order: RecalcOrder.NATURAL, COLUMN_WISE, or ROW_WISE
+        """
+        if self._recalc_engine:
+            self._recalc_engine.set_order(order)
+
+    def get_recalc_order(self) -> "RecalcOrder":
+        """Get the current recalculation order.
+
+        Returns:
+            Current RecalcOrder
+        """
+        from ..formula.recalc import RecalcOrder
+
+        if self._recalc_engine:
+            return self._recalc_engine.order
+        return RecalcOrder.NATURAL
 
     # -------------------------------------------------------------------------
     # Index Management (for O(k) row/column access)
@@ -569,7 +637,7 @@ class Spreadsheet:
 
     def get_col_width(self, col: int) -> int:
         """Get width of column."""
-        default = self.global_settings.get("default_col_width", DEFAULT_COL_WIDTH)
+        default: int = self.global_settings.get("default_col_width", DEFAULT_COL_WIDTH)
         return self._col_widths.get(col, default)
 
     def set_col_width(self, col: int, width: int) -> None:

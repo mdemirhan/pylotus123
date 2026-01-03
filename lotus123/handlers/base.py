@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
     from ..charting import Chart
     from ..core import Spreadsheet
-    from ..formula.recalc import RecalcEngine
+    from ..formula.recalc import RecalcMode, RecalcOrder
     from ..ui import SpreadsheetGrid
     from ..utils.undo import UndoManager
 
@@ -25,7 +25,6 @@ class AppProtocol(Protocol):
     spreadsheet: "Spreadsheet"
     chart: "Chart"
     undo_manager: "UndoManager"
-    recalc_engine: "RecalcEngine"
     config: Any  # AppConfig
 
     # State flags
@@ -84,20 +83,36 @@ class AppProtocol(Protocol):
         ...
 
     # Methods from LotusApp that handlers need
-    def _update_status(self) -> None:
+    def update_status(self) -> None:
         """Update the status bar and cell reference display."""
         ...
 
-    def _mark_dirty(self) -> None:
+    def mark_dirty(self) -> None:
         """Mark the spreadsheet as having unsaved changes."""
         ...
 
-    def _update_title(self) -> None:
+    def update_title(self) -> None:
         """Update the window title."""
         ...
 
-    def _apply_theme(self) -> None:
+    def apply_theme(self) -> None:
         """Apply the current theme to all widgets."""
+        ...
+
+    def set_recalc_mode(self, mode: "RecalcMode") -> None:
+        """Set the recalculation mode."""
+        ...
+
+    def get_recalc_mode(self) -> "RecalcMode":
+        """Get the current recalculation mode."""
+        ...
+
+    def set_recalc_order(self, order: "RecalcOrder") -> None:
+        """Set the recalculation order."""
+        ...
+
+    def get_recalc_order(self) -> "RecalcOrder":
+        """Get the current recalculation order."""
         ...
 
 
@@ -191,19 +206,19 @@ class BaseHandler:
 
     def update_status(self) -> None:
         """Update the status bar and cell reference display."""
-        self._app._update_status()
+        self._app.update_status()
 
     def update_title(self) -> None:
         """Update the window title."""
-        self._app._update_title()
+        self._app.update_title()
 
     def mark_dirty(self) -> None:
         """Mark the spreadsheet as having unsaved changes."""
-        self._app._mark_dirty()
+        self._app.mark_dirty()
 
     def apply_theme(self) -> None:
         """Apply the current theme to all widgets."""
-        self._app._apply_theme()
+        self._app.apply_theme()
 
     @property
     def is_dirty(self) -> bool:
@@ -214,4 +229,4 @@ class BaseHandler:
     def is_dirty(self, value: bool) -> None:
         """Set the dirty state of the spreadsheet."""
         self._app.spreadsheet.modified = value
-        self._app._update_title()
+        self._app.update_title()

@@ -1701,11 +1701,10 @@ class TestWk1CalcSettingsIO:
 
     def test_write_and_read_automatic_calcmode(self):
         """Test automatic calculation mode."""
-        from lotus123.formula.recalc import RecalcMode, create_recalc_engine
+        from lotus123.formula.recalc import RecalcMode
 
         spreadsheet = Spreadsheet()
-        engine = create_recalc_engine(spreadsheet)
-        engine.mode = RecalcMode.AUTOMATIC
+        spreadsheet.set_recalc_mode(RecalcMode.AUTOMATIC)
         spreadsheet.set_cell(0, 0, "100")
 
         writer = Wk1Writer(spreadsheet)
@@ -1717,21 +1716,19 @@ class TestWk1CalcSettingsIO:
             writer.save(filepath)
 
             new_spreadsheet = Spreadsheet()
-            create_recalc_engine(new_spreadsheet)
             reader = Wk1Reader(new_spreadsheet)
             reader.load(filepath)
 
-            assert new_spreadsheet._recalc_engine.mode == RecalcMode.AUTOMATIC
+            assert new_spreadsheet.get_recalc_mode() == RecalcMode.AUTOMATIC
         finally:
             Path(filepath).unlink()
 
     def test_write_and_read_manual_calcmode(self):
         """Test manual calculation mode."""
-        from lotus123.formula.recalc import RecalcMode, create_recalc_engine
+        from lotus123.formula.recalc import RecalcMode
 
         spreadsheet = Spreadsheet()
-        engine = create_recalc_engine(spreadsheet)
-        engine.mode = RecalcMode.MANUAL
+        spreadsheet.set_recalc_mode(RecalcMode.MANUAL)
         spreadsheet.set_cell(0, 0, "100")
 
         writer = Wk1Writer(spreadsheet)
@@ -1743,21 +1740,19 @@ class TestWk1CalcSettingsIO:
             writer.save(filepath)
 
             new_spreadsheet = Spreadsheet()
-            create_recalc_engine(new_spreadsheet)
             reader = Wk1Reader(new_spreadsheet)
             reader.load(filepath)
 
-            assert new_spreadsheet._recalc_engine.mode == RecalcMode.MANUAL
+            assert new_spreadsheet.get_recalc_mode() == RecalcMode.MANUAL
         finally:
             Path(filepath).unlink()
 
     def test_write_and_read_natural_calcorder(self):
         """Test natural calculation order."""
-        from lotus123.formula.recalc import RecalcOrder, create_recalc_engine
+        from lotus123.formula.recalc import RecalcOrder
 
         spreadsheet = Spreadsheet()
-        engine = create_recalc_engine(spreadsheet)
-        engine.order = RecalcOrder.NATURAL
+        spreadsheet.set_recalc_order(RecalcOrder.NATURAL)
         spreadsheet.set_cell(0, 0, "100")
 
         writer = Wk1Writer(spreadsheet)
@@ -1769,21 +1764,19 @@ class TestWk1CalcSettingsIO:
             writer.save(filepath)
 
             new_spreadsheet = Spreadsheet()
-            create_recalc_engine(new_spreadsheet)
             reader = Wk1Reader(new_spreadsheet)
             reader.load(filepath)
 
-            assert new_spreadsheet._recalc_engine.order == RecalcOrder.NATURAL
+            assert new_spreadsheet.get_recalc_order() == RecalcOrder.NATURAL
         finally:
             Path(filepath).unlink()
 
     def test_write_and_read_column_wise_calcorder(self):
         """Test column-wise calculation order."""
-        from lotus123.formula.recalc import RecalcOrder, create_recalc_engine
+        from lotus123.formula.recalc import RecalcOrder
 
         spreadsheet = Spreadsheet()
-        engine = create_recalc_engine(spreadsheet)
-        engine.order = RecalcOrder.COLUMN_WISE
+        spreadsheet.set_recalc_order(RecalcOrder.COLUMN_WISE)
         spreadsheet.set_cell(0, 0, "100")
 
         writer = Wk1Writer(spreadsheet)
@@ -1795,21 +1788,19 @@ class TestWk1CalcSettingsIO:
             writer.save(filepath)
 
             new_spreadsheet = Spreadsheet()
-            create_recalc_engine(new_spreadsheet)
             reader = Wk1Reader(new_spreadsheet)
             reader.load(filepath)
 
-            assert new_spreadsheet._recalc_engine.order == RecalcOrder.COLUMN_WISE
+            assert new_spreadsheet.get_recalc_order() == RecalcOrder.COLUMN_WISE
         finally:
             Path(filepath).unlink()
 
     def test_write_and_read_row_wise_calcorder(self):
         """Test row-wise calculation order."""
-        from lotus123.formula.recalc import RecalcOrder, create_recalc_engine
+        from lotus123.formula.recalc import RecalcOrder
 
         spreadsheet = Spreadsheet()
-        engine = create_recalc_engine(spreadsheet)
-        engine.order = RecalcOrder.ROW_WISE
+        spreadsheet.set_recalc_order(RecalcOrder.ROW_WISE)
         spreadsheet.set_cell(0, 0, "100")
 
         writer = Wk1Writer(spreadsheet)
@@ -1821,11 +1812,10 @@ class TestWk1CalcSettingsIO:
             writer.save(filepath)
 
             new_spreadsheet = Spreadsheet()
-            create_recalc_engine(new_spreadsheet)
             reader = Wk1Reader(new_spreadsheet)
             reader.load(filepath)
 
-            assert new_spreadsheet._recalc_engine.order == RecalcOrder.ROW_WISE
+            assert new_spreadsheet.get_recalc_order() == RecalcOrder.ROW_WISE
         finally:
             Path(filepath).unlink()
 
@@ -1864,14 +1854,13 @@ class TestWk1MetadataRoundtrip:
 
     def test_full_metadata_roundtrip(self):
         """Test complete metadata preservation across save/load."""
-        from lotus123.formula.recalc import RecalcMode, RecalcOrder, create_recalc_engine
+        from lotus123.formula.recalc import RecalcMode, RecalcOrder
 
         spreadsheet = Spreadsheet()
-        engine = create_recalc_engine(spreadsheet)
 
         # Set up calc settings
-        engine.mode = RecalcMode.MANUAL
-        engine.order = RecalcOrder.COLUMN_WISE
+        spreadsheet.set_recalc_mode(RecalcMode.MANUAL)
+        spreadsheet.set_recalc_order(RecalcOrder.COLUMN_WISE)
 
         # Add data with formats
         spreadsheet.set_cell(0, 0, "1234.56")
@@ -1901,13 +1890,12 @@ class TestWk1MetadataRoundtrip:
             writer.save(filepath)
 
             new_spreadsheet = Spreadsheet()
-            create_recalc_engine(new_spreadsheet)
             reader = Wk1Reader(new_spreadsheet)
             reader.load(filepath)
 
             # Verify calc settings
-            assert new_spreadsheet._recalc_engine.mode == RecalcMode.MANUAL
-            assert new_spreadsheet._recalc_engine.order == RecalcOrder.COLUMN_WISE
+            assert new_spreadsheet.get_recalc_mode() == RecalcMode.MANUAL
+            assert new_spreadsheet.get_recalc_order() == RecalcOrder.COLUMN_WISE
 
             # Verify formats
             assert new_spreadsheet.get_cell(0, 0).format_code == "F2"

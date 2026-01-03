@@ -21,7 +21,7 @@ filterwarnings = [
 
 [dependency-groups]
 dev = [
-    "mypy>=1.14.0",
+    "basedpyright>=1.22.0",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
     "pytest-cov>=7.0.0",
@@ -29,9 +29,26 @@ dev = [
     "types-openpyxl>=3.1.5.20250919",
 ]
 
-[tool.mypy]
-python_version = "3.12"
-no_implicit_optional = true
+[tool.basedpyright]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"  # Not "strict" or "all"
+# Loosen the most annoying rules
+reportAny = false                       # Don't flag every Any usage
+reportUnknownMemberType = false         # Too noisy with third-party libs
+reportUnknownArgumentType = false       # Same issue
+reportUnknownVariableType = false       # Same issue
+reportMissingTypeStubs = "warning"      # Don't error on untyped libraries
+reportPrivateUsage = "error"            # Accessing _private is sometimes needed
+reportUnnecessaryIsInstance = false     # Sometimes explicit checks aid readability
+
+[[tool.basedpyright.executionEnvironments]]
+root = "tests"
+extraPaths = ["."]                      # Allow tests to import lotus123
+reportPrivateUsage = false              # Relaxed for tests
+reportUnknownMemberType = false
+reportAttributeAccessIssue = false
+reportArgumentType = false
+reportAny = false
 
 [tool.ruff.lint.isort]
 force-single-line = false           # allows multiple imports per line

@@ -235,10 +235,11 @@ class TestLotusAppAsync:
     async def test_menu_activation_with_slash(self):
         """Test menu activates with / key."""
         from lotus123.app import LotusApp
+        from lotus123.ui import LotusMenu
 
         app = LotusApp()
         async with app.run_test() as pilot:
-            menu = app.query_one("#menu-bar")
+            menu = app.query_one("#menu-bar", LotusMenu)
 
             assert menu.active is False
 
@@ -251,10 +252,11 @@ class TestLotusAppAsync:
     async def test_menu_deactivation_with_escape(self):
         """Test menu deactivates with Escape."""
         from lotus123.app import LotusApp
+        from lotus123.ui import LotusMenu
 
         app = LotusApp()
         async with app.run_test() as pilot:
-            menu = app.query_one("#menu-bar")
+            menu = app.query_one("#menu-bar", LotusMenu)
 
             await pilot.press("slash")
             await pilot.pause()
@@ -268,10 +270,11 @@ class TestLotusAppAsync:
     async def test_arrow_key_navigation(self):
         """Test arrow keys move cursor."""
         from lotus123.app import LotusApp
+        from lotus123.ui import SpreadsheetGrid
 
         app = LotusApp()
         async with app.run_test() as pilot:
-            grid = app.query_one("#grid")
+            grid = app.query_one("#grid", SpreadsheetGrid)
 
             assert grid.cursor_row == 0
             assert grid.cursor_col == 0
@@ -309,6 +312,8 @@ class TestLotusAppAsync:
     @pytest.mark.asyncio
     async def test_typing_text_correctly(self):
         """Test typing multiple characters works correctly."""
+        from textual.widgets import Input
+
         from lotus123.app import LotusApp
 
         app = LotusApp()
@@ -317,13 +322,14 @@ class TestLotusAppAsync:
                 await pilot.press(char)
                 await pilot.pause()
 
-            cell_input = app.query_one("#cell-input")
+            cell_input = app.query_one("#cell-input", Input)
             assert cell_input.value == "Hello"
 
     @pytest.mark.asyncio
     async def test_enter_submits_cell(self):
         """Test Enter key submits cell value."""
         from lotus123.app import LotusApp
+        from lotus123.ui import SpreadsheetGrid
 
         app = LotusApp()
         async with app.run_test() as pilot:
@@ -337,7 +343,7 @@ class TestLotusAppAsync:
             await pilot.pause()
 
             # Should move to next row
-            grid = app.query_one("#grid")
+            grid = app.query_one("#grid", SpreadsheetGrid)
             assert grid.cursor_row == 1
 
             # Value should be in spreadsheet
@@ -394,10 +400,11 @@ class TestLotusAppAsync:
     async def test_page_navigation(self):
         """Test PageUp/PageDown navigation."""
         from lotus123.app import LotusApp
+        from lotus123.ui import SpreadsheetGrid
 
         app = LotusApp()
         async with app.run_test() as pilot:
-            grid = app.query_one("#grid")
+            grid = app.query_one("#grid", SpreadsheetGrid)
 
             await pilot.press("pagedown")
             await pilot.pause()
@@ -423,10 +430,11 @@ class TestLotusAppAsync:
     async def test_arrow_keys_blocked_during_modal(self):
         """Test arrow keys don't affect grid when modal is open."""
         from lotus123.app import LotusApp
+        from lotus123.ui import SpreadsheetGrid
 
         app = LotusApp()
         async with app.run_test() as pilot:
-            grid = app.query_one("#grid")
+            grid = app.query_one("#grid", SpreadsheetGrid)
             initial_row = grid.cursor_row
 
             # Open modal

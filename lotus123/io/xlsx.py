@@ -7,10 +7,20 @@ with bidirectional translation to ensure round-trip fidelity.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from .xlsx_format_translator import FormatTranslator
 from .xlsx_formula_translator import FormulaTranslator
+
+if TYPE_CHECKING:
+    from openpyxl import Workbook, load_workbook
+    from openpyxl.cell.cell import Cell
+    from openpyxl.styles import Alignment
+    from openpyxl.utils import column_index_from_string, get_column_letter
+    from openpyxl.workbook.defined_name import DefinedName
+    from openpyxl.worksheet.worksheet import Worksheet
+
+    from ..core.spreadsheet import Spreadsheet
 
 try:
     from openpyxl import Workbook, load_workbook
@@ -22,9 +32,6 @@ try:
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
-
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
 
 
 # Alignment prefix mapping
@@ -386,13 +393,14 @@ class XlsxWriter:
         """Export all cells to worksheet."""
         from ..core.cell import ALIGNMENT_PREFIXES
 
-        for (row, col), cell in self.spreadsheet._cells.items():
+        for (row, col), cell in self.spreadsheet.cells.items():
             if cell.is_empty:
                 continue
 
             excel_row = row + 1  # Convert to 1-based
             excel_col = col + 1
-            excel_cell = ws.cell(row=excel_row, column=excel_col)
+            # Cast to Cell since we're creating new cells, not accessing merged cells
+            excel_cell = cast("Cell", ws.cell(row=excel_row, column=excel_col))
 
             if cell.is_formula:
                 # Convert formula
@@ -466,13 +474,13 @@ class XlsxWriter:
 
     def _export_column_widths(self, ws: "Worksheet") -> None:
         """Export column widths."""
-        for col, width in self.spreadsheet._col_widths.items():
+        for col, width in self.spreadsheet.col_widths.items():
             col_letter = get_column_letter(col + 1)
             ws.column_dimensions[col_letter].width = width
 
     def _export_row_heights(self, ws: "Worksheet") -> None:
         """Export row heights."""
-        for row, height in self.spreadsheet._row_heights.items():
+        for row, height in self.spreadsheet.row_heights.items():
             # Convert Lotus lines to Excel points (1 line = ~15 points)
             ws.row_dimensions[row + 1].height = height * 15
 

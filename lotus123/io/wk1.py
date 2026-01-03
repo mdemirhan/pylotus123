@@ -323,11 +323,11 @@ BINARY_OPERATORS: dict[int, str] = {
 # Format Byte Encoding/Decoding
 # =============================================================================
 
-def encode_format_byte(format_code: str) -> int:
+def encode_format_byte(format_code: str | None) -> int:
     """Encode app format code to WK1 format byte.
 
     Args:
-        format_code: App format code (e.g., "F2", "C0", "D1", "G")
+        format_code: App format code (e.g., "F2", "C0", "D1", "G"), or None
 
     Returns:
         WK1 format byte (0-255)
@@ -1478,11 +1478,10 @@ class Wk1Reader:
         from ..formula.recalc import RecalcMode
 
         mode_byte = data[0]
-        if self.spreadsheet._recalc_engine:
-            if mode_byte == 0:
-                self.spreadsheet._recalc_engine.mode = RecalcMode.MANUAL
-            else:
-                self.spreadsheet._recalc_engine.mode = RecalcMode.AUTOMATIC
+        if mode_byte == 0:
+            self.spreadsheet.set_recalc_mode(RecalcMode.MANUAL)
+        else:
+            self.spreadsheet.set_recalc_mode(RecalcMode.AUTOMATIC)
 
     def _read_calcorder(self, data: bytes) -> None:
         """Read calculation order.
@@ -1495,13 +1494,12 @@ class Wk1Reader:
         from ..formula.recalc import RecalcOrder
 
         order_byte = data[0]
-        if self.spreadsheet._recalc_engine:
-            if order_byte == 0:
-                self.spreadsheet._recalc_engine.order = RecalcOrder.NATURAL
-            elif order_byte == 1:
-                self.spreadsheet._recalc_engine.order = RecalcOrder.COLUMN_WISE
-            elif order_byte == 2:
-                self.spreadsheet._recalc_engine.order = RecalcOrder.ROW_WISE
+        if order_byte == 0:
+            self.spreadsheet.set_recalc_order(RecalcOrder.NATURAL)
+        elif order_byte == 1:
+            self.spreadsheet.set_recalc_order(RecalcOrder.COLUMN_WISE)
+        elif order_byte == 2:
+            self.spreadsheet.set_recalc_order(RecalcOrder.ROW_WISE)
 
     def _read_blank(self, data: bytes) -> None:
         """Read blank cell (format only, no value).
@@ -1570,7 +1568,7 @@ class Wk1Writer:
             self._write_record(f, RANGE, range_data)
 
         # Write column widths
-        for col, width in sorted(self.spreadsheet._col_widths.items()):
+        for col, width in sorted(self.spreadsheet.col_widths.items()):
             colw_data = struct.pack("<HB", col, width)
             self._write_record(f, COLW1, colw_data)
 
@@ -1578,7 +1576,7 @@ class Wk1Writer:
         self._write_named_ranges(f)
 
         # Write cells
-        for (row, col), cell in sorted(self.spreadsheet._cells.items()):
+        for (row, col), cell in sorted(self.spreadsheet.cells.items()):
             if cell.is_empty:
                 # Write blank cell if it has a non-default format
                 if cell.format_code != "G":
@@ -1643,9 +1641,8 @@ class Wk1Writer:
         from ..formula.recalc import RecalcMode
 
         mode_byte = 0xFF  # Default: automatic
-        if self.spreadsheet._recalc_engine:
-            if self.spreadsheet._recalc_engine.mode == RecalcMode.MANUAL:
-                mode_byte = 0x00
+        if self.spreadsheet.get_recalc_mode() == RecalcMode.MANUAL:
+            mode_byte = 0x00
 
         self._write_record(f, CALCMODE, struct.pack("<B", mode_byte))
 
@@ -1657,13 +1654,13 @@ class Wk1Writer:
         """
         from ..formula.recalc import RecalcOrder
 
-        order_byte = 0x00  # Default: natural
-        if self.spreadsheet._recalc_engine:
-            order = self.spreadsheet._recalc_engine.order
-            if order == RecalcOrder.COLUMN_WISE:
-                order_byte = 0x01
-            elif order == RecalcOrder.ROW_WISE:
-                order_byte = 0x02
+        order = self.spreadsheet.get_recalc_order()
+        if order == RecalcOrder.COLUMN_WISE:
+            order_byte = 0x01
+        elif order == RecalcOrder.ROW_WISE:
+            order_byte = 0x02
+        else:
+            order_byte = 0x00  # natural
 
         self._write_record(f, CALCORDER, struct.pack("<B", order_byte))
 

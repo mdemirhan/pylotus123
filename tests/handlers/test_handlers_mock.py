@@ -1,3 +1,4 @@
+from typing import Any
 
 from unittest.mock import MagicMock, patch
 from lotus123.handlers.clipboard_handlers import ClipboardHandler
@@ -7,7 +8,7 @@ from lotus123.core.cell import Cell
 from lotus123.ui.grid import SpreadsheetGrid
 
 class MockApp:
-    def __init__(self):
+    def __init__(self) -> None:
         self.spreadsheet = MagicMock(spec=Spreadsheet)
         self.spreadsheet.rows = 100
         self.spreadsheet.cols = 26
@@ -42,9 +43,38 @@ class MockApp:
         self.recalc_mode = "auto"
         self.global_zero_display = True
 
-    def _update_status(self): pass
-    def _update_title(self): pass
-    def _mark_dirty(self): self.spreadsheet.modified = True
+        # AppProtocol required attributes
+        self.chart: Any = MagicMock()
+        self.config: Any = MagicMock()
+        self.editing: bool = False
+        self._menu_active: bool = False
+        self.current_theme_type: Any = MagicMock()
+        self.color_theme: Any = MagicMock()
+        self.sub_title: str = ""
+        self._size: Any = MagicMock()
+
+    @property
+    def size(self) -> Any:
+        return self._size
+
+    @size.setter
+    def size(self, value: Any) -> None:
+        self._size = value
+
+    def update_status(self) -> None: pass
+    def update_title(self) -> None: pass
+    def mark_dirty(self) -> None: self.spreadsheet.modified = True
+    def apply_theme(self) -> None: pass
+    def set_recalc_mode(self, mode: Any) -> None:
+        from lotus123.formula.recalc import RecalcMode
+        self.recalc_mode = "manual" if mode == RecalcMode.MANUAL else "auto"
+        self.spreadsheet.set_recalc_mode(mode)
+    def get_recalc_mode(self) -> Any:
+        return self.spreadsheet.get_recalc_mode()
+    def set_recalc_order(self, order: Any) -> None:
+        self.spreadsheet.set_recalc_order(order)
+    def get_recalc_order(self) -> Any:
+        return self.spreadsheet.get_recalc_order()
 
 class TestClipboardHandler:
     def setup_method(self):
@@ -81,6 +111,7 @@ class TestClipboardHandler:
     
     def test_copy_cells(self):
         self.handler.copy_cells()
+        assert self.handler.range_clipboard is not None
         assert len(self.handler.range_clipboard) == 3 # 3 rows (0,1,2)
         assert len(self.handler.range_clipboard[0]) == 3 # 3 cols
         assert not self.handler.clipboard_is_cut

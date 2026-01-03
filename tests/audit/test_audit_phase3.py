@@ -1,14 +1,14 @@
 
 from lotus123.core.spreadsheet import Spreadsheet
-from lotus123.formula.recalc import create_recalc_engine, RecalcMode
+from lotus123.formula.recalc import RecalcMode
 
 class TestPhase3Audit:
     """Systematic audit tests for edge cases and complexity."""
 
     def setup_method(self):
         self.sheet = Spreadsheet()
-        self.engine = create_recalc_engine(self.sheet)
-        self.engine.set_mode(RecalcMode.MANUAL)
+        self.engine = self.sheet._recalc_engine
+        self.sheet.set_recalc_mode(RecalcMode.MANUAL)
 
     def test_circular_reference_self(self):
         """Audit: Direct self-reference."""
@@ -21,6 +21,7 @@ class TestPhase3Audit:
         assert val == "#CIRC!" or val == "#CIRC", f"Expected #CIRC!, got {val}"
         
         # Check RecalcEngine stats
+        assert self.sheet._recalc_engine is not None
         assert (0, 0) in self.sheet._recalc_engine.get_circular_references()
 
     def test_circular_reference_chain(self):
@@ -49,6 +50,7 @@ class TestPhase3Audit:
         
         assert self.sheet.get_value(0, 1) == 10.0
         assert self.sheet.get_value(0, 0) == 10.0
+        assert self.sheet._recalc_engine is not None
         assert not self.sheet._recalc_engine.get_circular_references()
 
     def test_structural_update_with_invalid_ref(self):

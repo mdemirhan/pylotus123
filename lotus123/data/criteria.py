@@ -154,13 +154,13 @@ class CriteriaParser:
                 if value is None or value == "":
                     continue
 
-                criterion = self._parse_criterion(col, value)
+                criterion = self.parse_criterion(col, value)
                 and_group.append(criterion)
 
             if and_group:
                 self._criteria.append(and_group)
 
-    def _parse_criterion(self, column: int, value: Any) -> Criterion:
+    def parse_criterion(self, column: int, value: Any) -> Criterion:
         """Parse a single criterion value."""
         value_str = str(value).strip()
 
@@ -257,4 +257,4 @@ def parse_simple_criteria(column: int, criteria_str: str) -> Criterion:
         "<>0" - not equal to 0
     """
     parser = CriteriaParser()
-    return parser._parse_criterion(column, criteria_str)
+    return parser.parse_criterion(column, criteria_str)
