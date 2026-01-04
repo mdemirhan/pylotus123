@@ -31,7 +31,7 @@ uv run basedpyright
 
 ## Development Workflow
 
-After making code changes, always run the type checker (`uv run basedpyright`) and address any issues before considering the work complete.
+After making code changes, always run `uv run ruff format` to format the code, then run the type checker (`uv run basedpyright`) and address any issues before considering the work complete.
 
 ## Architecture
 
