@@ -45,11 +45,7 @@ class TestExportOptions:
     def test_custom_values(self):
         """Test custom option values."""
         opts = ExportOptions(
-            format=ExportFormat.TSV,
-            delimiter="\t",
-            include_header=True,
-            start_row=1,
-            end_row=10
+            format=ExportFormat.TSV, delimiter="\t", include_header=True, start_row=1, end_row=10
         )
         assert opts.format == ExportFormat.TSV
         assert opts.include_header is True
@@ -206,12 +202,7 @@ class TestExportFile:
     def test_export_with_options(self):
         """Test exporting with explicit options."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
-            opts = ExportOptions(
-                format=ExportFormat.CSV,
-                delimiter=",",
-                start_row=1,
-                end_row=1
-            )
+            opts = ExportOptions(format=ExportFormat.CSV, delimiter=",", start_row=1, end_row=1)
             count = self.exporter.export_file(f.name, opts)
 
             assert count == 1  # Only row 1
@@ -251,10 +242,7 @@ class TestExportFormatted:
     def test_export_formatted_with_header(self):
         """Test formatted export with column headers."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-            opts = ExportOptions(
-                format=ExportFormat.FORMATTED_TEXT,
-                include_header=True
-            )
+            opts = ExportOptions(format=ExportFormat.FORMATTED_TEXT, include_header=True)
             count = self.exporter.export_file(f.name, opts)
 
             # Header row + separator + data rows
@@ -413,6 +401,7 @@ class TestRoundTripTextLikeFormula:
     def setup_method(self):
         """Set up test fixtures."""
         from lotus123.io.text_import import TextImporter
+
         self.ss = Spreadsheet()
         self.exporter = TextExporter(self.ss)
         self.importer = TextImporter(self.ss)
@@ -433,6 +422,7 @@ class TestRoundTripTextLikeFormula:
         # Create new spreadsheet and import
         ss2 = Spreadsheet()
         from lotus123.io.text_import import TextImporter
+
         importer2 = TextImporter(ss2)
         importer2.import_text(csv_content)
 
@@ -455,6 +445,7 @@ class TestRoundTripTextLikeFormula:
 
         ss2 = Spreadsheet()
         from lotus123.io.text_import import TextImporter
+
         importer2 = TextImporter(ss2)
         importer2.import_text(csv_content)
 
@@ -471,6 +462,7 @@ class TestRoundTripTextLikeFormula:
 
         ss2 = Spreadsheet()
         from lotus123.io.text_import import TextImporter
+
         importer2 = TextImporter(ss2)
         importer2.import_text(csv_content)
 

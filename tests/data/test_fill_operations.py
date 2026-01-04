@@ -1,6 +1,5 @@
 """Tests for fill operations."""
 
-
 from lotus123 import Spreadsheet
 from lotus123.data.fill import FillOperations, FillSpec, FillType
 

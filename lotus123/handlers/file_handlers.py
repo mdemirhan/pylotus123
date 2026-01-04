@@ -25,7 +25,9 @@ class FileHandler(BaseHandler):
         super().__init__(app)
         self._pending_xlsx_import_path: str = ""
         self._pending_open_path: str = ""  # File path selected in open dialog
-        self._pending_action: Callable[[], None] | None = None  # Callback for after save confirmation
+        self._pending_action: Callable[[], None] | None = (
+            None  # Callback for after save confirmation
+        )
 
     def _sync_global_settings_to_spreadsheet(self) -> None:
         """Sync app global settings to spreadsheet before save."""
@@ -240,7 +242,9 @@ class FileHandler(BaseHandler):
                     )
                 else:
                     # Single sheet - import directly
-                    self._perform_xlsx_import_from_open(filepath, sheet_names[0] if sheet_names else None)
+                    self._perform_xlsx_import_from_open(
+                        filepath, sheet_names[0] if sheet_names else None
+                    )
 
         except FileNotFoundError:
             self.notify(f"File not found: {filepath}", severity="error")
@@ -326,9 +330,7 @@ class FileHandler(BaseHandler):
 
     def change_theme(self) -> None:
         """Show the theme selection dialog."""
-        self._app.push_screen(
-            ThemeDialog(self._app.current_theme_type), self._do_change_theme
-        )
+        self._app.push_screen(ThemeDialog(self._app.current_theme_type), self._do_change_theme)
 
     def _do_change_theme(self, result: ThemeType | None) -> None:
         if result:

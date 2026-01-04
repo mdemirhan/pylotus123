@@ -101,7 +101,7 @@ class ScatterChartRenderer(ChartTypeRenderer):
         # Place min at left, max at right
         remaining = plot_width - len(x_min_str) - len(x_max_str)
         x_label_line += x_min_str + " " * max(0, remaining) + x_max_str
-        lines.append(x_label_line[:ctx.width])
+        lines.append(x_label_line[: ctx.width])
 
         # X-axis title
         if ctx.chart.x_axis.title:

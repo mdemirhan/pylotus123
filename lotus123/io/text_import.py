@@ -145,7 +145,7 @@ class TextImporter:
 
                 dest_row = options.dest_row + rows_imported
 
-                for col_idx, value in enumerate(row[options.start_col:]):
+                for col_idx, value in enumerate(row[options.start_col :]):
                     if options.trim_whitespace:
                         value = value.strip()
 
@@ -257,7 +257,7 @@ class TextImporter:
         rows_imported = 0
         lines = text.split("\n")
 
-        for line in lines[options.start_row:]:
+        for line in lines[options.start_row :]:
             if options.skip_blank_lines and not line.strip():
                 continue
 

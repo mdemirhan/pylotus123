@@ -101,7 +101,7 @@ class LineChartRenderer(ChartTypeRenderer):
                         label_chars[pos] = char
 
             label_line = " " * (y_label_width + 1) + "".join(label_chars)
-            lines.append(label_line[:ctx.width])
+            lines.append(label_line[: ctx.width])
 
         # X-axis title
         if ctx.chart.x_axis.title:

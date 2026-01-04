@@ -167,9 +167,7 @@ class WorksheetHandler(BaseHandler):
 
     def set_column_width(self) -> None:
         """Prompt for a new column width."""
-        self._app.push_screen(
-            CommandInput("Column width (3-50):"), self._do_set_width
-        )
+        self._app.push_screen(CommandInput("Column width (3-50):"), self._do_set_width)
 
     def _do_set_width(self, result: str | None) -> None:
         if result:
@@ -237,9 +235,7 @@ class WorksheetHandler(BaseHandler):
     def global_column_width(self) -> None:
         """Set the default column width."""
         self._app.push_screen(
-            CommandInput(
-                f"Default column width (3-50) [{self._app.global_col_width}]:"
-            ),
+            CommandInput(f"Default column width (3-50) [{self._app.global_col_width}]:"),
             self._do_global_column_width,
         )
 

@@ -236,6 +236,3 @@ def find_circular_references(
             strongconnect(node)
 
     return circular
-
-
-

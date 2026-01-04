@@ -102,11 +102,7 @@ def fn_vlookup(
         return FormulaError.REF
 
     if range_match:
-        first_col = [
-            row[0] if isinstance(row, list) else row
-            for row in table
-            if row is not None
-        ]
+        first_col = [row[0] if isinstance(row, list) else row for row in table if row is not None]
         if not _is_sorted(first_col):
             return FormulaError.NA
 

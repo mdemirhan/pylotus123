@@ -64,11 +64,11 @@ class Tokenizer:
             if ch == '"':
                 j = i + 1
                 while j < len(formula) and formula[j] != '"':
-                    if formula[j] == "\"" and j + 1 < len(formula):
+                    if formula[j] == '"' and j + 1 < len(formula):
                         j += 2
                     else:
                         j += 1
-                value = formula[i + 1 : j].replace('\"', '"')
+                value = formula[i + 1 : j].replace('"', '"')
                 raw_text = formula[i : j + 1]
                 tokens.append(Token(TokenType.STRING, value, i, raw_text))
                 i = j + 1
@@ -83,13 +83,13 @@ class Tokenizer:
                     continue
 
             # Single char comparison/equals
-            if ch in "<>= " :
+            if ch in "<>= ":
                 tokens.append(Token(TokenType.COMPARISON, ch, i, ch))
                 i += 1
                 continue
 
             # Operators
-            if ch in "+-*/^%" :
+            if ch in "+-*/^%":
                 tokens.append(Token(TokenType.OPERATOR, ch, i, ch))
                 i += 1
                 continue
@@ -163,8 +163,10 @@ class Tokenizer:
                                     Token(TokenType.RANGE, named.reference.to_string(), i, name)
                                 )
                             else:
-                                tokens.append(Token(TokenType.CELL, named.reference.to_string(), i, name))
-                    
+                                tokens.append(
+                                    Token(TokenType.CELL, named.reference.to_string(), i, name)
+                                )
+
                     if not is_named_range:
                         # Cell reference
                         tokens.append(Token(TokenType.CELL, name.upper(), i, name))

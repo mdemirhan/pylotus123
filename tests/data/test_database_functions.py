@@ -1,6 +1,5 @@
 """Tests for database statistical functions."""
 
-
 from lotus123.formula.functions.database import (
     DATABASE_FUNCTIONS,
     _get_field_index,

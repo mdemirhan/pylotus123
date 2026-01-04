@@ -110,10 +110,7 @@ class SheetSelectDialog(ModalScreen[str | None]):
                 id="sheet-title",
             )
             yield ListView(
-                *[
-                    SheetItem(name, i, id=f"sheet-{i}")
-                    for i, name in enumerate(self.sheet_names)
-                ],
+                *[SheetItem(name, i, id=f"sheet-{i}") for i, name in enumerate(self.sheet_names)],
                 id="sheet-list",
             )
             with Horizontal(id="dialog-buttons"):

@@ -1,6 +1,5 @@
 """Tests for database operations module."""
 
-
 from lotus123 import Spreadsheet
 from lotus123.data.database import (
     DatabaseOperations,
@@ -177,26 +176,17 @@ class TestQuery:
 
     def test_query_with_func(self):
         """Test query with criteria function."""
-        rows = self.db.query(
-            (0, 0, 3, 1),
-            criteria_func=lambda r: r[0] == "John"
-        )
+        rows = self.db.query((0, 0, 3, 1), criteria_func=lambda r: r[0] == "John")
         assert rows == [1]
 
     def test_query_age_criteria(self):
         """Test query with age criteria."""
-        rows = self.db.query(
-            (0, 0, 3, 1),
-            criteria_func=lambda r: int(r[1]) > 28
-        )
+        rows = self.db.query((0, 0, 3, 1), criteria_func=lambda r: int(r[1]) > 28)
         assert rows == [1, 3]  # John (30) and Bob (35)
 
     def test_query_no_matches(self):
         """Test query with no matches."""
-        rows = self.db.query(
-            (0, 0, 3, 1),
-            criteria_func=lambda r: r[0] == "Nobody"
-        )
+        rows = self.db.query((0, 0, 3, 1), criteria_func=lambda r: r[0] == "Nobody")
         assert rows == []
 
 
@@ -220,11 +210,7 @@ class TestExtract:
     def test_extract_all_columns(self):
         """Test extract all columns."""
         matching = [1, 3]  # John and Bob
-        count = self.db.extract(
-            (0, 0, 3, 1),
-            (10, 0),
-            matching
-        )
+        count = self.db.extract((0, 0, 3, 1), (10, 0), matching)
 
         assert count == 2
         # Header
@@ -243,7 +229,7 @@ class TestExtract:
             (0, 0, 3, 1),
             (10, 0),
             matching,
-            columns=[0]  # Only Name column
+            columns=[0],  # Only Name column
         )
 
         assert count == 2
@@ -253,11 +239,7 @@ class TestExtract:
 
     def test_extract_no_matches(self):
         """Test extract with no matches."""
-        count = self.db.extract(
-            (0, 0, 3, 1),
-            (10, 0),
-            []
-        )
+        count = self.db.extract((0, 0, 3, 1), (10, 0), [])
         assert count == 0
 
 
@@ -362,7 +344,7 @@ class TestSubtotal:
         """Test subtotal on multiple columns."""
         totals = self.db.subtotal((0, 0, 3, 2), group_col=0, sum_cols=[1, 2])
         assert totals["Sales"][1] == 300  # Sales sum
-        assert totals["Sales"][2] == 30   # Units sum
+        assert totals["Sales"][2] == 30  # Units sum
         assert totals["HR"][1] == 50
         assert totals["HR"][2] == 5
 

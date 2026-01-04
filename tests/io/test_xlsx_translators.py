@@ -38,7 +38,9 @@ class TestFormulaTranslator:
         # COLS -> COLUMNS
         assert FormulaTranslator.lotus_to_excel("=COLS(A1:C1)") == "=COLUMNS(A1:C1)"
         # DAVG -> DAVERAGE
-        assert FormulaTranslator.lotus_to_excel("=DAVG(A1:C10,1,E1:E2)") == "=DAVERAGE(A1:C10,1,E1:E2)"
+        assert (
+            FormulaTranslator.lotus_to_excel("=DAVG(A1:C10,1,E1:E2)") == "=DAVERAGE(A1:C10,1,E1:E2)"
+        )
 
     def test_lotus_to_excel_nested_functions(self):
         """Test nested function translation."""
@@ -67,7 +69,9 @@ class TestFormulaTranslator:
         # COLUMNS -> COLS
         assert FormulaTranslator.excel_to_lotus("=COLUMNS(A1:C1)") == "=COLS(A1:C1)"
         # DAVERAGE -> DAVG
-        assert FormulaTranslator.excel_to_lotus("=DAVERAGE(A1:C10,1,E1:E2)") == "=DAVG(A1:C10,1,E1:E2)"
+        assert (
+            FormulaTranslator.excel_to_lotus("=DAVERAGE(A1:C10,1,E1:E2)") == "=DAVG(A1:C10,1,E1:E2)"
+        )
 
     def test_excel_to_lotus_nested_functions(self):
         """Test nested function reverse translation."""
@@ -194,14 +198,34 @@ class TestFormatTranslator:
     def test_format_roundtrip(self):
         """Test format codes survive round-trip translation."""
         test_codes = [
-            "F0", "F1", "F2", "F5", "F15",
-            "S0", "S2",
-            "C0", "C2",
-            "P0", "P2",
-            ",0", ",2",
-            "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9",
-            "T1", "T2", "T3", "T4",
-            "H", "G",
+            "F0",
+            "F1",
+            "F2",
+            "F5",
+            "F15",
+            "S0",
+            "S2",
+            "C0",
+            "C2",
+            "P0",
+            "P2",
+            ",0",
+            ",2",
+            "D1",
+            "D2",
+            "D3",
+            "D4",
+            "D5",
+            "D6",
+            "D7",
+            "D8",
+            "D9",
+            "T1",
+            "T2",
+            "T3",
+            "T4",
+            "H",
+            "G",
         ]
         for code in test_codes:
             excel = FormatTranslator.lotus_to_excel(code)

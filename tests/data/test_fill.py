@@ -1,6 +1,5 @@
 """Tests for fill operations module."""
 
-
 from lotus123 import Spreadsheet
 from lotus123.data.fill import (
     FillOperations,
@@ -35,12 +34,7 @@ class TestFillSpec:
 
     def test_custom_values(self):
         """Test custom values."""
-        spec = FillSpec(
-            fill_type=FillType.GROWTH,
-            start_value=10,
-            step=2,
-            stop_value=100
-        )
+        spec = FillSpec(fill_type=FillType.GROWTH, start_value=10, step=2, stop_value=100)
         assert spec.fill_type == FillType.GROWTH
         assert spec.start_value == 10
         assert spec.step == 2

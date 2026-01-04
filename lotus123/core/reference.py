@@ -286,18 +286,18 @@ def adjust_formula_references(
 
     tokenizer = Tokenizer()
     tokens = tokenizer.tokenize(formula)
-    
+
     result = []
     last_pos = 0
 
     for token in tokens:
         # Append skipped content (whitespace, etc.)
         if token.position > last_pos:
-            result.append(formula[last_pos:token.position])
-        
+            result.append(formula[last_pos : token.position])
+
         # Determine replacement text
         text = token.raw_text
-        
+
         if token.type == TokenType.CELL:
             try:
                 ref = CellReference.parse(token.raw_text)
@@ -305,7 +305,7 @@ def adjust_formula_references(
             except ValueError:
                 # Not a valid cell ref (e.g. named range or function looking like cell)
                 pass
-        
+
         elif token.type == TokenType.RANGE:
             # Tokenizer might classify named ranges as RANGE if we passed a spreadsheet,
             # but here we pass None. So this usually won't trigger unless we handle ranges explicitly.
@@ -338,7 +338,7 @@ def adjust_for_structural_change(
     max_col: int = 255,
 ) -> str:
     """Adjust references based on row/column insertion/deletion.
-    
+
     Args:
         formula: Formula string
         axis: 'row' or 'col'
@@ -346,7 +346,7 @@ def adjust_for_structural_change(
         shift: Amount to shift (+1 or -1)
         max_row: Max row index
         max_col: Max col index
-        
+
     Returns:
         Adjusted formula string
     """
@@ -354,22 +354,22 @@ def adjust_for_structural_change(
 
     tokenizer = Tokenizer()
     tokens = tokenizer.tokenize(formula)
-    
+
     result = []
     last_pos = 0
 
     for token in tokens:
         # Append skipped content
         if token.position > last_pos:
-            result.append(formula[last_pos:token.position])
-            
+            result.append(formula[last_pos : token.position])
+
         text = token.raw_text
-        
+
         if token.type == TokenType.CELL:
             try:
                 ref = CellReference.parse(token.raw_text)
-                
-                if axis == 'row':
+
+                if axis == "row":
                     if shift < 0 and ref.row == boundary:
                         text = FormulaError.REF
                     elif ref.row >= boundary:
@@ -379,7 +379,7 @@ def adjust_for_structural_change(
                             text = ref.to_string()
                         else:
                             text = FormulaError.REF
-                elif axis == 'col':
+                elif axis == "col":
                     if shift < 0 and ref.col == boundary:
                         text = FormulaError.REF
                     elif ref.col >= boundary:
@@ -389,7 +389,7 @@ def adjust_for_structural_change(
                             text = ref.to_string()
                         else:
                             text = FormulaError.REF
-                            
+
             except ValueError:
                 pass
 

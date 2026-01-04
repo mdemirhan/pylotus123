@@ -25,9 +25,7 @@ class ImportExportHandler(BaseHandler):
 
     # ===== Common Import/Export Helpers =====
 
-    def _import_text_file(
-        self, filepath: str, format_type: ImportFormat, format_name: str
-    ) -> None:
+    def _import_text_file(self, filepath: str, format_type: ImportFormat, format_name: str) -> None:
         """Common text file import logic for CSV/TSV."""
         try:
             from ..io import ImportOptions, TextImporter
@@ -51,9 +49,7 @@ class ImportExportHandler(BaseHandler):
         except Exception as e:
             self.notify(f"Error importing {format_name}: {e}", severity="error")
 
-    def _export_text_file(
-        self, filepath: str, format_type: ExportFormat, format_name: str
-    ) -> None:
+    def _export_text_file(self, filepath: str, format_type: ExportFormat, format_name: str) -> None:
         """Common text file export logic for CSV/TSV."""
         try:
             from ..io import ExportOptions, TextExporter
@@ -164,9 +160,7 @@ class ImportExportHandler(BaseHandler):
     def import_wk1(self) -> None:
         """Show file dialog to import a Lotus WK1 file."""
         self._app.push_screen(
-            FileDialog(
-                mode="open", title="Import Lotus 1-2-3", file_extensions=[".wk1", ".wks"]
-            ),
+            FileDialog(mode="open", title="Import Lotus 1-2-3", file_extensions=[".wk1", ".wks"]),
             self._do_import_wk1,
         )
 
@@ -222,9 +216,7 @@ class ImportExportHandler(BaseHandler):
     def import_xlsx(self) -> None:
         """Show file dialog to import an Excel XLSX file."""
         self._app.push_screen(
-            FileDialog(
-                mode="open", title="Import Excel XLSX", file_extensions=[".xlsx", ".xls"]
-            ),
+            FileDialog(mode="open", title="Import Excel XLSX", file_extensions=[".xlsx", ".xls"]),
             self._do_import_xlsx_file,
         )
 

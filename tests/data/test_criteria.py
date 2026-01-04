@@ -1,6 +1,5 @@
 """Tests for criteria parsing module."""
 
-
 from lotus123.data.criteria import (
     Criterion,
     CriteriaParser,
@@ -293,7 +292,9 @@ class TestCriteriaParserMatches:
         # Parse criteria for column 5
         self.parser._criteria = [[Criterion(column=5, value="test")]]
         # Row only has 2 columns - should not match
-        assert self.parser.matches(["a", "b"]) is True  # Column 5 doesn't exist, so criterion not checked
+        assert (
+            self.parser.matches(["a", "b"]) is True
+        )  # Column 5 doesn't exist, so criterion not checked
 
 
 class TestCreateFilter:

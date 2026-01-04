@@ -468,76 +468,136 @@ class TestFormulaDecompiler:
     def test_decompile_simple_addition(self):
         """Test decompiling A1+B1."""
         # Bytecode: variable(A1) + variable(B1) + ADD + RETURN
-        bytecode = bytes([
-            0x01, 0x00, 0x00, 0x00, 0x00,  # variable: col=0, row=0 (A1)
-            0x01, 0x01, 0x00, 0x00, 0x00,  # variable: col=1, row=0 (B1)
-            0x09,  # ADD
-            0x03,  # RETURN
-        ])
+        bytecode = bytes(
+            [
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x00,  # variable: col=0, row=0 (A1)
+                0x01,
+                0x01,
+                0x00,
+                0x00,
+                0x00,  # variable: col=1, row=0 (B1)
+                0x09,  # ADD
+                0x03,  # RETURN
+            ]
+        )
         result = decompile_formula(bytecode)
         assert result == "=A1+B1"
 
     def test_decompile_integer_constant(self):
         """Test decompiling integer constant."""
         # Bytecode: integer(42) + RETURN
-        bytecode = bytes([
-            0x05, 0x2A, 0x00,  # integer: 42 (0x002A)
-            0x03,  # RETURN
-        ])
+        bytecode = bytes(
+            [
+                0x05,
+                0x2A,
+                0x00,  # integer: 42 (0x002A)
+                0x03,  # RETURN
+            ]
+        )
         result = decompile_formula(bytecode)
         assert result == "=42"
 
     def test_decompile_subtraction(self):
         """Test decompiling A1-B1."""
-        bytecode = bytes([
-            0x01, 0x00, 0x00, 0x00, 0x00,  # A1
-            0x01, 0x01, 0x00, 0x00, 0x00,  # B1
-            0x0A,  # SUB
-            0x03,  # RETURN
-        ])
+        bytecode = bytes(
+            [
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x00,  # A1
+                0x01,
+                0x01,
+                0x00,
+                0x00,
+                0x00,  # B1
+                0x0A,  # SUB
+                0x03,  # RETURN
+            ]
+        )
         result = decompile_formula(bytecode)
         assert result == "=A1-B1"
 
     def test_decompile_multiplication(self):
         """Test decompiling A1*B1."""
-        bytecode = bytes([
-            0x01, 0x00, 0x00, 0x00, 0x00,  # A1
-            0x01, 0x01, 0x00, 0x00, 0x00,  # B1
-            0x0B,  # MUL
-            0x03,  # RETURN
-        ])
+        bytecode = bytes(
+            [
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x00,  # A1
+                0x01,
+                0x01,
+                0x00,
+                0x00,
+                0x00,  # B1
+                0x0B,  # MUL
+                0x03,  # RETURN
+            ]
+        )
         result = decompile_formula(bytecode)
         assert result == "=A1*B1"
 
     def test_decompile_division(self):
         """Test decompiling A1/B1."""
-        bytecode = bytes([
-            0x01, 0x00, 0x00, 0x00, 0x00,  # A1
-            0x01, 0x01, 0x00, 0x00, 0x00,  # B1
-            0x0C,  # DIV
-            0x03,  # RETURN
-        ])
+        bytecode = bytes(
+            [
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x00,  # A1
+                0x01,
+                0x01,
+                0x00,
+                0x00,
+                0x00,  # B1
+                0x0C,  # DIV
+                0x03,  # RETURN
+            ]
+        )
         result = decompile_formula(bytecode)
         assert result == "=A1/B1"
 
     def test_decompile_unary_minus(self):
         """Test decompiling -A1."""
-        bytecode = bytes([
-            0x01, 0x00, 0x00, 0x00, 0x00,  # A1
-            0x08,  # UNARY_MINUS
-            0x03,  # RETURN
-        ])
+        bytecode = bytes(
+            [
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x00,  # A1
+                0x08,  # UNARY_MINUS
+                0x03,  # RETURN
+            ]
+        )
         result = decompile_formula(bytecode)
         assert result == "=-A1"
 
     def test_decompile_comparison(self):
         """Test decompiling A1>B1."""
-        bytecode = bytes([
-            0x01, 0x00, 0x00, 0x00, 0x00,  # A1
-            0x01, 0x01, 0x00, 0x00, 0x00,  # B1
-            0x13,  # GT
-            0x03,  # RETURN
-        ])
+        bytecode = bytes(
+            [
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x00,  # A1
+                0x01,
+                0x01,
+                0x00,
+                0x00,
+                0x00,  # B1
+                0x13,  # GT
+                0x03,  # RETURN
+            ]
+        )
         result = decompile_formula(bytecode)
         assert result == "=A1>B1"
 
@@ -1392,7 +1452,24 @@ class TestFormatByteEncoding:
 
     def test_roundtrip_formats(self):
         """Test format encoding/decoding roundtrip."""
-        formats = ["G", "F0", "F2", "F4", "S2", "C2", "P2", ",2", "D1", "D2", "D3", "D4", "D5", "T1", "T2", "T3"]
+        formats = [
+            "G",
+            "F0",
+            "F2",
+            "F4",
+            "S2",
+            "C2",
+            "P2",
+            ",2",
+            "D1",
+            "D2",
+            "D3",
+            "D4",
+            "D5",
+            "T1",
+            "T2",
+            "T3",
+        ]
         for fmt in formats:
             encoded = encode_format_byte(fmt)
             decoded = decode_format_byte(encoded)
@@ -2179,12 +2256,16 @@ class TestWk1RelativeCellReferences:
         # The actual bytes from the WK1 file: 0xF5, 0xBF for column (0xBFF5)
         # 0xBFF5: bit 15 set (relative), bits 0-7 = 0xF5 = -11 as signed
         # Row: 0x8000 (relative, offset 0)
-        bytecode = bytes([
-            0x01,  # OP_VARIABLE
-            0xF5, 0xBF,  # Column: relative, offset -11 (0xF5 signed)
-            0x00, 0x80,  # Row: relative, offset 0
-            0x03,  # OP_RETURN
-        ])
+        bytecode = bytes(
+            [
+                0x01,  # OP_VARIABLE
+                0xF5,
+                0xBF,  # Column: relative, offset -11 (0xF5 signed)
+                0x00,
+                0x80,  # Row: relative, offset 0
+                0x03,  # OP_RETURN
+            ]
+        )
         # Formula at N3 (col=13, row=2)
         result = decompile_formula(bytecode, formula_row=2, formula_col=13)
         assert result == "=C3"
@@ -2194,12 +2275,16 @@ class TestWk1RelativeCellReferences:
         # Formula in B2 (col=1, row=1) referencing B3 (col=1, row=2)
         # Relative column offset: 0 (same column)
         # Relative row offset: 2 - 1 = 1
-        bytecode = bytes([
-            0x01,  # OP_VARIABLE
-            0x00, 0x80,  # Column: relative, offset 0
-            0x01, 0x80,  # Row: relative, offset 1
-            0x03,  # OP_RETURN
-        ])
+        bytecode = bytes(
+            [
+                0x01,  # OP_VARIABLE
+                0x00,
+                0x80,  # Column: relative, offset 0
+                0x01,
+                0x80,  # Row: relative, offset 1
+                0x03,  # OP_RETURN
+            ]
+        )
         result = decompile_formula(bytecode, formula_row=1, formula_col=1)
         assert result == "=B3"
 
@@ -2208,12 +2293,16 @@ class TestWk1RelativeCellReferences:
         # Formula in B5 (col=1, row=4) referencing B3 (col=1, row=2)
         # Relative row offset: 2 - 4 = -2
         # -2 as signed 14-bit: 0x4000 - 2 = 0x3FFE
-        bytecode = bytes([
-            0x01,  # OP_VARIABLE
-            0x00, 0x80,  # Column: relative, offset 0
-            0xFE, 0xBF,  # Row: relative, offset -2 (0x3FFE with bit 15 set = 0xBFFE)
-            0x03,  # OP_RETURN
-        ])
+        bytecode = bytes(
+            [
+                0x01,  # OP_VARIABLE
+                0x00,
+                0x80,  # Column: relative, offset 0
+                0xFE,
+                0xBF,  # Row: relative, offset -2 (0x3FFE with bit 15 set = 0xBFFE)
+                0x03,  # OP_RETURN
+            ]
+        )
         result = decompile_formula(bytecode, formula_row=4, formula_col=1)
         assert result == "=B3"
 

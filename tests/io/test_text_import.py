@@ -46,11 +46,7 @@ class TestImportOptions:
     def test_custom_values(self):
         """Test custom option values."""
         opts = ImportOptions(
-            format=ImportFormat.TSV,
-            delimiter="\t",
-            has_header=True,
-            start_row=1,
-            dest_row=5
+            format=ImportFormat.TSV, delimiter="\t", has_header=True, start_row=1, dest_row=5
         )
         assert opts.format == ImportFormat.TSV
         assert opts.delimiter == "\t"
@@ -280,10 +276,7 @@ class TestTextImporterFixedWidth:
             f.write("AAABBBCCC\n111222333\n444555666")
             f.flush()
 
-            opts = ImportOptions(
-                format=ImportFormat.FIXED_WIDTH,
-                field_widths=[3, 3, 3]
-            )
+            opts = ImportOptions(format=ImportFormat.FIXED_WIDTH, field_widths=[3, 3, 3])
             count = self.importer.import_file(f.name, opts)
 
             assert count == 3
@@ -304,7 +297,7 @@ class TestTextImporterFixedWidth:
 
             opts = ImportOptions(
                 format=ImportFormat.FIXED_WIDTH,
-                field_widths=[]  # Auto-detect
+                field_widths=[],  # Auto-detect
             )
             # Should either work with auto-detection or raise error
             try:
@@ -322,9 +315,7 @@ class TestTextImporterFixedWidth:
             f.flush()
 
             opts = ImportOptions(
-                format=ImportFormat.FIXED_WIDTH,
-                field_widths=[3, 3, 3],
-                start_row=1
+                format=ImportFormat.FIXED_WIDTH, field_widths=[3, 3, 3], start_row=1
             )
             count = self.importer.import_file(f.name, opts)
 

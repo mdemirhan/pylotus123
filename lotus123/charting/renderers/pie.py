@@ -60,9 +60,7 @@ class PieChartRenderer(ChartTypeRenderer):
 
         return lines
 
-    def _render_slice(
-        self, index: int, label: str, percentage: float, ctx: RenderContext
-    ) -> str:
+    def _render_slice(self, index: int, label: str, percentage: float, ctx: RenderContext) -> str:
         """Render a single pie slice as a horizontal bar.
 
         Args:

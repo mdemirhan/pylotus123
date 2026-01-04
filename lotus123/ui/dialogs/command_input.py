@@ -56,6 +56,7 @@ class CommandInput(ModalScreen[str | None]):
     def on_mount(self) -> None:
         # Get theme fresh from the app's current setting
         from ..themes import THEMES
+
         theme_type = self.app.current_theme_type  # type: ignore[attr-defined]
         theme = THEMES[theme_type]
 

@@ -82,9 +82,7 @@ class TestTextImporter:
             f.flush()
             path = f.name
 
-        opts = ImportOptions(
-            format=ImportFormat.CSV, has_header=True, dest_row=5, dest_col=5
-        )
+        opts = ImportOptions(format=ImportFormat.CSV, has_header=True, dest_row=5, dest_col=5)
 
         try:
             rows = self.importer.import_file(path, opts)

@@ -100,7 +100,6 @@ class FormulaParser:
         self._pos += 1
         return token
 
-
     def _is_error(self, value: Any) -> bool:
         """Check if a value is a known error string."""
         return FormulaError.is_error(value)

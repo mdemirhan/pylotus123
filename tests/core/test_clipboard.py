@@ -1,6 +1,5 @@
 """Tests for clipboard operations."""
 
-
 from lotus123 import Spreadsheet
 from lotus123.utils.clipboard import Clipboard, ClipboardCell, ClipboardContent, ClipboardMode
 

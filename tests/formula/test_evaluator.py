@@ -1,6 +1,5 @@
 """Tests for formula evaluator."""
 
-
 from lotus123 import Spreadsheet
 from lotus123.formula.evaluator import (
     EvaluationContext,
@@ -270,5 +269,3 @@ class TestFindCircularReferences:
         circular = find_circular_references(graph)
         assert (0, 0) in circular
         assert (0, 1) in circular
-
-

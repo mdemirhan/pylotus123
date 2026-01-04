@@ -41,6 +41,7 @@ class ChartHandler(BaseHandler):
 
     def set_x_range(self) -> None:
         """Set the X-axis range for the chart."""
+
         def apply_range(range_str: str) -> None:
             self.chart.set_x_range(range_str)
             self.notify(f"X-Range set to {range_str}")
@@ -77,9 +78,7 @@ class ChartHandler(BaseHandler):
             prompt, lambda range_str: self._add_or_update_series(index, name, range_str)
         )
 
-    def _set_range_from_selection(
-        self, prompt: str, on_set: Callable[[str], None]
-    ) -> None:
+    def _set_range_from_selection(self, prompt: str, on_set: Callable[[str], None]) -> None:
         """Handle range selection or prompt input."""
         grid = self.get_grid()
         if grid.has_selection:
@@ -114,9 +113,7 @@ class ChartHandler(BaseHandler):
         # Use ~75% of terminal size for the chart
         chart_width = int(self._app.size.width * 0.75)
         chart_height = int(self._app.size.height * 0.70)
-        chart_lines = self.chart_renderer.render(
-            self.chart, width=chart_width, height=chart_height
-        )
+        chart_lines = self.chart_renderer.render(self.chart, width=chart_width, height=chart_height)
         self._app.push_screen(ChartViewScreen(chart_lines))
 
     def reset_chart(self) -> None:

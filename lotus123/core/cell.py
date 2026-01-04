@@ -64,7 +64,7 @@ class Cell:
 
     # Pre-compiled regex for number detection in is_formula
     # Using a regex that mimics float() acceptance roughly but stricter on partial inputs
-    _NUMBER_PATTERN = re.compile(r'^\d*\.?\d+(?:[eE][+-]?\d+)?$')
+    _NUMBER_PATTERN = re.compile(r"^\d*\.?\d+(?:[eE][+-]?\d+)?$")
     # IEEE 754 special float values (case-insensitive)
     _SPECIAL_FLOATS = frozenset({"inf", "nan"})
 
@@ -216,6 +216,4 @@ class Cell:
 
     def copy(self) -> Cell:
         """Create a copy of this cell."""
-        return Cell(
-            raw_value=self.raw_value, format_code=self.format_code
-        )
+        return Cell(raw_value=self.raw_value, format_code=self.format_code)

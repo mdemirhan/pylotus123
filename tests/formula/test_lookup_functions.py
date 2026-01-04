@@ -1,6 +1,5 @@
 """Tests for lookup and reference functions."""
 
-
 from lotus123.formula.functions.lookup import (
     LOOKUP_FUNCTIONS,
     fn_address,

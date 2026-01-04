@@ -106,9 +106,7 @@ class DatabaseOperations:
                     raw_val = row_data[sk.column][0]
                     sort_val = self._parse_sort_value(raw_val)
 
-                    if sk.order == SortOrder.DESCENDING and isinstance(
-                        sort_val, (int, float)
-                    ):
+                    if sk.order == SortOrder.DESCENDING and isinstance(sort_val, (int, float)):
                         sort_val = -sort_val
                     key_values.append(sort_val)
             return tuple(key_values)
@@ -137,9 +135,7 @@ class DatabaseOperations:
             if has_strings:
                 col = sk.column
 
-                def string_key(
-                    rd: list[tuple[str, str]], c: int = col
-                ) -> str:
+                def string_key(rd: list[tuple[str, str]], c: int = col) -> str:
                     return rd[c][0].lower() if c < len(rd) else ""
 
                 sorted_data = sorted(sorted_data, key=string_key, reverse=True)
@@ -179,9 +175,7 @@ class DatabaseOperations:
             return  # No data to sort
 
         # Extract cell data for sorting
-        cell_data = self._extract_cell_data(
-            data_start, end_row, start_col, end_col, values_only
-        )
+        cell_data = self._extract_cell_data(data_start, end_row, start_col, end_col, values_only)
 
         # Primary sort with numeric descending handled by negation
         sort_key = self._create_sort_key(keys)
@@ -238,9 +232,7 @@ class DatabaseOperations:
             return []  # No data to sort
 
         # Extract cell data for sorting
-        cell_data = self._extract_cell_data(
-            data_start, end_row, start_col, end_col, values_only
-        )
+        cell_data = self._extract_cell_data(data_start, end_row, start_col, end_col, values_only)
 
         # Primary sort with numeric descending handled by negation
         sort_key = self._create_sort_key(keys)

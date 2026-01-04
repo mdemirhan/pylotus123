@@ -92,7 +92,7 @@ class BarChartRenderer(ChartTypeRenderer):
             group_width = num_series * (bar_width + 1) + 2
             for i, label in enumerate(x_labels[:num_groups]):
                 # Truncate label to fit group width
-                truncated = label[:group_width - 1] if len(label) >= group_width else label
+                truncated = label[: group_width - 1] if len(label) >= group_width else label
                 # Center the label under each group
                 label_line += truncated.center(group_width)
             lines.append(label_line)

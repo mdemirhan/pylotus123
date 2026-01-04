@@ -1,6 +1,5 @@
 """Tests for undo/redo operations."""
 
-
 from lotus123 import Spreadsheet
 from lotus123.utils.undo import (
     CellChangeCommand,
@@ -181,10 +180,13 @@ class TestRangeChangeCommand:
         self.ss.set_cell(0, 0, "old1")
         self.ss.set_cell(0, 1, "old2")
 
-        cmd = RangeChangeCommand(self.ss, changes=[
-            (0, 0, "new1", "old1"),
-            (0, 1, "new2", "old2"),
-        ])
+        cmd = RangeChangeCommand(
+            self.ss,
+            changes=[
+                (0, 0, "new1", "old1"),
+                (0, 1, "new2", "old2"),
+            ],
+        )
         cmd.execute()
 
         assert self.ss.get_value(0, 0) == "new1"
@@ -192,10 +194,13 @@ class TestRangeChangeCommand:
 
     def test_undo(self):
         """Test undo restores all old values."""
-        cmd = RangeChangeCommand(self.ss, changes=[
-            (0, 0, "new1", "old1"),
-            (0, 1, "new2", "old2"),
-        ])
+        cmd = RangeChangeCommand(
+            self.ss,
+            changes=[
+                (0, 0, "new1", "old1"),
+                (0, 1, "new2", "old2"),
+            ],
+        )
         cmd.execute()
         cmd.undo()
 
@@ -204,10 +209,13 @@ class TestRangeChangeCommand:
 
     def test_description(self):
         """Test description property."""
-        cmd = RangeChangeCommand(self.ss, changes=[
-            (0, 0, "new1", "old1"),
-            (0, 1, "new2", "old2"),
-        ])
+        cmd = RangeChangeCommand(
+            self.ss,
+            changes=[
+                (0, 0, "new1", "old1"),
+                (0, 1, "new2", "old2"),
+            ],
+        )
         assert "2 cells" in cmd.description
 
 

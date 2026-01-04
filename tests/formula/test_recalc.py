@@ -1,6 +1,5 @@
 """Tests for recalculation engine."""
 
-
 from lotus123 import Spreadsheet
 from lotus123.formula.recalc import (
     RecalcEngine,
@@ -118,15 +117,15 @@ class TestRecalcEngine:
         # Setup: B1 depends on A1 (0,0 -> 0,1)
         self.engine._dependency_graph[(0, 1)] = {(0, 0)}
         self.engine._dependents[(0, 0)] = {(0, 1)}
-        
+
         # Change B1 to depend on C1 (0,2)
         # We need to simulate the formula change passed to update_cell_dependency
         self.engine.update_cell_dependency(0, 1, "=C1")
-        
+
         # Verify old dependency removed
         assert (0, 0) not in self.engine.get_dependencies(0, 1)
         assert (0, 1) not in self.engine.get_dependents(0, 0)
-        
+
         # Verify new dependency added
         assert (0, 2) in self.engine.get_dependencies(0, 1)
         assert (0, 1) in self.engine.get_dependents(0, 2)
@@ -135,9 +134,9 @@ class TestRecalcEngine:
         """Test updating cell from formula to constant removes dependencies."""
         self.engine._dependency_graph[(0, 1)] = {(0, 0)}
         self.engine._dependents[(0, 0)] = {(0, 1)}
-        
+
         self.engine.update_cell_dependency(0, 1, None)
-        
+
         assert len(self.engine.get_dependencies(0, 1)) == 0
         assert len(self.engine.get_dependents(0, 0)) == 0
 

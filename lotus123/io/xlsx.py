@@ -54,9 +54,7 @@ class XlsxImportWarnings:
 
     sheet_count: int = 0
     imported_sheet_name: str = ""
-    unsupported_formulas: list[tuple[str, str]] = field(
-        default_factory=list
-    )  # (cell_ref, formula)
+    unsupported_formulas: list[tuple[str, str]] = field(default_factory=list)  # (cell_ref, formula)
     merged_cells: list[str] = field(default_factory=list)
     conditional_formatting: bool = False
     data_validations: bool = False
@@ -82,9 +80,7 @@ class XlsxImportWarnings:
             )
 
         if self.unsupported_formulas:
-            parts.append(
-                f"{len(self.unsupported_formulas)} formulas have unsupported functions."
-            )
+            parts.append(f"{len(self.unsupported_formulas)} formulas have unsupported functions.")
 
         if self.merged_cells:
             parts.append(f"{len(self.merged_cells)} merged cell ranges were unmerged.")
@@ -133,9 +129,7 @@ class XlsxReader:
         wb.close()
         return names
 
-    def load(
-        self, filepath: str, sheet_name: str | None = None
-    ) -> XlsxImportWarnings:
+    def load(self, filepath: str, sheet_name: str | None = None) -> XlsxImportWarnings:
         """Load XLSX file into spreadsheet.
 
         Args:
@@ -218,17 +212,11 @@ class XlsxReader:
 
                 if cell.data_type == "f":
                     # Formula cell
-                    formula = (
-                        cell.value
-                        if isinstance(cell.value, str)
-                        else f"={cell.value}"
-                    )
+                    formula = cell.value if isinstance(cell.value, str) else f"={cell.value}"
                     lotus_formula = FormulaTranslator.excel_to_lotus(formula)
 
                     # Check for unsupported functions
-                    unsupported = FormulaTranslator.get_unsupported_excel_functions(
-                        formula
-                    )
+                    unsupported = FormulaTranslator.get_unsupported_excel_functions(formula)
                     if unsupported:
                         cell_ref = f"{get_column_letter(cell.column)}{cell.row}"
                         self.warnings.unsupported_formulas.append((cell_ref, formula))
@@ -318,9 +306,7 @@ class XlsxReader:
             row_num = "".join(c for c in freeze_cell if c.isdigit())
 
             if col_letter:
-                self.spreadsheet.frozen_cols = (
-                    column_index_from_string(col_letter) - 1
-                )
+                self.spreadsheet.frozen_cols = column_index_from_string(col_letter) - 1
             if row_num:
                 self.spreadsheet.frozen_rows = int(row_num) - 1
 
@@ -493,9 +479,7 @@ class XlsxWriter:
 
             # Build Excel-style reference
             if isinstance(ref, CellReference):
-                excel_ref = (
-                    f"Sheet1!${get_column_letter(ref.col + 1)}${ref.row + 1}"
-                )
+                excel_ref = f"Sheet1!${get_column_letter(ref.col + 1)}${ref.row + 1}"
             elif isinstance(ref, RangeReference):
                 start = f"${get_column_letter(ref.start.col + 1)}${ref.start.row + 1}"
                 end = f"${get_column_letter(ref.end.col + 1)}${ref.end.row + 1}"

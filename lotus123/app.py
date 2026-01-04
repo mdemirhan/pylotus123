@@ -266,6 +266,7 @@ class LotusApp(App[None]):
             mode: RecalcMode.AUTOMATIC or RecalcMode.MANUAL
         """
         from .formula.recalc import RecalcMode
+
         self.recalc_mode = "manual" if mode == RecalcMode.MANUAL else "auto"
         self.spreadsheet.set_recalc_mode(mode)
 
@@ -465,9 +466,7 @@ class LotusApp(App[None]):
         status_bar = self.query_one("#status-bar", StatusBarWidget)
         status_bar.update_cell(grid.cursor_row, grid.cursor_col)
         status_bar.update_from_spreadsheet()
-        status_bar.set_modified(
-            self.spreadsheet.modified
-        )  # Must be after update_from_spreadsheet
+        status_bar.set_modified(self.spreadsheet.modified)  # Must be after update_from_spreadsheet
 
         if not self.editing:
             self.query_one("#cell-input", Input).value = cell.raw_value
@@ -499,9 +498,7 @@ class LotusApp(App[None]):
         new_value = event.value
 
         # Apply global label prefix for text entries (not formulas or numbers)
-        if new_value and not new_value.startswith(
-            ("=", "@", "+", "-", "'", '"', "^", "\\")
-        ):
+        if new_value and not new_value.startswith(("=", "@", "+", "-", "'", '"', "^", "\\")):
             # Check if it's not a number
             try:
                 float(new_value.replace(",", ""))
@@ -544,9 +541,7 @@ class LotusApp(App[None]):
                         if cell.raw_value:
                             changes.append((r, c, "", cell.raw_value))
                 if changes:
-                    cmd = RangeChangeCommand(
-                        spreadsheet=self.spreadsheet, changes=changes
-                    )
+                    cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
                     self.undo_manager.execute(cmd)
                     self.mark_dirty()
                 grid.clear_selection()

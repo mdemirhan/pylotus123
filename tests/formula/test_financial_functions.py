@@ -1,7 +1,5 @@
 """Tests for financial functions."""
 
-
-
 from lotus123.formula.functions.financial import (
     FINANCIAL_FUNCTIONS,
     fn_cterm,

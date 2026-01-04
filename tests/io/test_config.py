@@ -20,11 +20,7 @@ class TestAppConfigDefault:
 
     def test_custom_values(self):
         """Test custom configuration values."""
-        config = AppConfig(
-            theme="MOCHA",
-            default_col_width=15,
-            recent_files=["/path/to/file.wk1"]
-        )
+        config = AppConfig(theme="MOCHA", default_col_width=15, recent_files=["/path/to/file.wk1"])
         assert config.theme == "MOCHA"
         assert config.default_col_width == 15
         assert config.recent_files == ["/path/to/file.wk1"]
@@ -48,7 +44,7 @@ class TestAppConfigRecentFiles:
         assert config.recent_files == [
             "/path/to/file3.wk1",
             "/path/to/file2.wk1",
-            "/path/to/file1.wk1"
+            "/path/to/file1.wk1",
         ]
 
     def test_add_duplicate_recent_file(self):
@@ -57,10 +53,7 @@ class TestAppConfigRecentFiles:
         config.add_recent_file("/path/to/file1.wk1")
         config.add_recent_file("/path/to/file2.wk1")
         config.add_recent_file("/path/to/file1.wk1")
-        assert config.recent_files == [
-            "/path/to/file1.wk1",
-            "/path/to/file2.wk1"
-        ]
+        assert config.recent_files == ["/path/to/file1.wk1", "/path/to/file2.wk1"]
 
     def test_recent_files_max_10(self):
         """Test recent files are limited to 10."""
@@ -85,9 +78,7 @@ class TestAppConfigSaveLoad:
                 with patch("lotus123.ui.config.CONFIG_FILE", config_file):
                     # Create and save config
                     config = AppConfig(
-                        theme="MOCHA",
-                        default_col_width=12,
-                        recent_files=["/test/file.wk1"]
+                        theme="MOCHA", default_col_width=12, recent_files=["/test/file.wk1"]
                     )
                     config.save()
 

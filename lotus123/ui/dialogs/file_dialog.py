@@ -31,8 +31,7 @@ class FilteredDirectoryTree(DirectoryTree):
         self._extensions: set[str] | None = None
         if extensions:
             self._extensions = {
-                ext.lower() if ext.startswith(".") else f".{ext.lower()}"
-                for ext in extensions
+                ext.lower() if ext.startswith(".") else f".{ext.lower()}" for ext in extensions
             }
         self._show_all = False
 
@@ -163,8 +162,10 @@ class FileDialog(ModalScreen[str | None]):
             yield tree
             if self._file_extensions:
                 # Format extensions for display (e.g., "*.json, *.csv")
-                ext_display = ", ".join(f"*{ext}" if ext.startswith(".") else f"*.{ext}"
-                                        for ext in self._file_extensions)
+                ext_display = ", ".join(
+                    f"*{ext}" if ext.startswith(".") else f"*.{ext}"
+                    for ext in self._file_extensions
+                )
                 with Horizontal(id="filter-row"):
                     yield Checkbox("Show all files", id="show-all-checkbox")
                     yield Static(f"({ext_display})", id="extension-display")
@@ -216,8 +217,10 @@ class FileDialog(ModalScreen[str | None]):
             ext_label.update("(*)")
         else:
             if self._file_extensions:
-                ext_display = ", ".join(f"*{ext}" if ext.startswith(".") else f"*.{ext}"
-                                        for ext in self._file_extensions)
+                ext_display = ", ".join(
+                    f"*{ext}" if ext.startswith(".") else f"*.{ext}"
+                    for ext in self._file_extensions
+                )
                 ext_label.update(f"({ext_display})")
             else:
                 ext_label.update("(*)")

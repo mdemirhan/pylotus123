@@ -193,6 +193,17 @@ class LotusMenu(Static, can_focus=True):
 
     def _update_display(self) -> None:
         """Update the menu bar display."""
+
+        def append_menu(x_pos: int) -> None:
+            self._menu_positions = []
+            for name, data in self.MENU_STRUCTURE.items():
+                start_x = x_pos
+                text.append(str(data["key"]), highlight)
+                text.append(name[1:] + "  ", style)
+                end_x = x_pos + len(name) + 2
+                self._menu_positions.append((name, start_x, end_x))
+                x_pos = end_x
+
         t = self.theme
         text = Text()
         style = Style(color=t.menu_fg, bgcolor=t.menu_bg)
@@ -203,29 +214,11 @@ class LotusMenu(Static, can_focus=True):
             text.append(" Press ", style)
             text.append("/", highlight)
             text.append(" for menu  |  ", style)
-            x_pos = 21
-            self._menu_positions = []
-            for name, data in self.MENU_STRUCTURE.items():
-                key = str(data["key"])
-                start_x = x_pos
-                text.append(key, highlight)
-                text.append(name[1:] + "  ", style)
-                end_x = x_pos + len(name) + 2
-                self._menu_positions.append((name, start_x, end_x))
-                x_pos = end_x
+            append_menu(21)
         else:
             if self.current_menu is None:
                 text.append(" MENU: ", selected)
-                x_pos = 7
-                self._menu_positions = []
-                for name, data in self.MENU_STRUCTURE.items():
-                    key = str(data["key"])
-                    start_x = x_pos
-                    text.append(key, highlight)
-                    text.append(name[1:] + "  ", style)
-                    end_x = x_pos + len(name) + 2
-                    self._menu_positions.append((name, start_x, end_x))
-                    x_pos = end_x
+                append_menu(7)
             else:
                 # Build title showing navigation path
                 path_str = self.current_menu
@@ -248,7 +241,7 @@ class LotusMenu(Static, can_focus=True):
                         # Key is in the middle of the label
                         text.append(label[:key_idx], style)
                         text.append(label[key_idx], highlight)
-                        text.append(label[key_idx + 1:], style)
+                        text.append(label[key_idx + 1 :], style)
                     else:
                         # Key not found in label, show key in brackets
                         text.append(f"[{key}]", highlight)

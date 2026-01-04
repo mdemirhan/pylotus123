@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, BinaryIO
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
 
-
+# fmt: off
 # WK1 Record Opcodes (per Lotus 1-2-3 Release 2 specification)
 BOF = 0x0000      # Beginning of file
 EOF = 0x0001      # End of file
@@ -317,11 +317,12 @@ BINARY_OPERATORS: dict[int, str] = {
     OP_AND: "#AND#",
     OP_OR: "#OR#",
 }
-
+# fmt: on
 
 # =============================================================================
 # Format Byte Encoding/Decoding
 # =============================================================================
+
 
 def encode_format_byte(format_code: str | None) -> int:
     """Encode app format code to WK1 format byte.
@@ -437,7 +438,7 @@ def _col_to_letter(col: int) -> str:
     col += 1  # Make 1-based
     while col > 0:
         col -= 1
-        result = chr(ord('A') + (col % 26)) + result
+        result = chr(ord("A") + (col % 26)) + result
         col //= 26
     return result
 
@@ -446,7 +447,7 @@ def _letter_to_col(letters: str) -> int:
     """Convert column letter(s) to 0-based index."""
     result = 0
     for char in letters.upper():
-        result = result * 26 + (ord(char) - ord('A') + 1)
+        result = result * 26 + (ord(char) - ord("A") + 1)
     return result - 1
 
 
@@ -509,7 +510,7 @@ class FormulaDecompiler:
     def _read_constant(self) -> None:
         """Read 8-byte IEEE double constant."""
         if self.pos + 8 <= len(self.bytecode):
-            value = struct.unpack("<d", self.bytecode[self.pos:self.pos + 8])[0]
+            value = struct.unpack("<d", self.bytecode[self.pos : self.pos + 8])[0]
             self.pos += 8
             if value == int(value):
                 self.stack.append((str(int(value)), 99))
@@ -519,7 +520,7 @@ class FormulaDecompiler:
     def _read_integer(self) -> None:
         """Read 2-byte signed integer constant."""
         if self.pos + 2 <= len(self.bytecode):
-            value = struct.unpack("<h", self.bytecode[self.pos:self.pos + 2])[0]
+            value = struct.unpack("<h", self.bytecode[self.pos : self.pos + 2])[0]
             self.pos += 2
             self.stack.append((str(value), 99))
 
@@ -533,8 +534,8 @@ class FormulaDecompiler:
         For relative references, offset is signed (2's complement in relevant bits).
         """
         if self.pos + 4 <= len(self.bytecode):
-            col_word = struct.unpack("<H", self.bytecode[self.pos:self.pos + 2])[0]
-            row_word = struct.unpack("<H", self.bytecode[self.pos + 2:self.pos + 4])[0]
+            col_word = struct.unpack("<H", self.bytecode[self.pos : self.pos + 2])[0]
+            row_word = struct.unpack("<H", self.bytecode[self.pos + 2 : self.pos + 4])[0]
             self.pos += 4
 
             # Check if column is relative (bit 15 set)
@@ -570,10 +571,10 @@ class FormulaDecompiler:
         WK1 range reference format is same as cell reference, but for both corners.
         """
         if self.pos + 8 <= len(self.bytecode):
-            start_col_word = struct.unpack("<H", self.bytecode[self.pos:self.pos + 2])[0]
-            start_row_word = struct.unpack("<H", self.bytecode[self.pos + 2:self.pos + 4])[0]
-            end_col_word = struct.unpack("<H", self.bytecode[self.pos + 4:self.pos + 6])[0]
-            end_row_word = struct.unpack("<H", self.bytecode[self.pos + 6:self.pos + 8])[0]
+            start_col_word = struct.unpack("<H", self.bytecode[self.pos : self.pos + 2])[0]
+            start_row_word = struct.unpack("<H", self.bytecode[self.pos + 2 : self.pos + 4])[0]
+            end_col_word = struct.unpack("<H", self.bytecode[self.pos + 4 : self.pos + 6])[0]
+            end_row_word = struct.unpack("<H", self.bytecode[self.pos + 6 : self.pos + 8])[0]
             self.pos += 8
 
             # Resolve start cell
@@ -585,8 +586,7 @@ class FormulaDecompiler:
             end_row = self._resolve_row(end_row_word)
 
             range_ref = (
-                f"{_col_to_letter(start_col)}{start_row + 1}:"
-                f"{_col_to_letter(end_col)}{end_row + 1}"
+                f"{_col_to_letter(start_col)}{start_row + 1}:{_col_to_letter(end_col)}{end_row + 1}"
             )
             self.stack.append((range_ref, 99))
 
@@ -737,7 +737,7 @@ class FormulaCompiler:
         if self.pos >= len(self.formula):
             return None
 
-        remaining = self.formula[self.pos:]
+        remaining = self.formula[self.pos :]
 
         # Multi-char operators first
         if remaining.startswith("<>"):
@@ -800,7 +800,7 @@ class FormulaCompiler:
             self._advance()
             self._parse_unary()
             # Unary plus is a no-op
-        elif char.upper() == "#" and self.formula[self.pos:].upper().startswith("#NOT#"):
+        elif char.upper() == "#" and self.formula[self.pos :].upper().startswith("#NOT#"):
             self.pos += 5
             self._parse_unary()
             self.bytecode.append(OP_NOT)
@@ -860,7 +860,7 @@ class FormulaCompiler:
             else:
                 break
 
-        num_str = self.formula[start:self.pos]
+        num_str = self.formula[start : self.pos]
         try:
             value = float(num_str)
             if value == int(value) and -32768 <= value <= 32767:
@@ -888,7 +888,7 @@ class FormulaCompiler:
             else:
                 break
 
-        ident = self.formula[start:self.pos]
+        ident = self.formula[start : self.pos]
 
         # Check if it's a function (followed by parenthesis)
         self._skip_whitespace()
@@ -982,7 +982,7 @@ class FormulaCompiler:
             else:
                 break
 
-        range_str = self.formula[start:self.pos]
+        range_str = self.formula[start : self.pos]
 
         if ":" in range_str:
             parts = range_str.split(":")
@@ -995,8 +995,9 @@ class FormulaCompiler:
 
                 if start_word and end_word:
                     self.bytecode.append(OP_RANGE)
-                    self.bytecode.extend(struct.pack("<HHHH",
-                        start_word[0], start_word[1], end_word[0], end_word[1]))
+                    self.bytecode.extend(
+                        struct.pack("<HHHH", start_word[0], start_word[1], end_word[0], end_word[1])
+                    )
                     return
 
         # Fallback - invalid range
@@ -1073,7 +1074,7 @@ class FormulaCompiler:
             else:
                 break
 
-        func_name = self.formula[start:self.pos].upper()
+        func_name = self.formula[start : self.pos].upper()
         self._parse_function_by_name(func_name)
 
     def _parse_function_by_name(self, func_name: str) -> None:
@@ -1124,7 +1125,7 @@ class FormulaCompiler:
                         self.pos += 1
 
                 # Compile the argument (pass formula position for relative refs)
-                arg_str = self.formula[arg_start_pos:self.pos]
+                arg_str = self.formula[arg_start_pos : self.pos]
                 if arg_str.strip():
                     arg_comp = FormulaCompiler(arg_str, self.formula_row, self.formula_col)
                     arg_comp._parse_expression()
@@ -1386,7 +1387,7 @@ class Wk1Reader:
         formula_len = struct.unpack("<H", data[13:15])[0]
 
         if len(data) >= 15 + formula_len:
-            bytecode = data[15:15 + formula_len]
+            bytecode = data[15 : 15 + formula_len]
             try:
                 # Pass the formula's cell location to resolve relative references
                 formula_text = decompile_formula(bytecode, row, col)
@@ -1458,8 +1459,7 @@ class Wk1Reader:
             ref_str = f"{_col_to_letter(start_col)}{start_row + 1}"
         else:
             ref_str = (
-                f"{_col_to_letter(start_col)}{start_row + 1}:"
-                f"{_col_to_letter(end_col)}{end_row + 1}"
+                f"{_col_to_letter(start_col)}{start_row + 1}:{_col_to_letter(end_col)}{end_row + 1}"
             )
 
         try:
@@ -1699,9 +1699,7 @@ class Wk1Writer:
             data = name_bytes + struct.pack("<HHHH", start_col, start_row, end_col, end_row)
             self._write_record(f, NAME, data)
 
-    def _write_blank(
-        self, f: BinaryIO, row: int, col: int, format_code: str = "G"
-    ) -> None:
+    def _write_blank(self, f: BinaryIO, row: int, col: int, format_code: str = "G") -> None:
         """Write blank cell (format only, no value).
 
         Args:

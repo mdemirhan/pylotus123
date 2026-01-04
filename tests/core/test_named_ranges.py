@@ -363,7 +363,9 @@ class TestNamedRangeErrorHandling:
         mgr = NamedRangeManager()
         with pytest.raises(ValueError) as excinfo:
             mgr.add_from_string("A1", "B1:C10")
-        assert "Invalid name" in str(excinfo.value) or "cell reference" in str(excinfo.value).lower()
+        assert (
+            "Invalid name" in str(excinfo.value) or "cell reference" in str(excinfo.value).lower()
+        )
 
     def test_add_duplicate_name_replaces(self):
         """Test that adding a duplicate name replaces the old one."""

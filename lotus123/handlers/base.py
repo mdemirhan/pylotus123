@@ -72,9 +72,7 @@ class AppProtocol(Protocol):
         """Show a notification toast."""
         ...
 
-    def query_one(
-        self, selector: str | type, expect_type: type | None = None
-    ) -> Any:
+    def query_one(self, selector: str | type, expect_type: type | None = None) -> Any:
         """Query for a single widget."""
         ...
 

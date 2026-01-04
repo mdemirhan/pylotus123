@@ -26,7 +26,9 @@ class TestXlsxImportWarnings:
 
     def test_unsupported_functions_warning(self):
         """Test unsupported functions warning."""
-        warnings = XlsxImportWarnings(unsupported_formulas=[("A1", "=XLOOKUP(...)"), ("B2", "=LAMBDA(...)")])
+        warnings = XlsxImportWarnings(
+            unsupported_formulas=[("A1", "=XLOOKUP(...)"), ("B2", "=LAMBDA(...)")]
+        )
         assert warnings.has_warnings()
         assert "formulas have unsupported" in warnings.to_message()
 

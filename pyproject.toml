@@ -50,9 +50,12 @@ reportAttributeAccessIssue = false
 reportArgumentType = false
 reportAny = false
 
+[tool.ruff]
+line-length = 100
+
 [tool.ruff.lint.isort]
 force-single-line = false           # allows multiple imports per line
 combine-as-imports = true           # combines from x import a and from x import b into from x import a, b
 
 [tool.ruff.format]
-skip-magic-trailing-comma = true    # ignore trailing commas that force one-per-line
+skip-magic-trailing-comma = false   # Having a trailing comma will force one-per-line

@@ -1,6 +1,5 @@
 """Tests for logical functions."""
 
-
 from lotus123.formula.functions.logical import (
     _flatten_args,
     _to_bool,

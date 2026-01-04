@@ -74,9 +74,7 @@ class DataHandler(BaseHandler):
         last_col = index_to_col(c2)
         col_range = first_col if c1 == c2 else f"{first_col}-{last_col}"
         self._app.push_screen(
-            CommandInput(
-                f"Sort column [{col_range}] (add D for descending, e.g., 'A' or 'AD'):"
-            ),
+            CommandInput(f"Sort column [{col_range}] (add D for descending, e.g., 'A' or 'AD'):"),
             self._do_data_sort,
         )
 

@@ -7,6 +7,7 @@ from lotus123.core.spreadsheet import Spreadsheet
 from lotus123.core.cell import Cell
 from lotus123.ui.grid import SpreadsheetGrid
 
+
 class MockApp:
     def __init__(self) -> None:
         self.spreadsheet = MagicMock(spec=Spreadsheet)
@@ -30,7 +31,7 @@ class MockApp:
 
         # Grid mock
         self.grid = MagicMock(spec=SpreadsheetGrid)
-        self.grid.selection_range = (0, 0, 2, 2) # A1:C3
+        self.grid.selection_range = (0, 0, 2, 2)  # A1:C3
         self.grid.cursor_row = 0
         self.grid.cursor_col = 0
         self.grid.has_selection = True
@@ -61,20 +62,33 @@ class MockApp:
     def size(self, value: Any) -> None:
         self._size = value
 
-    def update_status(self) -> None: pass
-    def update_title(self) -> None: pass
-    def mark_dirty(self) -> None: self.spreadsheet.modified = True
-    def apply_theme(self) -> None: pass
+    def update_status(self) -> None:
+        pass
+
+    def update_title(self) -> None:
+        pass
+
+    def mark_dirty(self) -> None:
+        self.spreadsheet.modified = True
+
+    def apply_theme(self) -> None:
+        pass
+
     def set_recalc_mode(self, mode: Any) -> None:
         from lotus123.formula.recalc import RecalcMode
+
         self.recalc_mode = "manual" if mode == RecalcMode.MANUAL else "auto"
         self.spreadsheet.set_recalc_mode(mode)
+
     def get_recalc_mode(self) -> Any:
         return self.spreadsheet.get_recalc_mode()
+
     def set_recalc_order(self, order: Any) -> None:
         self.spreadsheet.set_recalc_order(order)
+
     def get_recalc_order(self) -> Any:
         return self.spreadsheet.get_recalc_order()
+
 
 class TestClipboardHandler:
     def setup_method(self):
@@ -85,7 +99,7 @@ class TestClipboardHandler:
         self.handler.menu_copy()
         assert self.handler.pending_source_range == (0, 0, 2, 2)
         self.app.push_screen.assert_called()
-        
+
     def test_do_menu_copy(self):
         # Make source and target different to trigger change
         cell_src = MagicMock(spec=Cell, raw_value="SRC")
@@ -93,8 +107,8 @@ class TestClipboardHandler:
         # get_cell called for src then target
         self.app.spreadsheet.get_cell.side_effect = [cell_src, cell_dst]
 
-        self.handler.pending_source_range = (0, 0, 0, 0) # A1:A1
-        self.handler._do_menu_copy("B1") # Copy A1 to B1
+        self.handler.pending_source_range = (0, 0, 0, 0)  # A1:A1
+        self.handler._do_menu_copy("B1")  # Copy A1 to B1
         self.app.undo_manager.execute.assert_called()
         cmd = self.app.undo_manager.execute.call_args[0][0]
         # Should be RangeChangeCommand
@@ -108,12 +122,12 @@ class TestClipboardHandler:
         self.handler.pending_source_range = (0, 0, 0, 0)
         self.handler._do_menu_move("B1")
         self.app.undo_manager.execute.assert_called()
-    
+
     def test_copy_cells(self):
         self.handler.copy_cells()
         assert self.handler.range_clipboard is not None
-        assert len(self.handler.range_clipboard) == 3 # 3 rows (0,1,2)
-        assert len(self.handler.range_clipboard[0]) == 3 # 3 cols
+        assert len(self.handler.range_clipboard) == 3  # 3 rows (0,1,2)
+        assert len(self.handler.range_clipboard[0]) == 3  # 3 cols
         assert not self.handler.clipboard_is_cut
 
     def test_cut_cells(self):
@@ -124,6 +138,7 @@ class TestClipboardHandler:
         self.handler.range_clipboard = [["1", "2"]]
         self.handler.paste_cells()
         self.app.undo_manager.execute.assert_called()
+
 
 class TestQueryHandler:
     def setup_method(self):
@@ -138,7 +153,7 @@ class TestQueryHandler:
         # Without selection
         self.app.grid.has_selection = False
         self.handler.set_input()
-        self.app.push_screen.assert_called() # Should prompt
+        self.app.push_screen.assert_called()  # Should prompt
 
     def test_do_set_input(self):
         self.handler._do_set_input("A1:D5")
@@ -166,9 +181,9 @@ class TestQueryHandler:
         self.handler.criteria_range = (0, 6, 1, 6)
 
         # Mock DatabaseOperations locally within find method scope or patch it
-        with patch('lotus123.data.database.DatabaseOperations') as MockDB:
+        with patch("lotus123.data.database.DatabaseOperations") as MockDB:
             mock_db_instance = MockDB.return_value
-            mock_db_instance.query.return_value = [1, 2, 3] # rows 1, 2, 3 overlap
+            mock_db_instance.query.return_value = [1, 2, 3]  # rows 1, 2, 3 overlap
 
             self.handler.find()
 
@@ -185,11 +200,13 @@ class TestQueryHandler:
         self.handler.reset()
         assert self.handler.input_range is None
 
+
 class TestWorksheetHandler:
     def setup_method(self):
         self.app = MockApp()
         # Create a dummy WorksheetHandler using BaseHandler pattern
         from lotus123.handlers.worksheet_handlers import WorksheetHandler
+
         self.handler = WorksheetHandler(self.app)
 
     def test_global_format(self):
@@ -220,6 +237,7 @@ class TestWorksheetHandler:
     def test_do_set_width_single_column(self):
         """Test setting width for a single column."""
         from lotus123.utils.undo import ColWidthCommand
+
         # Set selection to single column (A1:A3)
         self.app.grid.selection_range = (0, 0, 2, 0)
         self.handler._do_set_width("15")
@@ -233,6 +251,7 @@ class TestWorksheetHandler:
     def test_do_set_width_multiple_columns(self):
         """Test setting width for multiple selected columns."""
         from lotus123.utils.undo import ColWidthCommand
+
         # Set selection to columns A-C (A1:C3)
         self.app.grid.selection_range = (0, 0, 2, 2)
         self.handler._do_set_width("12")
@@ -260,43 +279,49 @@ class TestWorksheetHandler:
         self.handler._do_set_width("51")  # Greater than 50
         self.app.notify.assert_called_with("Width must be between 3 and 50", severity="error")
 
+
 class TestFileHandler:
     def setup_method(self):
         self.app = MockApp()
         from lotus123.handlers.file_handlers import FileHandler
+
         self.handler = FileHandler(self.app)
         self.app.spreadsheet.filename = "test.json"
-        
+
     def test_save(self):
-        with patch('lotus123.handlers.file_handlers.FileDialog'):
+        with patch("lotus123.handlers.file_handlers.FileDialog"):
             self.handler.save()
             # If filename set, simply notifies
             assert self.app.spreadsheet.modified is False
 
     def test_retrieve(self):
-        with patch('lotus123.handlers.file_handlers.FileDialog'):
+        with patch("lotus123.handlers.file_handlers.FileDialog"):
             self.handler.open_file()
             self.app.push_screen.assert_called()
+
 
 class TestDataHandler:
     def setup_method(self):
         self.app = MockApp()
         from lotus123.handlers.data_handlers import DataHandler
+
         self.handler = DataHandler(self.app)
-        
+
     def test_fill(self):
         # Fill needs range
-        self.app.grid.selection_range = (0,0,5,0)
+        self.app.grid.selection_range = (0, 0, 5, 0)
         self.handler.data_fill()
         self.app.push_screen.assert_called()
 
     def test_sort(self):
-        pass # Skipping brittle sort test as per user direction
+        pass  # Skipping brittle sort test as per user direction
+
 
 class TestRangeHandler:
     def setup_method(self):
         self.app = MockApp()
         from lotus123.handlers.range_handlers import RangeHandler
+
         self.handler = RangeHandler(self.app)
 
     def test_range_format(self):
@@ -309,7 +334,8 @@ class TestRangeHandler:
 
     def test_range_name(self):
         self.handler.range_name()
-        self.app.push_screen.assert_called() # Prompt for name
+        self.app.push_screen.assert_called()  # Prompt for name
+
 
 class TestChartHandler:
     def setup_method(self):
@@ -324,12 +350,14 @@ class TestChartHandler:
         self.app.chart.add_series.side_effect = add_series_side_effect
 
         from lotus123.handlers.chart_handlers import ChartHandler
+
         self.handler = ChartHandler(self.app)
         # Mock the handler's chart_renderer
         self.handler.chart_renderer = MagicMock()
 
     def test_set_chart_type(self):
         from lotus123.charting import ChartType
+
         self.handler.set_chart_type(ChartType.BAR)
         self.app.chart.set_type.assert_called_with(ChartType.BAR)
 
@@ -337,15 +365,15 @@ class TestChartHandler:
         # Test X
         self.handler.set_x_range()
         self.app.chart.set_x_range.assert_called()
-        
+
         # Test A-F
-        ranges = ['a', 'b', 'c', 'd', 'e', 'f']
+        ranges = ["a", "b", "c", "d", "e", "f"]
         for idx, r in enumerate(ranges):
             method_name = f"set_{r}_range"
             getattr(self.handler, method_name)()
             # Should invoke add_series
             assert self.app.chart.add_series.call_count >= 1
-            
+
             # Test callback via shared range handler
             self.handler._do_set_range(
                 f"{r.upper()}1:{r.upper()}10",

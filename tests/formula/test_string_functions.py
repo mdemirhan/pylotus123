@@ -1,6 +1,5 @@
 """Tests for string functions."""
 
-
 from lotus123.formula.functions.string import (
     _to_int,
     _to_string,

@@ -25,9 +25,7 @@ class RangeHandler(BaseHandler):
     def range_format(self) -> None:
         """Set the format for the selected range."""
         self._app.push_screen(
-            CommandInput(
-                "Format: G, F0-F15, S0-S15, C0-C15, P0-P15, ,0-,15, D1-D9, T1-T4, H, +:"
-            ),
+            CommandInput("Format: G, F0-F15, S0-S15, C0-C15, P0-P15, ,0-,15, D1-D9, T1-T4, H, +:"),
             self._do_range_format,
         )
 
@@ -95,9 +93,7 @@ class RangeHandler(BaseHandler):
         r1, c1, r2, c2 = grid.selection_range
         range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
         self.pending_range = range_str
-        self._app.push_screen(
-            CommandInput(f"Name for range {range_str}:"), self._do_range_name
-        )
+        self._app.push_screen(CommandInput(f"Name for range {range_str}:"), self._do_range_name)
 
     def _do_range_name(self, result: str | None) -> None:
         if not result:

@@ -1,6 +1,5 @@
 """Tests for information functions."""
 
-
 from lotus123.formula.functions.info import (
     INFO_FUNCTIONS,
     fn_areas,

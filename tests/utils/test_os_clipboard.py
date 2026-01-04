@@ -124,9 +124,7 @@ class TestCopyToClipboard:
         call_args = mock_popen.call_args
         assert call_args[0][0] == ["clip.exe"]
         # Windows uses UTF-16-LE encoding
-        mock_process.communicate.assert_called_once_with(
-            input="Test text".encode("utf-16-le")
-        )
+        mock_process.communicate.assert_called_once_with(input="Test text".encode("utf-16-le"))
 
     @patch("lotus123.utils.os_clipboard.shutil.which")
     @patch("lotus123.utils.os_clipboard.subprocess.Popen")

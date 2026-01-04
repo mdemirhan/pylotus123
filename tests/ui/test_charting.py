@@ -1,6 +1,5 @@
 """Tests for charting module."""
 
-
 from lotus123.charting.chart import (
     Chart,
     ChartAxis,
@@ -85,7 +84,9 @@ class TestChartAxis:
 
     def test_custom_axis(self):
         """Test custom axis settings."""
-        axis = ChartAxis(title="Revenue", min_value=0, max_value=100, scale_type=ScaleType.LOGARITHMIC)
+        axis = ChartAxis(
+            title="Revenue", min_value=0, max_value=100, scale_type=ScaleType.LOGARITHMIC
+        )
         assert axis.title == "Revenue"
         assert axis.min_value == 0
         assert axis.max_value == 100
@@ -363,28 +364,24 @@ class TestChartMethods:
                     "data_range": "B1:B5",
                     "values": [10, 20, 30, 40, 50],
                     "line_style": "SYMBOLS",
-                    "color": "blue"
+                    "color": "blue",
                 }
             ],
             "x_axis": {
                 "title": "X Axis",
                 "min_value": 0,
                 "max_value": 100,
-                "scale_type": "LOGARITHMIC"
+                "scale_type": "LOGARITHMIC",
             },
-            "y_axis": {
-                "title": "Y Axis",
-                "min_value": 0,
-                "max_value": 1000
-            },
+            "y_axis": {"title": "Y Axis", "min_value": 0, "max_value": 1000},
             "options": {
                 "title": "My Chart",
                 "subtitle": "Subtitle",
                 "show_legend": False,
                 "legend_position": "right",
                 "grid_horizontal": True,
-                "grid_vertical": True
-            }
+                "grid_vertical": True,
+            },
         }
 
         chart = Chart.from_dict(data)

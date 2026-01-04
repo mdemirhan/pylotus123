@@ -33,9 +33,7 @@ class QueryHandler(BaseHandler):
             range_str = f"{make_cell_ref(r1, c1)}:{make_cell_ref(r2, c2)}"
             self.notify(f"Query Input range set to {range_str}")
         else:
-            self._app.push_screen(
-                CommandInput("Input range (e.g., A1:D100):"), self._do_set_input
-            )
+            self._app.push_screen(CommandInput("Input range (e.g., A1:D100):"), self._do_set_input)
 
     def _do_set_input(self, result: str | None) -> None:
         if not result:
@@ -169,9 +167,7 @@ class QueryHandler(BaseHandler):
 
         # If we already have results, cycle to the next one
         if self.find_results:
-            self.find_index = (
-                self.find_index + 1
-            ) % len(self.find_results)
+            self.find_index = (self.find_index + 1) % len(self.find_results)
             target_row = self.find_results[self.find_index]
             grid.cursor_row = target_row
             grid.cursor_col = self._get_first_criteria_col()
@@ -186,9 +182,7 @@ class QueryHandler(BaseHandler):
         db = DatabaseOperations(self.spreadsheet)
         criteria_filter = self._build_criteria_filter()
 
-        matching_rows = db.query(
-            self.input_range, criteria_func=criteria_filter
-        )
+        matching_rows = db.query(self.input_range, criteria_func=criteria_filter)
 
         if not matching_rows:
             self.notify("No matching records found")
@@ -203,9 +197,7 @@ class QueryHandler(BaseHandler):
         grid.cursor_row = first_row
         grid.cursor_col = self._get_first_criteria_col()
 
-        self.notify(
-            f"Found {len(matching_rows)} matching record(s). Press Find again for next."
-        )
+        self.notify(f"Found {len(matching_rows)} matching record(s). Press Find again for next.")
 
     def _get_first_criteria_col(self) -> int:
         """Get the column index in the input range that matches the first criteria header."""
@@ -236,9 +228,7 @@ class QueryHandler(BaseHandler):
             self.notify("Set Input range first (Data:Query:Input)", severity="warning")
             return
         if not self.output_range:
-            self.notify(
-                "Set Output range first (Data:Query:Output)", severity="warning"
-            )
+            self.notify("Set Output range first (Data:Query:Output)", severity="warning")
             return
 
         from ..data.database import DatabaseOperations
@@ -246,17 +236,13 @@ class QueryHandler(BaseHandler):
         db = DatabaseOperations(self.spreadsheet)
         criteria_filter = self._build_criteria_filter()
 
-        matching_rows = db.query(
-            self.input_range, criteria_func=criteria_filter
-        )
+        matching_rows = db.query(self.input_range, criteria_func=criteria_filter)
 
         if not matching_rows:
             self.notify("No matching records to extract")
             return
 
-        count = db.extract(
-            self.input_range, self.output_range, matching_rows
-        )
+        count = db.extract(self.input_range, self.output_range, matching_rows)
         grid = self.get_grid()
         grid.refresh_grid()
         self.mark_dirty()
@@ -268,9 +254,7 @@ class QueryHandler(BaseHandler):
             self.notify("Set Input range first (Data:Query:Input)", severity="warning")
             return
         if not self.output_range:
-            self.notify(
-                "Set Output range first (Data:Query:Output)", severity="warning"
-            )
+            self.notify("Set Output range first (Data:Query:Output)", severity="warning")
             return
 
         from ..data.database import DatabaseOperations
@@ -279,9 +263,7 @@ class QueryHandler(BaseHandler):
         criteria_filter = self._build_criteria_filter()
 
         # First query matching rows
-        matching_rows = db.query(
-            self.input_range, criteria_func=criteria_filter
-        )
+        matching_rows = db.query(self.input_range, criteria_func=criteria_filter)
 
         if not matching_rows:
             self.notify("No matching records found")
@@ -295,9 +277,7 @@ class QueryHandler(BaseHandler):
         # Intersect with matching
         unique_matching = [r for r in unique_rows if r in matching_rows]
 
-        count = db.extract(
-            self.input_range, self.output_range, unique_matching
-        )
+        count = db.extract(self.input_range, self.output_range, unique_matching)
         grid = self.get_grid()
         grid.refresh_grid()
         self.mark_dirty()
@@ -314,9 +294,7 @@ class QueryHandler(BaseHandler):
         db = DatabaseOperations(self.spreadsheet)
         criteria_filter = self._build_criteria_filter()
 
-        matching_rows = db.query(
-            self.input_range, criteria_func=criteria_filter
-        )
+        matching_rows = db.query(self.input_range, criteria_func=criteria_filter)
 
         if not matching_rows:
             self.notify("No matching records to delete")

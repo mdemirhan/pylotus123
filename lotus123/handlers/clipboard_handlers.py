@@ -54,18 +54,13 @@ class ClipboardHandler(BaseHandler):
             for c_offset in range(c2 - c1 + 1):
                 src_row, src_col = r1 + r_offset, c1 + c_offset
                 target_row, target_col = dest_row + r_offset, dest_col + c_offset
-                if (
-                    target_row >= self.spreadsheet.rows
-                    or target_col >= self.spreadsheet.cols
-                ):
+                if target_row >= self.spreadsheet.rows or target_col >= self.spreadsheet.cols:
                     continue
                 src_cell = self.spreadsheet.get_cell(src_row, src_col)
                 target_cell = self.spreadsheet.get_cell(target_row, target_col)
                 old_value = target_cell.raw_value
                 new_value = src_cell.raw_value
-                if new_value and (
-                    new_value.startswith("=") or new_value.startswith("@")
-                ):
+                if new_value and (new_value.startswith("=") or new_value.startswith("@")):
                     row_delta = target_row - src_row
                     col_delta = target_col - src_col
                     new_value = new_value[0] + adjust_formula_references(
@@ -212,17 +207,12 @@ class ClipboardHandler(BaseHandler):
             for c_offset, value in enumerate(row_data):
                 target_row = dest_row + r_offset
                 target_col = dest_col + c_offset
-                if (
-                    target_row >= self.spreadsheet.rows
-                    or target_col >= self.spreadsheet.cols
-                ):
+                if target_row >= self.spreadsheet.rows or target_col >= self.spreadsheet.cols:
                     continue
                 cell = self.spreadsheet.get_cell(target_row, target_col)
                 old_value = cell.raw_value
                 new_value = value
-                if new_value and (
-                    new_value.startswith("=") or new_value.startswith("@")
-                ):
+                if new_value and (new_value.startswith("=") or new_value.startswith("@")):
                     row_delta = target_row - (src_row + r_offset)
                     col_delta = target_col - (src_col + c_offset)
                     new_value = new_value[0] + adjust_formula_references(
@@ -231,9 +221,7 @@ class ClipboardHandler(BaseHandler):
                 if new_value != old_value:
                     changes.append((target_row, target_col, new_value, old_value))
         if changes:
-            range_cmd = RangeChangeCommand(
-                spreadsheet=self.spreadsheet, changes=changes
-            )
+            range_cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=changes)
             self.undo_manager.execute(range_cmd)
             self.mark_dirty()
         if self.clipboard_is_cut:
@@ -241,21 +229,15 @@ class ClipboardHandler(BaseHandler):
             for r_offset, row_data in enumerate(self.range_clipboard):
                 for c_offset, value in enumerate(row_data):
                     if value:
-                        clear_changes.append(
-                            (src_row + r_offset, src_col + c_offset, "", value)
-                        )
+                        clear_changes.append((src_row + r_offset, src_col + c_offset, "", value))
             if clear_changes:
-                clear_cmd = RangeChangeCommand(
-                    spreadsheet=self.spreadsheet, changes=clear_changes
-                )
+                clear_cmd = RangeChangeCommand(spreadsheet=self.spreadsheet, changes=clear_changes)
                 self.undo_manager.execute(clear_cmd)
                 self.mark_dirty()
             self.clipboard_is_cut = False
         grid.refresh_grid()
         self.update_status()
         cells_count = (
-            len(self.range_clipboard) * len(self.range_clipboard[0])
-            if self.range_clipboard
-            else 0
+            len(self.range_clipboard) * len(self.range_clipboard[0]) if self.range_clipboard else 0
         )
         self.notify(f"Pasted {cells_count} cell(s)")

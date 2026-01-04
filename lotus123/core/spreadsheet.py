@@ -247,7 +247,7 @@ class Spreadsheet:
         self.update_cell_dependency(row, col, new_formula)
 
         self.modified = True
-        
+
         # Only full invalidate if no engine (engine handles incremental invalidation)
         if not self._recalc_engine:
             self._invalidate_cache()
@@ -724,7 +724,7 @@ class Spreadsheet:
         for (r, c), cell in self._cells.items():
             if r == row:
                 continue
-                
+
             # Adjust formula references for ALL remaining cells
             if cell.is_formula:
                 adjusted = adjust_for_structural_change(
@@ -896,7 +896,7 @@ class Spreadsheet:
         self.update_cell_dependency(to_row, to_col, new_formula)
 
         self.modified = True
-        
+
         if not self._recalc_engine:
             self._invalidate_cache()
 
@@ -932,7 +932,7 @@ class Spreadsheet:
     def save(self, filename: str) -> None:
         """Save spreadsheet to JSON file."""
         from ..io.lotus_json import LotusJsonSerializer
-        
+
         LotusJsonSerializer.save(self, filename)
         self.filename = filename
         self.modified = False
@@ -942,7 +942,7 @@ class Spreadsheet:
         from ..io.lotus_json import LotusJsonSerializer
 
         LotusJsonSerializer.load(self, filename)
-        
+
         self.filename = filename
         self.modified = False
         self._invalidate_cache()

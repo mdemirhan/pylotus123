@@ -98,7 +98,7 @@ class StackedBarChartRenderer(ChartTypeRenderer):
             label_line = " " * (y_label_width + 1)
             group_width = bar_width + 2
             for i, label in enumerate(x_labels[:num_groups]):
-                truncated = label[:group_width - 1] if len(label) >= group_width else label
+                truncated = label[: group_width - 1] if len(label) >= group_width else label
                 label_line += truncated.center(group_width)
             lines.append(label_line)
 
@@ -186,9 +186,7 @@ class StackedBarChartRenderer(ChartTypeRenderer):
 
         return line
 
-    def _build_legend(
-        self, ctx: RenderContext, series_values: list[list[float]]
-    ) -> str:
+    def _build_legend(self, ctx: RenderContext, series_values: list[list[float]]) -> str:
         """Build legend string showing series names with their symbols.
 
         Args:
