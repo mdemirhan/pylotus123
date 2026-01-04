@@ -1,64 +1,34 @@
-# CLAUDE.md
+# Lotus 1-2-3 Clone
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Project Overview
-
-Lotus 1-2-3 Clone - A terminal-based spreadsheet application built with Python and Textual TUI framework. Features 256x65536 grid, 180+ formula functions, charting, and support for multiple file formats (JSON, XLSX, CSV, WK1).
+Terminal spreadsheet app (Python/Textual). 256x65536 grid, 180+ formulas, charting, multi-format I/O.
 
 ## Commands
 
 ```bash
-# Install dependencies
-uv sync
-
-# Run the application
-uv run python main.py
-uv run python main.py samples/sales_dashboard.json  # Open a file
-
-# Testing
-uv run pytest                                        # Run all tests
-uv run pytest tests/core/test_spreadsheet.py        # Run specific file
-uv run pytest tests/core/test_spreadsheet.py::TestCellAlignment -v  # Run specific test
-
-# Linting and formatting
-uv run ruff check                                    # Lint
-uv run ruff format                                   # Format
-
-# Type checking
-uv run basedpyright
+uv sync                      # Install dependencies
+uv run python main.py [file] # Run app
+uv run pytest                # Test
+uv run ruff check && uv run ruff format  # Lint & format
+uv run basedpyright          # Type check
 ```
 
-## Development Workflow
-
-After making code changes, always run `uv run ruff format` to format the code, then run the type checker (`uv run basedpyright`) and address any issues before considering the work complete.
+After code changes, run `uv run ruff format` and `uv run basedpyright`, fixing any issues before considering work complete.
 
 ## Architecture
 
-The codebase follows separation of concerns with these main layers:
+- **core/**: Data model (Cell, Spreadsheet) - no UI deps
+- **formula/**: Parser + function registry pattern
+- **handlers/**: App logic via `AppProtocol` DI
+- **ui/**: Textual presentation
+- **data/**: Sort, query, fill
+- **io/**: JSON, XLSX, CSV, WK1
+- **charting/**: Text charts
+- **utils/**: Undo (command pattern), clipboard
 
-- **core/**: Pure data model (Cell, Spreadsheet, CellReference, formatting) - no UI dependencies
-- **formula/**: Formula parsing and evaluation engine with function registry pattern
-- **handlers/**: Application logic using composition pattern via `AppProtocol` interface
-- **ui/**: Textual-based presentation layer (grid, menus, dialogs, themes)
-- **data/**: Business logic for sort, query, fill operations
-- **io/**: File format handlers (JSON, XLSX, CSV/TSV, WK1)
-- **charting/**: Text-based chart renderers
-- **utils/**: Undo/redo (command pattern), clipboard management
+## Key Details
 
-### Key Patterns
-
-**Handler Composition**: Handlers extend `BaseHandler` and receive the app via `AppProtocol` dependency injection. This provides type-safe contracts and testability.
-
-**Function Registry**: Formula functions use a decorator-based registration pattern in `formula/functions/`.
-
-**Command Pattern**: Undo/redo uses the command pattern in `utils/undo.py`.
-
-### Cell Model
-
-Cells support types (EMPTY, NUMBER, TEXT, FORMULA, DATE, TIME, ERROR) and Lotus-style alignment prefixes:
-- `'` = Left, `"` = Right, `^` = Center, `\` = Repeat/Fill
-
-### Formula Syntax
-
-Both `=SUM(A1:A10)` and Lotus-style `@SUM(A1:A10)` are supported.
+- Handlers extend `BaseHandler`, receive app via `AppProtocol`
+- Formula functions: decorator registration in `formula/functions/`
+- Cell types: EMPTY, NUMBER, TEXT, FORMULA, DATE, TIME, ERROR
+- Alignment prefixes: `'`=Left, `"`=Right, `^`=Center, `\`=Fill
+- Formula syntax: `=SUM()` or Lotus-style `@SUM()`
