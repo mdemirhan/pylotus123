@@ -282,10 +282,15 @@ class FormulaParser:
             return FormulaError.REF
 
     def _get_range_values(self, start_ref: str, end_ref: str) -> list[Any]:
-        """Get flat list of values from a range."""
+        """Get 2D list of values from a range.
+
+        Returns a list of lists (rows) to preserve range shape information
+        needed by functions like VLOOKUP, HLOOKUP, INDEX, ROWS, COLS.
+        Functions that need flat values flatten internally.
+        """
         try:
             start = start_ref.replace("$", "")
             end = end_ref.replace("$", "")
-            return self.spreadsheet.get_range_flat(start, end, context=self.context)
+            return self.spreadsheet.get_range(start, end, context=self.context)
         except ValueError:
-            return [FormulaError.REF]
+            return [[FormulaError.REF]]

@@ -529,21 +529,24 @@ class TestLotusAppActionsAsync:
 class TestLotusAppMenuHandling:
     """Tests for menu handling."""
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_goto(self):
         """Test _handle_menu with Goto opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Goto")
+            await pilot.pause()
+            # Verify dialog was pushed
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_worksheet_goto(self):
         """Test _handle_menu with Worksheet:Goto opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Worksheet:Goto")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
     @pytest.mark.asyncio
     async def test_handle_menu_file_new(self):
@@ -575,21 +578,23 @@ class TestLotusAppMenuHandling:
         async with app.run_test() as pilot:
             app._handle_menu(None)
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_copy(self):
         """Test _handle_menu with Copy opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Copy")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_move(self):
         """Test _handle_menu with Move opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Move")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
 
 class TestLotusAppChartHandling:
@@ -641,53 +646,59 @@ class TestLotusAppChartHandling:
 class TestLotusAppWorksheetHandling:
     """Tests for worksheet handling."""
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_worksheet_insert_rows(self):
         """Test _handle_menu with Worksheet:Insert:Rows opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Worksheet:Insert:Rows")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_worksheet_insert_columns(self):
         """Test _handle_menu with Worksheet:Insert:Columns opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Worksheet:Insert:Columns")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_worksheet_delete_rows(self):
         """Test _handle_menu with Worksheet:Delete:Rows opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Worksheet:Delete:Rows")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_worksheet_delete_columns(self):
         """Test _handle_menu with Worksheet:Delete:Columns opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Worksheet:Delete:Columns")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_worksheet_column(self):
         """Test _handle_menu with Worksheet:Column opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Worksheet:Column")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_worksheet_erase(self):
         """Test _handle_menu with Worksheet:Erase opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Worksheet:Erase")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
 
 class TestLotusAppDataHandling:
@@ -700,37 +711,41 @@ class TestLotusAppDataHandling:
         async with app.run_test() as pilot:
             app._handle_menu("Data:Fill")
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_data_sort(self):
         """Test _handle_menu with Data:Sort opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Data:Sort")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_query_input(self):
         """Test _handle_menu with Data:Query:Input opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Data:Query:Input")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_query_criteria(self):
         """Test _handle_menu with Data:Query:Criteria opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Data:Query:Criteria")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_query_output(self):
         """Test _handle_menu with Data:Query:Output opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Data:Query:Output")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
     @pytest.mark.asyncio
     async def test_handle_menu_query_find(self):
@@ -771,29 +786,32 @@ class TestLotusAppDataHandling:
 class TestLotusAppGlobalSettings:
     """Tests for global settings handling."""
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_global_format(self):
         """Test _handle_menu with Worksheet:Global:Format opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Worksheet:Global:Format")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_global_label_prefix(self):
         """Test _handle_menu with Worksheet:Global:Label-Prefix opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Worksheet:Global:Label-Prefix")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_global_column_width(self):
         """Test _handle_menu with Worksheet:Global:Column-Width opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Worksheet:Global:Column-Width")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
     @pytest.mark.asyncio
     async def test_handle_menu_global_recalculation(self):
@@ -813,26 +831,29 @@ class TestLotusAppGlobalSettings:
 class TestLotusAppRangeHandling:
     """Tests for range handling."""
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_range_format(self):
         """Test _handle_menu with Range:Format opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Range:Format")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_range_label(self):
         """Test _handle_menu with Range:Label opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Range:Label")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1
 
-    @pytest.mark.skip(reason="Dialog interactions require complex setup")
     @pytest.mark.asyncio
     async def test_handle_menu_range_name(self):
         """Test _handle_menu with Range:Name opens dialog."""
         app = LotusApp()
         async with app.run_test() as pilot:
             app._handle_menu("Range:Name")
+            await pilot.pause()
+            assert len(app.screen_stack) > 1

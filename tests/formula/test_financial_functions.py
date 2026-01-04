@@ -25,18 +25,19 @@ class TestPMT:
     def test_basic_loan(self):
         """Test basic loan payment calculation."""
         # $10000 loan at 10% for 12 periods
-        result = fn_pmt(10000, 0.1, 12)
-        assert abs(result - 1467.63) < 1
+        # PMT(rate, nper, pv) returns negative (cash outflow)
+        result = fn_pmt(0.1, 12, 10000)
+        assert abs(result - (-1467.63)) < 1
 
     def test_zero_rate(self):
         """Test PMT with zero interest rate."""
-        result = fn_pmt(12000, 0, 12)
-        assert result == 1000
+        result = fn_pmt(0, 12, 12000)
+        assert result == -1000
 
     def test_high_rate(self):
         """Test PMT with high interest rate."""
-        result = fn_pmt(10000, 0.5, 5)
-        assert result > 0
+        result = fn_pmt(0.5, 5, 10000)
+        assert result < 0  # Payment is negative (cash outflow)
 
 
 class TestPV:
@@ -45,18 +46,19 @@ class TestPV:
     def test_basic_present_value(self):
         """Test basic present value calculation."""
         # $100 payment, 10% rate, 10 periods
-        result = fn_pv(100, 0.1, 10)
-        assert abs(result - 614.46) < 1
+        # PV(rate, nper, pmt) returns negative (investment)
+        result = fn_pv(0.1, 10, 100)
+        assert abs(result - (-614.46)) < 1
 
     def test_zero_rate(self):
         """Test PV with zero interest rate."""
-        result = fn_pv(100, 0, 10)
-        assert result == 1000
+        result = fn_pv(0, 10, 100)
+        assert result == -1000
 
     def test_single_period(self):
         """Test PV with single period."""
-        result = fn_pv(110, 0.1, 1)
-        assert abs(result - 100) < 1
+        result = fn_pv(0.1, 1, 110)
+        assert abs(result - (-100)) < 1
 
 
 class TestFV:
@@ -65,13 +67,14 @@ class TestFV:
     def test_basic_future_value(self):
         """Test basic future value calculation."""
         # $100 payment, 10% rate, 10 periods
-        result = fn_fv(100, 0.1, 10)
-        assert abs(result - 1593.74) < 1
+        # FV(rate, nper, pmt) returns negative (accumulated value)
+        result = fn_fv(0.1, 10, 100)
+        assert abs(result - (-1593.74)) < 1
 
     def test_zero_rate(self):
         """Test FV with zero interest rate."""
-        result = fn_fv(100, 0, 10)
-        assert result == 1000
+        result = fn_fv(0, 10, 100)
+        assert result == -1000
 
 
 class TestNPV:

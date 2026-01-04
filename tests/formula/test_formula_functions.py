@@ -510,13 +510,11 @@ class TestLookupFunctions:
         self.ss.set_cell(2, 0, "3")
         self.ss.set_cell(2, 1, "Cherry")
 
-    @pytest.mark.skip(reason="VLOOKUP requires 2D arrays but parser provides flat lists")
     def test_vlookup(self):
         """Test @VLOOKUP function."""
         self.ss.set_cell(5, 0, "@VLOOKUP(2, A1:B3, 2, 0)")
         assert self.ss.get_value(5, 0) == "Banana"
 
-    @pytest.mark.skip(reason="HLOOKUP requires 2D arrays but parser provides flat lists")
     def test_hlookup(self):
         """Test @HLOOKUP function."""
         # Set up horizontal table
@@ -530,7 +528,6 @@ class TestLookupFunctions:
         self.ss.set_cell(7, 0, "@HLOOKUP(2, A6:C7, 2, 0)")
         assert self.ss.get_value(7, 0) == "B"
 
-    @pytest.mark.skip(reason="INDEX requires 2D arrays but parser provides flat lists")
     def test_index(self):
         """Test @INDEX function."""
         self.ss.set_cell(5, 0, "@INDEX(A1:B3, 2, 2)")
@@ -541,13 +538,11 @@ class TestLookupFunctions:
         self.ss.set_cell(5, 0, "@MATCH(2, A1:A3, 0)")
         assert self.ss.get_value(5, 0) == 2
 
-    @pytest.mark.skip(reason="ROWS requires 2D arrays but parser provides flat lists")
     def test_rows(self):
         """Test @ROWS function."""
         self.ss.set_cell(5, 0, "@ROWS(A1:B3)")
         assert self.ss.get_value(5, 0) == 3
 
-    @pytest.mark.skip(reason="COLS requires 2D arrays but parser provides flat lists")
     def test_cols(self):
         """Test @COLS function."""
         self.ss.set_cell(5, 0, "@COLS(A1:B3)")
@@ -565,28 +560,24 @@ class TestFinancialFunctions:
     def setup_method(self):
         self.ss = Spreadsheet()
 
-    @pytest.mark.skip(reason="PV function not implemented")
     def test_pv(self):
         """Test @PV function."""
         self.ss.set_cell(0, 0, "@PV(0.1, 10, 100)")
         value = self.ss.get_value(0, 0)
         assert abs(value - (-614.46)) < 1
 
-    @pytest.mark.skip(reason="FV function not implemented")
     def test_fv(self):
         """Test @FV function."""
         self.ss.set_cell(0, 0, "@FV(0.1, 10, 100)")
         value = self.ss.get_value(0, 0)
         assert abs(value - (-1593.74)) < 1
 
-    @pytest.mark.skip(reason="PMT function not implemented")
     def test_pmt(self):
         """Test @PMT function."""
         self.ss.set_cell(0, 0, "@PMT(0.1, 10, 1000)")
         value = self.ss.get_value(0, 0)
         assert abs(value - (-162.75)) < 1
 
-    @pytest.mark.skip(reason="NPV function not implemented")
     def test_npv(self):
         """Test @NPV function."""
         self.ss.set_cell(0, 0, "100")
@@ -596,7 +587,6 @@ class TestFinancialFunctions:
         value = self.ss.get_value(3, 0)
         assert abs(value - 248.69) < 1
 
-    @pytest.mark.skip(reason="IRR function not implemented")
     def test_irr(self):
         """Test @IRR function."""
         self.ss.set_cell(0, 0, "-1000")

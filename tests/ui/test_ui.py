@@ -161,60 +161,60 @@ class TestAppConfig:
 class TestSpreadsheetGrid:
     """Tests for the SpreadsheetGrid widget.
 
-    Note: Direct instantiation tests are skipped because Textual widgets
-    require an active app context for reactive attributes. Grid functionality
-    is tested via async app tests below.
+    These tests use the LotusApp context to test grid functionality,
+    since Textual widgets require an active app context for reactive attributes.
     """
 
-    @pytest.mark.skip(reason="SpreadsheetGrid requires app context for reactive attributes")
-    def test_grid_initialization(self):
+    @pytest.mark.asyncio
+    async def test_grid_initialization(self):
         """Test grid initializes with correct state."""
-        from lotus123 import Spreadsheet
-        from lotus123.ui import THEMES, SpreadsheetGrid, ThemeType
+        from lotus123.app import LotusApp
+        from lotus123.ui import SpreadsheetGrid
 
-        ss = Spreadsheet()
-        theme = THEMES[ThemeType.LOTUS]
-        grid = SpreadsheetGrid(ss, theme)
+        app = LotusApp()
+        async with app.run_test() as pilot:
+            grid = app.query_one("#grid", SpreadsheetGrid)
+            assert grid.cursor_row == 0
+            assert grid.cursor_col == 0
+            assert grid.scroll_row == 0
+            assert grid.scroll_col == 0
 
-        assert grid.cursor_row == 0
-        assert grid.cursor_col == 0
-        assert grid.scroll_row == 0
-        assert grid.scroll_col == 0
-
-    @pytest.mark.skip(reason="SpreadsheetGrid requires app context for reactive attributes")
-    def test_grid_move_cursor(self):
+    @pytest.mark.asyncio
+    async def test_grid_move_cursor(self):
         """Test cursor movement."""
-        from lotus123 import Spreadsheet
-        from lotus123.ui import THEMES, SpreadsheetGrid, ThemeType
+        from lotus123.app import LotusApp
+        from lotus123.ui import SpreadsheetGrid
 
-        ss = Spreadsheet()
-        theme = THEMES[ThemeType.LOTUS]
-        grid = SpreadsheetGrid(ss, theme)
+        app = LotusApp()
+        async with app.run_test() as pilot:
+            grid = app.query_one("#grid", SpreadsheetGrid)
 
-        grid.move_cursor(1, 0)
-        assert grid.cursor_row == 1
-        assert grid.cursor_col == 0
+            grid.move_cursor(1, 0)
+            await pilot.pause()  # Let events process
+            assert grid.cursor_row == 1
+            assert grid.cursor_col == 0
 
-        grid.move_cursor(0, 1)
-        assert grid.cursor_row == 1
-        assert grid.cursor_col == 1
+            grid.move_cursor(0, 1)
+            await pilot.pause()
+            assert grid.cursor_row == 1
+            assert grid.cursor_col == 1
 
-    @pytest.mark.skip(reason="SpreadsheetGrid requires app context for reactive attributes")
-    def test_grid_cursor_bounds(self):
+    @pytest.mark.asyncio
+    async def test_grid_cursor_bounds(self):
         """Test cursor respects grid bounds."""
-        from lotus123 import Spreadsheet
-        from lotus123.ui import THEMES, SpreadsheetGrid, ThemeType
+        from lotus123.app import LotusApp
+        from lotus123.ui import SpreadsheetGrid
 
-        ss = Spreadsheet(rows=100, cols=26)
-        theme = THEMES[ThemeType.LOTUS]
-        grid = SpreadsheetGrid(ss, theme)
+        app = LotusApp()
+        async with app.run_test() as pilot:
+            grid = app.query_one("#grid", SpreadsheetGrid)
 
-        # Can't go negative
-        grid.move_cursor(-1, 0)
-        assert grid.cursor_row == 0
+            # Can't go negative
+            grid.move_cursor(-1, 0)
+            assert grid.cursor_row == 0
 
-        grid.move_cursor(0, -1)
-        assert grid.cursor_col == 0
+            grid.move_cursor(0, -1)
+            assert grid.cursor_col == 0
 
 
 class TestLotusAppAsync:

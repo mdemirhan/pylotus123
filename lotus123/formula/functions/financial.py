@@ -11,58 +11,61 @@ from typing import Any
 from ...core.errors import FormulaError
 
 
-def fn_pmt(principal: Any, rate: Any, nper: Any) -> float:
+def fn_pmt(rate: Any, nper: Any, pv: Any) -> float:
     """@PMT - Calculate loan payment.
 
-    Usage: @PMT(principal, interest_rate, num_periods)
+    Usage: @PMT(interest_rate, num_periods, present_value)
 
     Returns the periodic payment for a loan based on constant payments
     and a constant interest rate (ordinary annuity).
+    Result is negative (cash outflow).
     """
-    pv = float(principal)
     r = float(rate)
     n = float(nper)
+    present = float(pv)
 
     if r == 0:
-        return float(pv / n)
+        return -float(present / n)
 
-    return float(pv * (r * (1 + r) ** n) / ((1 + r) ** n - 1))
+    return -float(present * (r * (1 + r) ** n) / ((1 + r) ** n - 1))
 
 
-def fn_pv(payment: Any, rate: Any, nper: Any) -> float:
+def fn_pv(rate: Any, nper: Any, pmt: Any) -> float:
     """@PV - Calculate present value.
 
-    Usage: @PV(payment, interest_rate, num_periods)
+    Usage: @PV(interest_rate, num_periods, payment)
 
     Returns the present value of an investment based on periodic,
     constant payments and a constant interest rate.
+    Result is negative (represents initial investment).
     """
-    pmt = float(payment)
     r = float(rate)
     n = float(nper)
+    payment = float(pmt)
 
     if r == 0:
-        return float(pmt * n)
+        return -float(payment * n)
 
-    return float(pmt * ((1 - (1 + r) ** -n) / r))
+    return -float(payment * ((1 - (1 + r) ** -n) / r))
 
 
-def fn_fv(payment: Any, rate: Any, nper: Any) -> float:
+def fn_fv(rate: Any, nper: Any, pmt: Any) -> float:
     """@FV - Calculate future value.
 
-    Usage: @FV(payment, interest_rate, num_periods)
+    Usage: @FV(interest_rate, num_periods, payment)
 
     Returns the future value of an investment based on periodic,
     constant payments and a constant interest rate.
+    Result is negative (represents accumulated value owed).
     """
-    pmt = float(payment)
     r = float(rate)
     n = float(nper)
+    payment = float(pmt)
 
     if r == 0:
-        return float(pmt * n)
+        return -float(payment * n)
 
-    return float(pmt * (((1 + r) ** n - 1) / r))
+    return -float(payment * (((1 + r) ** n - 1) / r))
 
 
 def fn_npv(rate: Any, *cash_flows: Any) -> float:
@@ -97,17 +100,36 @@ def fn_npv(rate: Any, *cash_flows: Any) -> float:
     return npv
 
 
-def fn_irr(guess: Any, *cash_flows: Any) -> float | str:
+def fn_irr(*args: Any) -> float | str:
     """@IRR - Calculate internal rate of return.
 
-    Usage: @IRR(guess, value1, value2, ...)
+    Usage: @IRR(range) or @IRR(guess, range)
 
     Returns the internal rate of return for a series of cash flows.
     Uses Newton-Raphson iteration.
     """
+    # Parse arguments - IRR can be called as @IRR(range) or @IRR(guess, range)
+    if not args:
+        return FormulaError.ERR
+
+    # Determine if first arg is guess or cash flows
+    first_arg = args[0]
+    if isinstance(first_arg, list):
+        # First arg is the range - no guess provided
+        guess_val = 0.1
+        cash_flow_args = args
+    elif len(args) == 1 and isinstance(first_arg, (int, float)):
+        # Single number - this could be just one cash flow, use default guess
+        guess_val = 0.1
+        cash_flow_args = args
+    else:
+        # First arg is guess, rest are cash flows
+        guess_val = float(first_arg) if first_arg else 0.1
+        cash_flow_args = args[1:]
+
     # Flatten cash flows
     flows: list[Any] = []
-    for cf in cash_flows:
+    for cf in cash_flow_args:
         if isinstance(cf, list):
             for item in cf:
                 if isinstance(item, list):
@@ -124,10 +146,11 @@ def fn_irr(guess: Any, *cash_flows: Any) -> float | str:
         or (isinstance(f, str) and f.replace(".", "").replace("-", "").isdigit())
     ]
 
-    if not float_flows:
+    # IRR requires at least 2 cash flows to be meaningful
+    if len(float_flows) < 2:
         return FormulaError.ERR
 
-    rate = float(guess) if guess else 0.1
+    rate = guess_val
 
     # Newton-Raphson iteration
     for _ in range(100):
