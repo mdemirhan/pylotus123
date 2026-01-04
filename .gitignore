@@ -10,8 +10,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -50,8 +48,8 @@ cover/
 *.pot
 
 # Environments
-.env
-.venv
+.env/
+.venv/
 env/
 venv/
 ENV/
@@ -104,7 +102,7 @@ cython_debug/
 .DS_Store
 .AppleDouble
 .LSOverride
-Icon
+Icon?
 ._*
 .DocumentRevisions-V100
 .fseventsd
@@ -133,15 +131,11 @@ $RECYCLE.BIN/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# pyenv
-.python-version
-
 # Logs
 *.log
 logs/
 
 # Local configuration
-*.local
 .env.local
 .env.*.local
 
