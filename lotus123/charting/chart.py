@@ -8,8 +8,6 @@ Supports Lotus 1-2-3 style charts:
 - Pie charts
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any

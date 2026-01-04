@@ -1,7 +1,5 @@
 """Navigation handler methods for LotusApp."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from ..ui import CommandInput
@@ -14,7 +12,7 @@ if TYPE_CHECKING:
 class NavigationHandler(BaseHandler):
     """Handler for navigation operations."""
 
-    def __init__(self, app: "AppProtocol") -> None:
+    def __init__(self, app: AppProtocol) -> None:
         super().__init__(app)
 
     def scroll_half_down(self) -> None:

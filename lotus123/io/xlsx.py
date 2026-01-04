@@ -4,8 +4,6 @@ This module provides import and export functionality for Excel XLSX files,
 with bidirectional translation to ensure round-trip fidelity.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, cast
 
@@ -97,7 +95,7 @@ class XlsxImportWarnings:
 class XlsxReader:
     """Read XLSX files into spreadsheet."""
 
-    def __init__(self, spreadsheet: "Spreadsheet") -> None:
+    def __init__(self, spreadsheet: Spreadsheet) -> None:
         """Initialize reader with target spreadsheet.
 
         Args:
@@ -195,7 +193,7 @@ class XlsxReader:
 
         return self.warnings
 
-    def _import_cells(self, ws: "Worksheet") -> None:
+    def _import_cells(self, ws: Worksheet) -> None:
         """Import all cells from worksheet."""
         for row_cells in ws.iter_rows():
             for cell in row_cells:
@@ -262,7 +260,7 @@ class XlsxReader:
                 return ALIGNMENT_TO_PREFIX[horizontal]
         return ""
 
-    def _import_column_widths(self, ws: "Worksheet") -> None:
+    def _import_column_widths(self, ws: Worksheet) -> None:
         """Import column widths."""
         for col_letter, dim in ws.column_dimensions.items():
             if dim.width is not None and dim.width != 8.43:  # Default Excel width
@@ -270,7 +268,7 @@ class XlsxReader:
                 # Excel width is in characters, roughly similar to Lotus
                 self.spreadsheet.set_col_width(col_idx, int(dim.width))
 
-    def _import_row_heights(self, ws: "Worksheet") -> None:
+    def _import_row_heights(self, ws: Worksheet) -> None:
         """Import row heights."""
         for row_num, dim in ws.row_dimensions.items():
             if dim.height is not None and dim.height != 15:  # Default Excel height
@@ -279,7 +277,7 @@ class XlsxReader:
                 lines = max(1, round(dim.height / 15))
                 self.spreadsheet.set_row_height(row_idx, lines)
 
-    def _import_named_ranges(self, wb: "Workbook") -> None:
+    def _import_named_ranges(self, wb: Workbook) -> None:
         """Import named ranges from workbook."""
         # Iterate over defined names - iteration yields name strings
         for name_key in wb.defined_names:
@@ -297,7 +295,7 @@ class XlsxReader:
                 except (ValueError, KeyError, AttributeError):
                     pass  # Skip invalid names
 
-    def _import_frozen_panes(self, ws: "Worksheet") -> None:
+    def _import_frozen_panes(self, ws: Worksheet) -> None:
         """Import frozen pane settings."""
         if ws.freeze_panes:
             # freeze_panes is like "B2" meaning row 1 and col A are frozen
@@ -310,18 +308,18 @@ class XlsxReader:
             if row_num:
                 self.spreadsheet.frozen_rows = int(row_num) - 1
 
-    def _check_merged_cells(self, ws: "Worksheet") -> None:
+    def _check_merged_cells(self, ws: Worksheet) -> None:
         """Check for merged cells (not fully supported)."""
         for merge_range in ws.merged_cells.ranges:
             self.warnings.merged_cells.append(str(merge_range))
 
-    def _check_conditional_formatting(self, ws: "Worksheet") -> None:
+    def _check_conditional_formatting(self, ws: Worksheet) -> None:
         """Check for conditional formatting."""
         # Check if there are any conditional formatting rules
         if len(ws.conditional_formatting) > 0:
             self.warnings.conditional_formatting = True
 
-    def _check_data_validations(self, ws: "Worksheet") -> None:
+    def _check_data_validations(self, ws: Worksheet) -> None:
         """Check for data validations."""
         if ws.data_validations.dataValidation:
             self.warnings.data_validations = True
@@ -330,7 +328,7 @@ class XlsxReader:
 class XlsxWriter:
     """Write spreadsheet to XLSX format."""
 
-    def __init__(self, spreadsheet: "Spreadsheet") -> None:
+    def __init__(self, spreadsheet: Spreadsheet) -> None:
         """Initialize writer with source spreadsheet.
 
         Args:
@@ -375,7 +373,7 @@ class XlsxWriter:
         wb.save(filepath)
         wb.close()
 
-    def _export_cells(self, ws: "Worksheet") -> None:
+    def _export_cells(self, ws: Worksheet) -> None:
         """Export all cells to worksheet."""
         from ..core.cell import ALIGNMENT_PREFIXES
 
@@ -458,19 +456,19 @@ class XlsxWriter:
                 excel_format = FormatTranslator.lotus_to_excel(cell.format_code)
                 excel_cell.number_format = excel_format
 
-    def _export_column_widths(self, ws: "Worksheet") -> None:
+    def _export_column_widths(self, ws: Worksheet) -> None:
         """Export column widths."""
         for col, width in self.spreadsheet.col_widths.items():
             col_letter = get_column_letter(col + 1)
             ws.column_dimensions[col_letter].width = width
 
-    def _export_row_heights(self, ws: "Worksheet") -> None:
+    def _export_row_heights(self, ws: Worksheet) -> None:
         """Export row heights."""
         for row, height in self.spreadsheet.row_heights.items():
             # Convert Lotus lines to Excel points (1 line = ~15 points)
             ws.row_dimensions[row + 1].height = height * 15
 
-    def _export_named_ranges(self, wb: "Workbook") -> None:
+    def _export_named_ranges(self, wb: Workbook) -> None:
         """Export named ranges."""
         from ..core.reference import CellReference, RangeReference
 
@@ -490,7 +488,7 @@ class XlsxWriter:
             defined_name = DefinedName(named.name, attr_text=excel_ref)
             wb.defined_names.add(defined_name)
 
-    def _export_frozen_panes(self, ws: "Worksheet") -> None:
+    def _export_frozen_panes(self, ws: Worksheet) -> None:
         """Export frozen pane settings."""
         if self.spreadsheet.frozen_rows > 0 or self.spreadsheet.frozen_cols > 0:
             freeze_col = get_column_letter(self.spreadsheet.frozen_cols + 1)
@@ -500,7 +498,7 @@ class XlsxWriter:
 
 # Convenience functions
 def load_xlsx(
-    spreadsheet: "Spreadsheet", filepath: str, sheet_name: str | None = None
+    spreadsheet: Spreadsheet, filepath: str, sheet_name: str | None = None
 ) -> XlsxImportWarnings:
     """Load XLSX file into spreadsheet.
 
@@ -516,7 +514,7 @@ def load_xlsx(
     return reader.load(filepath, sheet_name)
 
 
-def save_xlsx(spreadsheet: "Spreadsheet", filepath: str) -> None:
+def save_xlsx(spreadsheet: Spreadsheet, filepath: str) -> None:
     """Save spreadsheet to XLSX file.
 
     Args:

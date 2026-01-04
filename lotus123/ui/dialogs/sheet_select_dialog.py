@@ -4,8 +4,6 @@ Provides a modal dialog for selecting which sheet to import from an
 Excel workbook with multiple sheets.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from textual import on

@@ -4,8 +4,6 @@ These constants define all error values used throughout the formula system,
 matching the Lotus 1-2-3 error conventions.
 """
 
-from __future__ import annotations
-
 from typing import Final
 
 

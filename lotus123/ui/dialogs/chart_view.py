@@ -3,8 +3,6 @@
 Provides a modal screen for displaying rendered ASCII/Unicode charts.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from textual.app import ComposeResult

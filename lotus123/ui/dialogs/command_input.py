@@ -4,8 +4,6 @@ Provides a modal dialog for entering commands like Goto cell reference,
 column width values, and other text inputs.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from textual import on

@@ -1,7 +1,5 @@
 """Formatting system for numeric, date, and time values."""
 
-from __future__ import annotations
-
 import datetime
 import math
 from dataclasses import dataclass

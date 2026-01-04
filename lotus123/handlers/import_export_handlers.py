@@ -1,7 +1,5 @@
 """Import/Export handler for CSV, TSV, WK1, and XLSX file formats."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
 
@@ -18,7 +16,7 @@ if TYPE_CHECKING:
 class ImportExportHandler(BaseHandler):
     """Handler for import/export operations (CSV, TSV, WK1, XLSX)."""
 
-    def __init__(self, app: "AppProtocol") -> None:
+    def __init__(self, app: AppProtocol) -> None:
         super().__init__(app)
         self._pending_export_format: str = ""
         self._pending_xlsx_path: str = ""

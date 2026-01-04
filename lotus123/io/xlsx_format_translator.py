@@ -4,8 +4,6 @@ This module provides bidirectional translation of format codes, ensuring
 lossless round-trip conversion between Lotus and Excel formats.
 """
 
-from __future__ import annotations
-
 import re
 
 

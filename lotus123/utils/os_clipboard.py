@@ -4,8 +4,6 @@ Provides functions to copy text to the system clipboard, enabling
 data exchange with other applications.
 """
 
-from __future__ import annotations
-
 import logging
 import shutil
 import subprocess

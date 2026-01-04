@@ -3,8 +3,6 @@
 Renders pie charts using ASCII representation with percentage bars.
 """
 
-from __future__ import annotations
-
 from .base import ChartTypeRenderer, RenderContext, get_series_values, get_x_labels
 
 

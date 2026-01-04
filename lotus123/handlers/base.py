@@ -1,7 +1,5 @@
 """Base protocol and handler class for app handlers."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol
 
 if TYPE_CHECKING:
@@ -22,9 +20,9 @@ class AppProtocol(Protocol):
     """
 
     # Core data
-    spreadsheet: "Spreadsheet"
-    chart: "Chart"
-    undo_manager: "UndoManager"
+    spreadsheet: Spreadsheet
+    chart: Chart
+    undo_manager: UndoManager
     config: Any  # AppConfig
 
     # State flags
@@ -54,7 +52,7 @@ class AppProtocol(Protocol):
     # Methods from Textual App
     def push_screen(
         self,
-        screen: "Screen[Any] | str",
+        screen: Screen[Any] | str,
         callback: Callable[[Any], None] | Callable[[Any], Any] | None = ...,
         wait_for_dismiss: bool = ...,
     ) -> Any:
@@ -97,19 +95,19 @@ class AppProtocol(Protocol):
         """Apply the current theme to all widgets."""
         ...
 
-    def set_recalc_mode(self, mode: "RecalcMode") -> None:
+    def set_recalc_mode(self, mode: RecalcMode) -> None:
         """Set the recalculation mode."""
         ...
 
-    def get_recalc_mode(self) -> "RecalcMode":
+    def get_recalc_mode(self) -> RecalcMode:
         """Get the current recalculation mode."""
         ...
 
-    def set_recalc_order(self, order: "RecalcOrder") -> None:
+    def set_recalc_order(self, order: RecalcOrder) -> None:
         """Set the recalculation order."""
         ...
 
-    def get_recalc_order(self) -> "RecalcOrder":
+    def get_recalc_order(self) -> RecalcOrder:
         """Get the current recalculation order."""
         ...
 
@@ -124,12 +122,12 @@ class BaseHandler:
         self._pending_overwrite_cancel: str = ""
 
     @property
-    def spreadsheet(self) -> "Spreadsheet":
+    def spreadsheet(self) -> Spreadsheet:
         """Access the spreadsheet data model."""
         return self._app.spreadsheet
 
     @property
-    def undo_manager(self) -> "UndoManager":
+    def undo_manager(self) -> UndoManager:
         """Access the undo manager."""
         return self._app.undo_manager
 
@@ -142,13 +140,13 @@ class BaseHandler:
         """Show a notification to the user."""
         self._app.notify(message, severity=severity)
 
-    def get_grid(self) -> "SpreadsheetGrid":
+    def get_grid(self) -> SpreadsheetGrid:
         """Get the spreadsheet grid widget."""
         from ..ui import SpreadsheetGrid
 
         return self._app.query_one("#grid", SpreadsheetGrid)
 
-    def reset_view(self) -> "SpreadsheetGrid":
+    def reset_view(self) -> SpreadsheetGrid:
         """Reset grid cursor and scroll state."""
         grid = self.get_grid()
         grid.cursor_row = 0

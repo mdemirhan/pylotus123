@@ -4,8 +4,6 @@ Provides the main grid display with mouse support, keyboard navigation,
 and range selection capabilities.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from rich.style import Style

@@ -8,8 +8,6 @@ Supports Lotus 1-2-3 style criteria:
 - Formula-based criteria
 """
 
-from __future__ import annotations
-
 import re
 from dataclasses import dataclass
 from enum import Enum, auto

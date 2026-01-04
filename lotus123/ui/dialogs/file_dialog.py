@@ -4,8 +4,6 @@ Provides a modal dialog for browsing and selecting files,
 with directory tree navigation and filename input.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any, Iterable
 

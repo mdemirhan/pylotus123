@@ -6,8 +6,6 @@ Implements Lotus 1-2-3 compatible date/time functions:
 @NOW, @TODAY, @WEEKDAY
 """
 
-from __future__ import annotations
-
 import datetime
 from typing import Any
 

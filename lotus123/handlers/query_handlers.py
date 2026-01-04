@@ -1,7 +1,5 @@
 """Data Query handler methods for LotusApp."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Callable
 
 from ..core import make_cell_ref, parse_cell_ref
@@ -15,7 +13,7 @@ if TYPE_CHECKING:
 class QueryHandler(BaseHandler):
     """Handler for data query operations."""
 
-    def __init__(self, app: "AppProtocol") -> None:
+    def __init__(self, app: AppProtocol) -> None:
         super().__init__(app)
         # Query state - owned by this handler
         self.input_range: tuple[int, int, int, int] | None = None

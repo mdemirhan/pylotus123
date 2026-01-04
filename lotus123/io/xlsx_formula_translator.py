@@ -4,8 +4,6 @@ This module provides bidirectional translation of formulas between Lotus 1-2-3
 and Excel XLSX formats, ensuring lossless round-trip conversion.
 """
 
-from __future__ import annotations
-
 import re
 
 

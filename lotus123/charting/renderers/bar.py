@@ -3,8 +3,6 @@
 Renders vertical bar charts with solid bars.
 """
 
-from __future__ import annotations
-
 from .base import (
     BOX_CORNER_BL,
     BOX_HORIZONTAL,

@@ -1,7 +1,5 @@
 """Range operation handler methods for LotusApp."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from ..core import make_cell_ref
@@ -17,7 +15,7 @@ if TYPE_CHECKING:
 class RangeHandler(BaseHandler):
     """Handler for range operations (format, label, name)."""
 
-    def __init__(self, app: "AppProtocol") -> None:
+    def __init__(self, app: AppProtocol) -> None:
         super().__init__(app)
         # Pending operation state - owned by this handler
         self.pending_range: str = ""

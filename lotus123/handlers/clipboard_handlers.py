@@ -1,7 +1,5 @@
 """Clipboard-related handler methods for LotusApp."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from ..core import adjust_formula_references, make_cell_ref, parse_cell_ref
@@ -17,7 +15,7 @@ if TYPE_CHECKING:
 class ClipboardHandler(BaseHandler):
     """Handler for clipboard operations (copy, cut, paste, move)."""
 
-    def __init__(self, app: "AppProtocol") -> None:
+    def __init__(self, app: AppProtocol) -> None:
         super().__init__(app)
         # Clipboard state - owned by this handler
         self.cell_clipboard: tuple[int, int, str] | None = None

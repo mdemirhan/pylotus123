@@ -5,8 +5,6 @@ Implements Lotus 1-2-3 compatible lookup functions:
 @CELL, @CELLPOINTER, @COLS, @ROWS
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from ...core.errors import FormulaError

@@ -3,8 +3,6 @@
 Renders line charts with data points and optional connecting lines.
 """
 
-from __future__ import annotations
-
 from .base import (
     BOX_CORNER_BL,
     BOX_HORIZONTAL,

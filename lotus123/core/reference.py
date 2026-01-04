@@ -1,7 +1,5 @@
 """Cell and range reference handling with absolute/relative reference support."""
 
-from __future__ import annotations
-
 import re
 from dataclasses import dataclass
 from typing import Iterator, TYPE_CHECKING

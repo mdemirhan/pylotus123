@@ -7,8 +7,6 @@ Supports exporting to:
 - Plain text with formatting
 """
 
-from __future__ import annotations
-
 import csv
 from dataclasses import dataclass
 from enum import Enum, auto

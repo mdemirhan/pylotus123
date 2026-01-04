@@ -1,7 +1,5 @@
 """Chart-related handler methods for LotusApp."""
 
-from __future__ import annotations
-
 import json
 from typing import TYPE_CHECKING, Callable
 
@@ -17,7 +15,7 @@ if TYPE_CHECKING:
 class ChartHandler(BaseHandler):
     """Handler for chart-related operations."""
 
-    def __init__(self, app: "AppProtocol") -> None:
+    def __init__(self, app: AppProtocol) -> None:
         super().__init__(app)
         # Chart renderer - owned by this handler
         self.chart_renderer = TextChartRenderer(self.spreadsheet)

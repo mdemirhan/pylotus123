@@ -4,8 +4,6 @@ These protocols define interfaces that allow components to interact
 without tight coupling to concrete implementations.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, Iterator, Protocol
 
 if TYPE_CHECKING:
@@ -19,7 +17,7 @@ class CellStore(Protocol):
     without tight coupling to the Spreadsheet class.
     """
 
-    def get_cell_if_exists(self, row: int, col: int) -> "Cell | None":
+    def get_cell_if_exists(self, row: int, col: int) -> Cell | None:
         """Get cell if it exists, without creating."""
         ...
 

@@ -1,7 +1,5 @@
 """Lotus 1-2-3 Clone - Main TUI Application."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -259,7 +257,7 @@ class LotusApp(App[None]):
         self.spreadsheet.modified = True
         self.update_title()
 
-    def set_recalc_mode(self, mode: "RecalcMode") -> None:
+    def set_recalc_mode(self, mode: RecalcMode) -> None:
         """Set the recalculation mode.
 
         Args:
@@ -270,11 +268,11 @@ class LotusApp(App[None]):
         self.recalc_mode = "manual" if mode == RecalcMode.MANUAL else "auto"
         self.spreadsheet.set_recalc_mode(mode)
 
-    def get_recalc_mode(self) -> "RecalcMode":
+    def get_recalc_mode(self) -> RecalcMode:
         """Get the current recalculation mode."""
         return self.spreadsheet.get_recalc_mode()
 
-    def set_recalc_order(self, order: "RecalcOrder") -> None:
+    def set_recalc_order(self, order: RecalcOrder) -> None:
         """Set the recalculation order.
 
         Args:
@@ -282,7 +280,7 @@ class LotusApp(App[None]):
         """
         self.spreadsheet.set_recalc_order(order)
 
-    def get_recalc_order(self) -> "RecalcOrder":
+    def get_recalc_order(self) -> RecalcOrder:
         """Get the current recalculation order."""
         return self.spreadsheet.get_recalc_order()
 

@@ -7,8 +7,6 @@ Database functions operate on a table with headers and apply criteria
 to filter rows before calculating statistics.
 """
 
-from __future__ import annotations
-
 import math
 from typing import Any
 

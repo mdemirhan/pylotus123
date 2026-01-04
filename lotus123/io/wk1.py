@@ -10,8 +10,6 @@ References:
 - Lotus Worksheet File Format Specification (WSFF)
 """
 
-from __future__ import annotations
-
 import math
 import struct
 from typing import TYPE_CHECKING, BinaryIO

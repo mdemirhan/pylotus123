@@ -5,8 +5,6 @@ Implements Lotus 1-2-3 compatible math functions:
 Trigonometric: @SIN, @COS, @TAN, @ASIN, @ACOS, @ATAN, @ATAN2, @PI, @RAND
 """
 
-from __future__ import annotations
-
 import math
 import random
 from typing import Any

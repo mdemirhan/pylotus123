@@ -1,7 +1,5 @@
 """Data operation handler methods for LotusApp (fill, sort)."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from ..core import col_to_index, index_to_col
@@ -17,7 +15,7 @@ if TYPE_CHECKING:
 class DataHandler(BaseHandler):
     """Handler for data operations (fill, sort)."""
 
-    def __init__(self, app: "AppProtocol") -> None:
+    def __init__(self, app: AppProtocol) -> None:
         super().__init__(app)
 
     def data_fill(self) -> None:

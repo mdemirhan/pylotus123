@@ -4,8 +4,6 @@ Provides theme definitions including the classic Lotus blue theme,
 Tomorrow Night, and Mocha color schemes.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import Enum, auto
 

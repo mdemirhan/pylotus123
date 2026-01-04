@@ -7,8 +7,6 @@ Supports importing:
 - Other delimited files
 """
 
-from __future__ import annotations
-
 import csv
 from dataclasses import dataclass, field
 from enum import Enum, auto

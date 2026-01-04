@@ -3,8 +3,6 @@
 This module defines the interface that all chart type renderers must implement.
 """
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING

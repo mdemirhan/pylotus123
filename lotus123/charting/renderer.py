@@ -5,8 +5,6 @@ This module provides the main ChartRenderer interface and TextChartRenderer
 implementation that delegates to type-specific renderers.
 """
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 

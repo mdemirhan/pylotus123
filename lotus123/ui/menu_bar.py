@@ -4,8 +4,6 @@ Provides the horizontal menu bar with keyboard and mouse support,
 featuring single-letter shortcuts and hierarchical navigation.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from rich.style import Style

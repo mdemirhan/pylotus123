@@ -5,8 +5,6 @@ Implements Lotus 1-2-3 compatible financial functions:
 @SLN, @SYD, @DDB, @IPMT, @PPMT, @TERM
 """
 
-from __future__ import annotations
-
 import math
 from typing import Any
 

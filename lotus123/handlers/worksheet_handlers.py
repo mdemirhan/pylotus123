@@ -1,7 +1,5 @@
 """Worksheet operation handler methods for LotusApp."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from ..core.reference import index_to_col
@@ -26,7 +24,7 @@ if TYPE_CHECKING:
 class WorksheetHandler(BaseHandler):
     """Handler for worksheet operations (insert/delete row, global settings)."""
 
-    def __init__(self, app: "AppProtocol") -> None:
+    def __init__(self, app: AppProtocol) -> None:
         super().__init__(app)
 
     def insert_rows(self) -> None:

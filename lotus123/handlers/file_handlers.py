@@ -1,7 +1,5 @@
 """File operation handler methods for LotusApp."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Literal
@@ -21,7 +19,7 @@ class FileHandler(BaseHandler):
     # All supported extensions for open dialog
     OPEN_EXTENSIONS = [".json"] + list(IMPORT_EXTENSIONS)
 
-    def __init__(self, app: "AppProtocol") -> None:
+    def __init__(self, app: AppProtocol) -> None:
         super().__init__(app)
         self._pending_xlsx_import_path: str = ""
         self._pending_open_path: str = ""  # File path selected in open dialog

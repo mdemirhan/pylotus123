@@ -4,8 +4,6 @@ Provides a modal dialog for selecting the application color theme
 with keyboard and mouse support.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from textual import on

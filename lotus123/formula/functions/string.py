@@ -6,8 +6,6 @@ Implements Lotus 1-2-3 compatible string functions:
 @VALUE, @STRING, @CHAR, @CODE, @REPEAT, @N, @S
 """
 
-from __future__ import annotations
-
 import re
 from typing import Any
 

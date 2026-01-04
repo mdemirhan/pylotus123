@@ -1,7 +1,5 @@
 """Main spreadsheet class with expanded dimensions and features."""
 
-from __future__ import annotations
-
 import math
 from typing import TYPE_CHECKING, Any, Iterator
 
@@ -124,7 +122,7 @@ class Spreadsheet:
 
         self._recalc_engine = RecalcEngine(self)
 
-    def set_recalc_mode(self, mode: "RecalcMode") -> None:
+    def set_recalc_mode(self, mode: RecalcMode) -> None:
         """Set the recalculation mode.
 
         Args:
@@ -133,7 +131,7 @@ class Spreadsheet:
         if self._recalc_engine:
             self._recalc_engine.set_mode(mode)
 
-    def get_recalc_mode(self) -> "RecalcMode":
+    def get_recalc_mode(self) -> RecalcMode:
         """Get the current recalculation mode.
 
         Returns:
@@ -145,7 +143,7 @@ class Spreadsheet:
             return self._recalc_engine.mode
         return RecalcMode.AUTOMATIC
 
-    def set_recalc_order(self, order: "RecalcOrder") -> None:
+    def set_recalc_order(self, order: RecalcOrder) -> None:
         """Set the recalculation order.
 
         Args:
@@ -154,7 +152,7 @@ class Spreadsheet:
         if self._recalc_engine:
             self._recalc_engine.set_order(order)
 
-    def get_recalc_order(self) -> "RecalcOrder":
+    def get_recalc_order(self) -> RecalcOrder:
         """Get the current recalculation order.
 
         Returns:
@@ -286,7 +284,7 @@ class Spreadsheet:
     # Value Computation
     # -------------------------------------------------------------------------
 
-    def get_value(self, row: int, col: int, context: "EvaluationContext | None" = None) -> Any:
+    def get_value(self, row: int, col: int, context: EvaluationContext | None = None) -> Any:
         """Get computed value of cell.
 
         Args:
@@ -313,7 +311,7 @@ class Spreadsheet:
         self._cache[(row, col)] = value
         return value
 
-    def get_value_by_ref(self, ref: str, context: "EvaluationContext | None" = None) -> Any:
+    def get_value_by_ref(self, ref: str, context: EvaluationContext | None = None) -> Any:
         """Get computed value by reference string."""
         row, col = parse_cell_ref(ref)
         return self.get_value(row, col, context)
@@ -335,7 +333,7 @@ class Spreadsheet:
             return value
 
     def _evaluate_formula(
-        self, row: int, col: int, context: "EvaluationContext | None" = None
+        self, row: int, col: int, context: EvaluationContext | None = None
     ) -> Any:
         """Evaluate a formula at the given cell position."""
         # Import here to avoid circular dependency
@@ -431,7 +429,7 @@ class Spreadsheet:
             self._cells.pop((row, col), None)
             self._remove_from_indices(row, col)
 
-    def iter_cells(self) -> "Iterator[tuple[int, int, Cell]]":
+    def iter_cells(self) -> Iterator[tuple[int, int, Cell]]:
         """Iterate over all cells.
 
         Yields:
@@ -668,7 +666,7 @@ class Spreadsheet:
     # -------------------------------------------------------------------------
 
     def get_range(
-        self, start_ref: str, end_ref: str, context: "EvaluationContext | None" = None
+        self, start_ref: str, end_ref: str, context: EvaluationContext | None = None
     ) -> list[list[Any]]:
         """Get values in a range as 2D list.
 
@@ -698,7 +696,7 @@ class Spreadsheet:
         return result
 
     def get_range_flat(
-        self, start_ref: str, end_ref: str, context: "EvaluationContext | None" = None
+        self, start_ref: str, end_ref: str, context: EvaluationContext | None = None
     ) -> list[Any]:
         """Get values in a range as flat list."""
         rows = self.get_range(start_ref, end_ref, context)

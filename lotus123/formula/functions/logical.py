@@ -5,8 +5,6 @@ Implements Lotus 1-2-3 compatible logical functions:
 @ISERR, @ISNA, @ISNUMBER, @ISSTRING
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from ...core.errors import FormulaError

@@ -1,7 +1,5 @@
 """Formula parser with tokenization and expression building."""
 
-from __future__ import annotations
-
 import math
 import operator
 from typing import TYPE_CHECKING, Any
@@ -47,9 +45,7 @@ class FormulaParser:
         ">=": operator.ge,
     }
 
-    def __init__(
-        self, spreadsheet: Spreadsheet, context: "EvaluationContext | None" = None
-    ) -> None:
+    def __init__(self, spreadsheet: Spreadsheet, context: EvaluationContext | None = None) -> None:
         self.spreadsheet = spreadsheet
         # Use singleton registry to avoid expensive re-initialization
         self.functions = REGISTRY

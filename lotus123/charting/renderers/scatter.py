@@ -3,8 +3,6 @@
 Renders XY scatter plots with data points.
 """
 
-from __future__ import annotations
-
 from .base import (
     BOX_CORNER_BL,
     BOX_HORIZONTAL,

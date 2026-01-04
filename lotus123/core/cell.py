@@ -1,7 +1,5 @@
 """Cell data model with support for various data types and alignment."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import Enum, auto
 import re

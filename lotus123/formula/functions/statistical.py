@@ -4,8 +4,6 @@ Implements Lotus 1-2-3 compatible statistical functions:
 @AVG, @COUNT, @MIN, @MAX, @STD, @VAR
 """
 
-from __future__ import annotations
-
 import math
 from typing import Any
 

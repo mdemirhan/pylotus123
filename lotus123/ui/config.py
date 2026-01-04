@@ -4,8 +4,6 @@ Handles loading and saving user preferences like theme, default column width,
 and recent files list.
 """
 
-from __future__ import annotations
-
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -23,7 +21,7 @@ class AppConfig:
     recent_files: list[str] = field(default_factory=list)
 
     @classmethod
-    def load(cls) -> "AppConfig":
+    def load(cls) -> AppConfig:
         """Load configuration from file."""
         try:
             if CONFIG_FILE.exists():

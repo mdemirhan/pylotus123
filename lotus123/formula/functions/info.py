@@ -5,8 +5,6 @@ Implements Lotus 1-2-3 compatible information functions:
 @ISNUMBER, @ISSTRING, @ISERR, @ISNA, @TYPE
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 
