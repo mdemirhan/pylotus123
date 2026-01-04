@@ -84,10 +84,16 @@ class DataHandler(BaseHandler):
         grid = self.get_grid()
         r1, c1, r2, c2 = grid.selection_range
         try:
-            # Parse user input: column letter + optional 'D' for descending
+            # Parse user input: column letter + optional 'D' suffix for descending
+            # e.g., "A" = col A ascending, "AD" = col A descending
+            #       "D" = col D ascending, "DD" = col D descending
             result = result.strip().upper()
-            descending = result.endswith("D")
-            sort_col_letter = result.rstrip("D").rstrip("A") or result[0]
+            if len(result) >= 2 and result.endswith("D"):
+                descending = True
+                sort_col_letter = result[:-1]
+            else:
+                descending = False
+                sort_col_letter = result
 
             # Convert column letter to absolute index within selection
             sort_col_abs = col_to_index(sort_col_letter)

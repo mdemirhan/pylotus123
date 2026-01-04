@@ -316,6 +316,77 @@ class TestDataHandler:
     def test_sort(self):
         pass  # Skipping brittle sort test as per user direction
 
+    def test_sort_column_d_parsing(self):
+        """Test that column D sorting correctly distinguishes ascending vs descending.
+
+        Bug fix: Previously "D" and "DD" both resulted in descending sort because
+        the code checked `result.endswith("D")` which is True for both.
+        """
+        from lotus123.core.spreadsheet import Spreadsheet
+        from lotus123.handlers.data_handlers import DataHandler
+
+        # Create a real spreadsheet with test data
+        spreadsheet = Spreadsheet()
+        spreadsheet.set_cell(0, 3, "300")  # D1
+        spreadsheet.set_cell(1, 3, "100")  # D2
+        spreadsheet.set_cell(2, 3, "200")  # D3
+
+        # Create app mock with real spreadsheet
+        app = MockApp()
+        app.spreadsheet = spreadsheet
+        app.grid.selection_range = (0, 3, 2, 3)  # D1:D3
+
+        handler = DataHandler(app)
+
+        # Sort ascending with "D" - should sort 100, 200, 300
+        handler._do_data_sort("D")
+        assert spreadsheet.get_cell(0, 3).raw_value == "100"
+        assert spreadsheet.get_cell(1, 3).raw_value == "200"
+        assert spreadsheet.get_cell(2, 3).raw_value == "300"
+
+        # Sort descending with "DD" - should sort 300, 200, 100
+        handler._do_data_sort("DD")
+        assert spreadsheet.get_cell(0, 3).raw_value == "300"
+        assert spreadsheet.get_cell(1, 3).raw_value == "200"
+        assert spreadsheet.get_cell(2, 3).raw_value == "100"
+
+    def test_sort_input_parsing_various_columns(self):
+        """Test sort input parsing for various column letters."""
+        from lotus123.core.spreadsheet import Spreadsheet
+        from lotus123.handlers.data_handlers import DataHandler
+
+        # Create spreadsheet with data in columns A and B
+        spreadsheet = Spreadsheet()
+        spreadsheet.set_cell(0, 0, "300")  # A1
+        spreadsheet.set_cell(1, 0, "100")  # A2
+        spreadsheet.set_cell(2, 0, "200")  # A3
+        spreadsheet.set_cell(0, 1, "Z")  # B1
+        spreadsheet.set_cell(1, 1, "A")  # B2
+        spreadsheet.set_cell(2, 1, "M")  # B3
+
+        app = MockApp()
+        app.spreadsheet = spreadsheet
+        app.grid.selection_range = (0, 0, 2, 1)  # A1:B3
+
+        handler = DataHandler(app)
+
+        # Sort by column A ascending
+        handler._do_data_sort("A")
+        assert spreadsheet.get_cell(0, 0).raw_value == "100"
+        assert spreadsheet.get_cell(0, 1).raw_value == "A"  # Row with 100 moved to top
+
+        # Sort by column A descending
+        handler._do_data_sort("AD")
+        assert spreadsheet.get_cell(0, 0).raw_value == "300"
+
+        # Sort by column B ascending
+        handler._do_data_sort("B")
+        assert spreadsheet.get_cell(0, 1).raw_value == "A"
+
+        # Sort by column B descending
+        handler._do_data_sort("BD")
+        assert spreadsheet.get_cell(0, 1).raw_value == "Z"
+
 
 class TestRangeHandler:
     def setup_method(self):

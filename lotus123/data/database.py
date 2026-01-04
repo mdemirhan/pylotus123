@@ -5,9 +5,9 @@ Implements Lotus 1-2-3 /Data commands for treating ranges as databases.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Iterator
 
 if TYPE_CHECKING:
     from ..core.spreadsheet import Spreadsheet
@@ -18,6 +18,54 @@ class SortOrder(Enum):
 
     ASCENDING = auto()
     DESCENDING = auto()
+
+
+@dataclass(frozen=True, slots=True)
+class CellData:
+    """Represents a cell's value and format for sorting operations."""
+
+    raw_value: str
+    format_code: str
+
+    def __iter__(self) -> Iterator[str]:
+        """Implemented to support tuple unpacking."""
+        yield self.raw_value
+        yield self.format_code
+
+
+EMPTY_CELL = CellData("", "G")
+
+
+@dataclass(frozen=True, slots=True)
+class CellArray:
+    """A row of cell data."""
+
+    _items: list[CellData] = field(repr=False)
+
+    def __getitem__(self, index: int) -> CellData:
+        return self._items[index]
+
+    def __len__(self) -> int:
+        return len(self._items)
+
+    def __iter__(self) -> Iterator[CellData]:
+        return iter(self._items)
+
+
+@dataclass(frozen=True, slots=True)
+class CellMatrix:
+    """A 2D grid of cell data for sorting operations."""
+
+    _rows: list[CellArray] = field(repr=False)
+
+    def __getitem__(self, index: int) -> CellArray:
+        return self._rows[index]
+
+    def __len__(self) -> int:
+        return len(self._rows)
+
+    def __iter__(self) -> Iterator[CellArray]:
+        return iter(self._rows)
 
 
 @dataclass
@@ -69,41 +117,40 @@ class DatabaseOperations:
         start_col: int,
         end_col: int,
         values_only: bool,
-    ) -> list[list[tuple[str, str]]]:
+    ) -> CellMatrix:
         """Extract cell data (raw_value, format_code) for sorting.
 
         When values_only=True, formulas are converted to their computed values.
         """
-        cell_data = []
+        rows: list[CellArray] = []
         for r in range(data_start, end_row + 1):
-            row_data = []
+            cells: list[CellData] = []
+
             for c in range(start_col, end_col + 1):
                 cell = self.spreadsheet.get_cell_if_exists(r, c)
-                if cell:
-                    if values_only and cell.is_formula:
-                        computed = self.spreadsheet.get_value(r, c)
-                        raw_val = str(computed) if computed else ""
-                    else:
-                        raw_val = cell.raw_value
-                    row_data.append((raw_val, cell.format_code))
-                else:
-                    row_data.append(("", "G"))
-            cell_data.append(row_data)
-        return cell_data
 
-    def _create_sort_key(
-        self, keys: list[SortKey]
-    ) -> Callable[[list[tuple[str, str]]], tuple[Any, ...]]:
+                if cell is None:
+                    cells.append(EMPTY_CELL)
+                elif values_only and cell.is_formula:
+                    computed = self.spreadsheet.get_value(r, c)
+                    cells.append(CellData(str(computed) if computed else "", cell.format_code))
+                else:
+                    cells.append(CellData(cell.raw_value, cell.format_code))
+
+            rows.append(CellArray(cells))
+        return CellMatrix(rows)
+
+    def _create_sort_key(self, keys: list[SortKey]) -> Callable[[CellArray], tuple[Any, ...]]:
         """Create a sort key function for the given sort keys.
 
         Handles numeric negation for descending order on numeric columns.
         """
 
-        def sort_key(row_data: list[tuple[str, str]]) -> tuple[Any, ...]:
+        def sort_key(row_data: CellArray) -> tuple[Any, ...]:
             key_values: list[Any] = []
             for sk in keys:
                 if 0 <= sk.column < len(row_data):
-                    raw_val = row_data[sk.column][0]
+                    raw_val = row_data[sk.column].raw_value
                     sort_val = self._parse_sort_value(raw_val)
 
                     if sk.order == SortOrder.DESCENDING and isinstance(sort_val, (int, float)):
@@ -114,8 +161,8 @@ class DatabaseOperations:
         return sort_key
 
     def _apply_descending_string_sorts(
-        self, sorted_data: list[list[tuple[str, str]]], keys: list[SortKey]
-    ) -> list[list[tuple[str, str]]]:
+        self, sorted_data: CellMatrix, keys: list[SortKey]
+    ) -> CellMatrix:
         """Apply reverse sorting for descending string columns.
 
         Numeric columns are handled by negation in the primary sort,
@@ -127,18 +174,18 @@ class DatabaseOperations:
 
             # Check if this column has any non-numeric values
             has_strings = any(
-                not self._is_numeric_string(row_data[sk.column][0])
+                not self._is_numeric_string(row_data[sk.column].raw_value)
                 for row_data in sorted_data
-                if sk.column < len(row_data) and row_data[sk.column][0]
+                if sk.column < len(row_data) and row_data[sk.column].raw_value
             )
 
             if has_strings:
                 col = sk.column
 
-                def string_key(rd: list[tuple[str, str]], c: int = col) -> str:
-                    return rd[c][0].lower() if c < len(rd) else ""
+                def string_key(rd: CellArray, c: int = col) -> str:
+                    return rd[c].raw_value.lower() if c < len(rd) else ""
 
-                sorted_data = sorted(sorted_data, key=string_key, reverse=True)
+                sorted_data = CellMatrix(sorted(sorted_data, key=string_key, reverse=True))
 
         return sorted_data
 
@@ -175,14 +222,17 @@ class DatabaseOperations:
             return  # No data to sort
 
         # Extract cell data for sorting
-        cell_data = self._extract_cell_data(data_start, end_row, start_col, end_col, values_only)
+        cell_data: CellMatrix = self._extract_cell_data(
+            data_start, end_row, start_col, end_col, values_only
+        )
 
         # Primary sort with numeric descending handled by negation
         sort_key = self._create_sort_key(keys)
-        sorted_data = sorted(cell_data, key=sort_key)
 
         # Apply reverse sorts for descending string columns
-        sorted_data = self._apply_descending_string_sorts(sorted_data, keys)
+        sorted_data: CellMatrix = self._apply_descending_string_sorts(
+            CellMatrix(sorted(cell_data, key=sort_key)), keys
+        )
 
         # Write sorted data back to cells
         for i, row_data in enumerate(sorted_data):
@@ -232,14 +282,17 @@ class DatabaseOperations:
             return []  # No data to sort
 
         # Extract cell data for sorting
-        cell_data = self._extract_cell_data(data_start, end_row, start_col, end_col, values_only)
+        cell_data: CellMatrix = self._extract_cell_data(
+            data_start, end_row, start_col, end_col, values_only
+        )
 
         # Primary sort with numeric descending handled by negation
         sort_key = self._create_sort_key(keys)
-        sorted_data = sorted(cell_data, key=sort_key)
 
         # Apply reverse sorts for descending string columns
-        sorted_data = self._apply_descending_string_sorts(sorted_data, keys)
+        sorted_data: CellMatrix = self._apply_descending_string_sorts(
+            CellMatrix(sorted(cell_data, key=sort_key)), keys
+        )
 
         # Collect changes and write sorted data back to cells
         # Format: (row, col, new_value, old_value) - matches RangeChangeCommand
