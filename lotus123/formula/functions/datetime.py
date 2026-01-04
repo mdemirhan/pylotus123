@@ -11,43 +11,12 @@ from __future__ import annotations
 import datetime
 from typing import Any
 
-# Lotus 1-2-3 date epoch: Day 1 = January 1, 1900
-# Note: Lotus has the infamous leap year bug (treats 1900 as leap year)
-EPOCH = datetime.date(1899, 12, 31)
-
-
-def _serial_to_date(serial: float) -> datetime.date:
-    """Convert Lotus serial number to date."""
-    # Handle the 1900 leap year bug
-    if serial >= 60:
-        serial -= 1
-    return EPOCH + datetime.timedelta(days=int(serial))
-
-
-def _date_to_serial(date: datetime.date) -> int:
-    """Convert date to Lotus serial number."""
-    delta = date - EPOCH
-    serial = delta.days
-    # Account for leap year bug
-    if serial >= 60:
-        serial += 1
-    return serial
-
-
-def _serial_to_time(serial: float) -> datetime.time:
-    """Convert fractional serial to time."""
-    fraction = serial % 1
-    total_seconds = int(fraction * 86400)
-    hours = total_seconds // 3600
-    minutes = (total_seconds % 3600) // 60
-    seconds = total_seconds % 60
-    return datetime.time(hours, minutes, seconds)
-
-
-def _time_to_serial(time: datetime.time) -> float:
-    """Convert time to fractional serial."""
-    total_seconds = time.hour * 3600 + time.minute * 60 + time.second
-    return total_seconds / 86400
+from lotus123.core.formatting import (
+    date_to_serial,
+    serial_to_date,
+    serial_to_time,
+    time_to_serial,
+)
 
 
 def _parse_date_string(text: str) -> datetime.date | None:
@@ -98,7 +67,7 @@ def fn_date(year: Any, month: Any, day: Any) -> int:
             m -= 12
 
         date = datetime.date(y, m, d)
-        return _date_to_serial(date)
+        return date_to_serial(date)
     except ValueError:
         return 0
 
@@ -111,7 +80,7 @@ def fn_datevalue(date_text: Any) -> int:
     text = str(date_text).strip()
     date = _parse_date_string(text)
     if date:
-        return _date_to_serial(date)
+        return date_to_serial(date)
     return 0
 
 
@@ -122,7 +91,7 @@ def fn_day(serial_number: Any) -> int:
     Returns 1-31.
     """
     try:
-        date = _serial_to_date(_to_number(serial_number))
+        date = serial_to_date(_to_number(serial_number))
         return date.day
     except (ValueError, OverflowError):
         return 0
@@ -135,7 +104,7 @@ def fn_month(serial_number: Any) -> int:
     Returns 1-12.
     """
     try:
-        date = _serial_to_date(_to_number(serial_number))
+        date = serial_to_date(_to_number(serial_number))
         return date.month
     except (ValueError, OverflowError):
         return 0
@@ -148,7 +117,7 @@ def fn_year(serial_number: Any) -> int:
     Returns 4-digit year.
     """
     try:
-        date = _serial_to_date(_to_number(serial_number))
+        date = serial_to_date(_to_number(serial_number))
         return date.year
     except (ValueError, OverflowError):
         return 0
@@ -163,7 +132,7 @@ def fn_weekday(serial_number: Any, return_type: Any = 1) -> int:
                  3 = Monday=0 to Sunday=6
     """
     try:
-        date = _serial_to_date(_to_number(serial_number))
+        date = serial_to_date(_to_number(serial_number))
         weekday = date.weekday()  # Monday = 0
 
         rtype = int(_to_number(return_type))
@@ -182,14 +151,14 @@ def fn_weekday(serial_number: Any, return_type: Any = 1) -> int:
 
 def fn_today() -> int:
     """@TODAY - Current date as serial number."""
-    return _date_to_serial(datetime.date.today())
+    return date_to_serial(datetime.date.today())
 
 
 def fn_now() -> float:
     """@NOW - Current date and time as serial number."""
     now = datetime.datetime.now()
-    date_serial = _date_to_serial(now.date())
-    time_serial = _time_to_serial(now.time())
+    date_serial = date_to_serial(now.date())
+    time_serial = time_to_serial(now.time())
     return date_serial + time_serial
 
 
@@ -214,7 +183,7 @@ def fn_time(hour: Any, minute: Any, second: Any) -> float:
     h = h % 24
 
     time = datetime.time(h, m, s)
-    return _time_to_serial(time)
+    return time_to_serial(time)
 
 
 def fn_timevalue(time_text: Any) -> float:
@@ -228,7 +197,7 @@ def fn_timevalue(time_text: Any) -> float:
     for fmt in formats:
         try:
             time = datetime.datetime.strptime(text, fmt).time()
-            return _time_to_serial(time)
+            return time_to_serial(time)
         except ValueError:
             continue
     return 0.0
@@ -241,7 +210,7 @@ def fn_hour(serial_number: Any) -> int:
     Returns 0-23.
     """
     try:
-        time = _serial_to_time(_to_number(serial_number))
+        time = serial_to_time(_to_number(serial_number))
         return time.hour
     except (ValueError, OverflowError):
         return 0
@@ -254,7 +223,7 @@ def fn_minute(serial_number: Any) -> int:
     Returns 0-59.
     """
     try:
-        time = _serial_to_time(_to_number(serial_number))
+        time = serial_to_time(_to_number(serial_number))
         return time.minute
     except (ValueError, OverflowError):
         return 0
@@ -267,7 +236,7 @@ def fn_second(serial_number: Any) -> int:
     Returns 0-59.
     """
     try:
-        time = _serial_to_time(_to_number(serial_number))
+        time = serial_to_time(_to_number(serial_number))
         return time.second
     except (ValueError, OverflowError):
         return 0
@@ -290,7 +259,7 @@ def fn_edate(start_date: Any, months: Any) -> int:
     Usage: @EDATE(start_date, months)
     """
     try:
-        date = _serial_to_date(_to_number(start_date))
+        date = serial_to_date(_to_number(start_date))
         m = int(_to_number(months))
 
         new_month = date.month + m
@@ -304,7 +273,7 @@ def fn_edate(start_date: Any, months: Any) -> int:
         new_day = min(date.day, max_day)
 
         new_date = datetime.date(new_year, new_month, new_day)
-        return _date_to_serial(new_date)
+        return date_to_serial(new_date)
     except (ValueError, OverflowError):
         return 0
 
@@ -315,7 +284,7 @@ def fn_eomonth(start_date: Any, months: Any) -> int:
     Usage: @EOMONTH(start_date, months)
     """
     try:
-        date = _serial_to_date(_to_number(start_date))
+        date = serial_to_date(_to_number(start_date))
         m = int(_to_number(months))
 
         new_month = date.month + m
@@ -326,7 +295,7 @@ def fn_eomonth(start_date: Any, months: Any) -> int:
 
         last_day = calendar.monthrange(new_year, new_month)[1]
         new_date = datetime.date(new_year, new_month, last_day)
-        return _date_to_serial(new_date)
+        return date_to_serial(new_date)
     except (ValueError, OverflowError):
         return 0
 

@@ -14,7 +14,6 @@ from lotus123.core.formatting import (
     _format_fixed,
     _format_general,
     _format_percent,
-    _format_plusminus,
     _format_scientific,
     _format_time,
     date_to_serial,

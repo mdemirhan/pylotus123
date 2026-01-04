@@ -1,6 +1,5 @@
 """Tests for XLSX formula and format translators."""
 
-import pytest
 
 from lotus123.io.xlsx_formula_translator import FormulaTranslator
 from lotus123.io.xlsx_format_translator import FormatTranslator

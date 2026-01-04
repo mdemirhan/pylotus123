@@ -3,7 +3,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
 
 from lotus123.core.spreadsheet import Spreadsheet
 from lotus123.io.xlsx import XlsxReader, XlsxWriter, XlsxImportWarnings, get_xlsx_sheet_names

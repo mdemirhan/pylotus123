@@ -3,7 +3,6 @@
 import sys
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from lotus123.utils.os_clipboard import (
     copy_to_clipboard,

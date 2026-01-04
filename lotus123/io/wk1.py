@@ -498,10 +498,10 @@ class FormulaDecompiler:
             elif opcode in BINARY_OPERATORS:
                 self._binary_op(opcode)
             elif opcode in FUNCTION_NAMES:
-                self._function(opcode)
+                self._decompile_function_call(opcode)
             elif opcode >= 0x50:
                 # Multi-arg function with arg count
-                self._multi_arg_function(opcode)
+                self._decompile_function_call(opcode)
 
         if self.stack:
             return "=" + self.stack[-1][0]
@@ -626,8 +626,8 @@ class FormulaDecompiler:
 
             self.stack.append((f"{left}{symbol}{right}", op_prec))
 
-    def _function(self, opcode: int) -> None:
-        """Handle function call."""
+    def _decompile_function_call(self, opcode: int) -> None:
+        """Decompile a function call opcode to text."""
         if opcode not in FUNCTION_NAMES:
             return
 
@@ -653,23 +653,6 @@ class FormulaDecompiler:
                 if self.stack:
                     args.insert(0, self.stack.pop()[0])
             self.stack.append((f"@{name}({','.join(args)})", 99))
-
-    def _multi_arg_function(self, opcode: int) -> None:
-        """Handle multi-argument function (opcode >= 0x50)."""
-        if opcode in FUNCTION_NAMES:
-            name, expected_args = FUNCTION_NAMES[opcode]
-            if expected_args == -1:
-                # Variable args - read count from bytecode
-                if self.pos < len(self.bytecode):
-                    arg_count = self.bytecode[self.pos]
-                    self.pos += 1
-                    args: list[str] = []
-                    for _ in range(arg_count):
-                        if self.stack:
-                            args.insert(0, self.stack.pop()[0])
-                    self.stack.append((f"@{name}({','.join(args)})", 99))
-            else:
-                self._function(opcode)
 
 
 class FormulaCompiler:
@@ -903,32 +886,29 @@ class FormulaCompiler:
             # It's a cell reference
             self._parse_cell_ref(ident)
 
-    def _parse_cell_ref(self, ref: str) -> None:
-        """Parse cell reference like A1, $A$1.
+    def _parse_ref_components(self, ref: str) -> tuple[bool, bool, str, str]:
+        """Parse cell reference into components.
 
-        References with $ are absolute; without $ are relative.
+        Args:
+            ref: Cell reference string like "A1", "$A$1", "$A1", "A$1"
+
+        Returns:
+            Tuple of (col_absolute, row_absolute, col_str, row_str)
         """
-        # Check for absolute column ($A) and row ($1)
         col_absolute = ref.startswith("$")
-        # Find if there's a $ before the row number
         row_absolute = False
         in_col = True
         for i, char in enumerate(ref):
             if char == "$":
                 if in_col and i > 0:
-                    # $ not at start means row absolute
                     row_absolute = True
                 continue
             if char.isdigit():
-                # Check if there's a $ right before the digits
                 if i > 0 and ref[i - 1] == "$":
                     row_absolute = True
                 in_col = False
 
-        # Remove $ signs for parsing
         clean_ref = ref.replace("$", "")
-
-        # Extract column letters and row number
         col_str = ""
         row_str = ""
         for char in clean_ref:
@@ -937,32 +917,52 @@ class FormulaCompiler:
             elif char.isdigit():
                 row_str += char
 
+        return col_absolute, row_absolute, col_str, row_str
+
+    def _encode_col_row(
+        self, col_str: str, row_str: str, col_absolute: bool, row_absolute: bool
+    ) -> tuple[int, int]:
+        """Encode column and row to WK1 words.
+
+        Args:
+            col_str: Column letters (e.g., "A", "BC")
+            row_str: Row number string (1-based)
+            col_absolute: Whether column is absolute
+            row_absolute: Whether row is absolute
+
+        Returns:
+            Tuple of (col_word, row_word) for WK1 format
+        """
+        target_col = _letter_to_col(col_str)
+        target_row = int(row_str) - 1  # Convert to 0-based
+
+        if col_absolute:
+            col_word = target_col
+        else:
+            col_offset = target_col - self.formula_col
+            if col_offset < 0:
+                col_offset += 256
+            col_word = 0x8000 | (col_offset & 0xFF)
+
+        if row_absolute:
+            row_word = target_row
+        else:
+            row_offset = target_row - self.formula_row
+            if row_offset < 0:
+                row_offset += 0x4000
+            row_word = 0x8000 | (row_offset & 0x3FFF)
+
+        return col_word, row_word
+
+    def _parse_cell_ref(self, ref: str) -> None:
+        """Parse cell reference like A1, $A$1.
+
+        References with $ are absolute; without $ are relative.
+        """
+        col_absolute, row_absolute, col_str, row_str = self._parse_ref_components(ref)
+
         if col_str and row_str:
-            target_col = _letter_to_col(col_str)
-            target_row = int(row_str) - 1  # Convert to 0-based
-
-            # Encode column
-            if col_absolute:
-                col_word = target_col  # No relative flag
-            else:
-                # Relative: compute offset and set bit 15
-                col_offset = target_col - self.formula_col
-                # Encode as signed 8-bit in bits 0-7
-                if col_offset < 0:
-                    col_offset += 256
-                col_word = 0x8000 | (col_offset & 0xFF)
-
-            # Encode row
-            if row_absolute:
-                row_word = target_row  # No relative flag
-            else:
-                # Relative: compute offset and set bit 15
-                row_offset = target_row - self.formula_row
-                # Encode as signed 14-bit in bits 0-13
-                if row_offset < 0:
-                    row_offset += 0x4000
-                row_word = 0x8000 | (row_offset & 0x3FFF)
-
+            col_word, row_word = self._encode_col_row(col_str, row_str, col_absolute, row_absolute)
             self.bytecode.append(OP_VARIABLE)
             self.bytecode.extend(struct.pack("<HH", col_word, row_word))
         else:
@@ -1009,57 +1009,12 @@ class FormulaCompiler:
 
         Returns None if the reference is invalid.
         """
-        # Check for absolute column ($A) and row ($1)
-        col_absolute = ref.startswith("$")
-        row_absolute = False
-        in_col = True
-        for i, char in enumerate(ref):
-            if char == "$":
-                if in_col and i > 0:
-                    row_absolute = True
-                continue
-            if char.isdigit():
-                if i > 0 and ref[i - 1] == "$":
-                    row_absolute = True
-                in_col = False
-
-        # Remove $ signs for parsing
-        clean_ref = ref.replace("$", "")
-
-        # Extract column letters and row number
-        col_str = ""
-        row_str = ""
-        for char in clean_ref:
-            if char.isalpha():
-                col_str += char
-            elif char.isdigit():
-                row_str += char
+        col_absolute, row_absolute, col_str, row_str = self._parse_ref_components(ref)
 
         if not col_str or not row_str:
             return None
 
-        target_col = _letter_to_col(col_str)
-        target_row = int(row_str) - 1
-
-        # Encode column
-        if col_absolute:
-            col_word = target_col
-        else:
-            col_offset = target_col - self.formula_col
-            if col_offset < 0:
-                col_offset += 256
-            col_word = 0x8000 | (col_offset & 0xFF)
-
-        # Encode row
-        if row_absolute:
-            row_word = target_row
-        else:
-            row_offset = target_row - self.formula_row
-            if row_offset < 0:
-                row_offset += 0x4000
-            row_word = 0x8000 | (row_offset & 0x3FFF)
-
-        return (col_word, row_word)
+        return self._encode_col_row(col_str, row_str, col_absolute, row_absolute)
 
     def _parse_function(self) -> None:
         """Parse @FUNCTION(...) style function."""

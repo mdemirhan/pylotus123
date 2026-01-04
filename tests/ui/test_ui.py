@@ -522,7 +522,6 @@ class TestDialogs:
 
     def test_filtered_directory_tree_extensions(self):
         """Test FilteredDirectoryTree filters by file extension."""
-        from pathlib import Path
 
         from lotus123.ui.dialogs.file_dialog import FilteredDirectoryTree
 
