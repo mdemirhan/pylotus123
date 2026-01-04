@@ -7,13 +7,19 @@ Terminal spreadsheet app (Python/Textual). 256x65536 grid, 180+ formulas, charti
 ```bash
 uv sync                      # Install dependencies
 uv run python main.py [file] # Run app
-uv run pytest                # Test
-uv run ruff check lotus123/ && uv run ruff format  # Lint & format
-uv run basedpyright          # Type check
+uv run pytest                # Test (excludes slow tests)
+uv run pytest -m slow        # Run slow UI tests only
+uv run pytest -m ''          # Run all tests including slow
+uv run ruff check lotus123/ && uv run ruff format lotus123/  # Lint & format
+uv run basedpyright lotus123/  # Type check
 ```
 
-After code changes, run `uv run ruff format`, `uv run ruff check lotus123/ --fix` and `uv run basedpyright`, 
-fixing any issues before considering work complete.
+After code changes, run `uv run ruff format lotus123/`, `uv run ruff check lotus123/ --fix` and `uv run basedpyright lotus123/`,
+fixing any issues before considering work complete. Do NOT run ruff or basedpyright on the tests/ folder.
+
+**Testing strategy**: Run fast tests (`uv run pytest`) by default. Only run slow UI tests (`uv run pytest -m ''`) for:
+- Extensive/major changes
+- Changes to UI components (`lotus123/ui/`, `lotus123/handlers/`, `lotus123/app.py`)
 
 ## Architecture
 

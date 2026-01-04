@@ -189,6 +189,7 @@ class TestLotusAppMethods:
 
 
 # Async tests for Textual app functionality
+@pytest.mark.slow
 class TestLotusAppAsync:
     """Async tests using Textual's testing framework."""
 
@@ -308,6 +309,7 @@ class TestLotusAppSpreadsheetIntegration:
         assert app.spreadsheet.get_value(0, 2) == 30
 
 
+@pytest.mark.slow
 class TestLotusAppActionsAsync:
     """More async tests for app actions."""
 
@@ -526,6 +528,7 @@ class TestLotusAppActionsAsync:
             await pilot.press("shift+tab")
 
 
+@pytest.mark.slow
 class TestLotusAppMenuHandling:
     """Tests for menu handling."""
 
@@ -597,6 +600,7 @@ class TestLotusAppMenuHandling:
             assert len(app.screen_stack) > 1
 
 
+@pytest.mark.slow
 class TestLotusAppChartHandling:
     """Tests for chart handling."""
 
@@ -643,6 +647,7 @@ class TestLotusAppChartHandling:
             app._handle_menu("Graph:Reset")
 
 
+@pytest.mark.slow
 class TestLotusAppWorksheetHandling:
     """Tests for worksheet handling."""
 
@@ -701,6 +706,7 @@ class TestLotusAppWorksheetHandling:
             assert len(app.screen_stack) > 1
 
 
+@pytest.mark.slow
 class TestLotusAppDataHandling:
     """Tests for data handling."""
 
@@ -783,6 +789,7 @@ class TestLotusAppDataHandling:
             app._handle_menu("Data:Query:Reset")
 
 
+@pytest.mark.slow
 class TestLotusAppGlobalSettings:
     """Tests for global settings handling."""
 
@@ -828,6 +835,7 @@ class TestLotusAppGlobalSettings:
             app._handle_menu("Worksheet:Global:Zero")
 
 
+@pytest.mark.slow
 class TestLotusAppRangeHandling:
     """Tests for range handling."""
 

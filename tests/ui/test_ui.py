@@ -158,6 +158,7 @@ class TestAppConfig:
         assert loaded["default_col_width"] == 15
 
 
+@pytest.mark.slow
 class TestSpreadsheetGrid:
     """Tests for the SpreadsheetGrid widget.
 
@@ -217,6 +218,7 @@ class TestSpreadsheetGrid:
             assert grid.cursor_col == 0
 
 
+@pytest.mark.slow
 class TestLotusAppAsync:
     """Async tests for the main Lotus app using Textual's test framework."""
 
