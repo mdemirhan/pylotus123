@@ -5,10 +5,9 @@ Implements Lotus 1-2-3 /Data commands for treating ranges as databases.
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, Callable, Iterator
+from typing import Any, Callable, Iterator
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 
 class SortOrder(Enum):
@@ -83,7 +82,7 @@ class DatabaseOperations:
     - Columns are fields
     """
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol) -> None:
         self.spreadsheet = spreadsheet
 
     @staticmethod

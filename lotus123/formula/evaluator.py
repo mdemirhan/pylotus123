@@ -1,25 +1,10 @@
 """Formula evaluation engine with dependency tracking."""
 
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ..core.errors import FormulaError
-
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
-
-
-@dataclass
-class EvaluationContext:
-    """Context for formula evaluation.
-
-    Tracks the current cell being evaluated and dependencies.
-    """
-
-    current_row: int = 0
-    current_col: int = 0
-    dependencies: set[tuple[int, int]] = field(default_factory=set)
-    computing: set[tuple[int, int]] = field(default_factory=set)
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
+from .context import EvaluationContext
 
 
 class FormulaEvaluator:
@@ -31,7 +16,9 @@ class FormulaEvaluator:
     - Circular reference detection
     """
 
-    def __init__(self, spreadsheet: Spreadsheet, context: EvaluationContext | None = None) -> None:
+    def __init__(
+        self, spreadsheet: SpreadsheetProtocol, context: EvaluationContext | None = None
+    ) -> None:
         self.spreadsheet = spreadsheet
         self._context = context or EvaluationContext()
 
@@ -160,7 +147,9 @@ class FormulaEvaluator:
         self._context = EvaluationContext()
 
 
-def build_dependency_graph(spreadsheet: Spreadsheet) -> dict[tuple[int, int], set[tuple[int, int]]]:
+def build_dependency_graph(
+    spreadsheet: SpreadsheetProtocol,
+) -> dict[tuple[int, int], set[tuple[int, int]]]:
     """Build a graph of cell dependencies.
 
     Args:

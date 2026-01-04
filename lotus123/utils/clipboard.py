@@ -2,10 +2,8 @@
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 
 class ClipboardMode(Enum):
@@ -50,7 +48,7 @@ class Clipboard:
     - Cut (move) operations
     """
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol) -> None:
         self.spreadsheet = spreadsheet
         self._content = ClipboardContent()
 

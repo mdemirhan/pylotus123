@@ -1,9 +1,7 @@
 """Worksheet operation handler methods for LotusApp."""
 
-from typing import TYPE_CHECKING
-
-from ..core.reference import index_to_col
 from ..core.formatting import normalize_format_code
+from ..core.reference import index_to_col
 from ..formula.recalc import RecalcMode
 from ..ui import CommandInput
 from ..utils.undo import (
@@ -15,10 +13,7 @@ from ..utils.undo import (
     InsertColCommand,
     InsertRowCommand,
 )
-from .base import BaseHandler
-
-if TYPE_CHECKING:
-    from .base import AppProtocol
+from .base import AppProtocol, BaseHandler
 
 
 class WorksheetHandler(BaseHandler):

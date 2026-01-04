@@ -1,15 +1,12 @@
 """Chart-related handler methods for LotusApp."""
 
 import json
-from typing import TYPE_CHECKING, Callable
+from typing import Callable
 
 from ..charting import Chart, ChartType, TextChartRenderer
 from ..core import make_cell_ref
 from ..ui import ChartViewScreen, CommandInput, FileDialog
-from .base import BaseHandler
-
-if TYPE_CHECKING:
-    from .base import AppProtocol
+from .base import AppProtocol, BaseHandler
 
 
 class ChartHandler(BaseHandler):

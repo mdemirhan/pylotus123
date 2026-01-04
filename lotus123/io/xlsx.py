@@ -7,6 +7,7 @@ with bidirectional translation to ensure round-trip fidelity.
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, cast
 
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 from .xlsx_format_translator import FormatTranslator
 from .xlsx_formula_translator import FormulaTranslator
 
@@ -17,8 +18,6 @@ if TYPE_CHECKING:
     from openpyxl.utils import column_index_from_string, get_column_letter
     from openpyxl.workbook.defined_name import DefinedName
     from openpyxl.worksheet.worksheet import Worksheet
-
-    from ..core.spreadsheet import Spreadsheet
 
 try:
     from openpyxl import Workbook, load_workbook
@@ -95,11 +94,11 @@ class XlsxImportWarnings:
 class XlsxReader:
     """Read XLSX files into spreadsheet."""
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol) -> None:
         """Initialize reader with target spreadsheet.
 
         Args:
-            spreadsheet: Spreadsheet to load data into
+            spreadsheet: SpreadsheetProtocol to load data into
         """
         self.spreadsheet = spreadsheet
         self.warnings = XlsxImportWarnings()
@@ -328,11 +327,11 @@ class XlsxReader:
 class XlsxWriter:
     """Write spreadsheet to XLSX format."""
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol) -> None:
         """Initialize writer with source spreadsheet.
 
         Args:
-            spreadsheet: Spreadsheet to export
+            spreadsheet: SpreadsheetProtocol to export
         """
         self.spreadsheet = spreadsheet
 
@@ -498,7 +497,7 @@ class XlsxWriter:
 
 # Convenience functions
 def load_xlsx(
-    spreadsheet: Spreadsheet, filepath: str, sheet_name: str | None = None
+    spreadsheet: SpreadsheetProtocol, filepath: str, sheet_name: str | None = None
 ) -> XlsxImportWarnings:
     """Load XLSX file into spreadsheet.
 
@@ -514,7 +513,7 @@ def load_xlsx(
     return reader.load(filepath, sheet_name)
 
 
-def save_xlsx(spreadsheet: Spreadsheet, filepath: str) -> None:
+def save_xlsx(spreadsheet: SpreadsheetProtocol, filepath: str) -> None:
     """Save spreadsheet to XLSX file.
 
     Args:

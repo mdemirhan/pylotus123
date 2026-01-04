@@ -11,12 +11,11 @@ Status indicators include:
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from textual.widgets import Static
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 
 class Mode(Enum):
@@ -96,7 +95,7 @@ class StatusBar:
     - Warnings
     """
 
-    def __init__(self, spreadsheet: Spreadsheet | None = None) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol | None = None) -> None:
         self.spreadsheet = spreadsheet
         self.mode = ModeIndicator()
         self.locks = LockIndicators()
@@ -261,7 +260,7 @@ class StatusBarWidget(Static):
     as a Textual Static widget with automatic updates.
     """
 
-    def __init__(self, spreadsheet: Spreadsheet | None = None, **kwargs: Any) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol | None = None, **kwargs: Any) -> None:
         super().__init__(
             " A1:                                                                    READY ",
             **kwargs,
@@ -277,7 +276,7 @@ class StatusBarWidget(Static):
         """Get the underlying StatusBar data object."""
         return self._status
 
-    def set_spreadsheet(self, spreadsheet: Spreadsheet) -> None:
+    def set_spreadsheet(self, spreadsheet: SpreadsheetProtocol) -> None:
         """Set the spreadsheet reference."""
         self._status.spreadsheet = spreadsheet
 

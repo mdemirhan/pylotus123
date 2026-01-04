@@ -1,10 +1,8 @@
 """JSON serialization for Spreadsheet."""
 
 import json
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 # Constants for default values to save space
 DEFAULT_COL_WIDTH = 10
@@ -17,7 +15,7 @@ class LotusJsonSerializer:
     """Handles saving and loading spreadsheets to/from JSON."""
 
     @staticmethod
-    def save(spreadsheet: Spreadsheet, filename: str) -> None:
+    def save(spreadsheet: SpreadsheetProtocol, filename: str) -> None:
         """Save spreadsheet to JSON file."""
         data = {
             "version": 2,
@@ -39,7 +37,7 @@ class LotusJsonSerializer:
             json.dump(data, f, indent=2)
 
     @staticmethod
-    def load(spreadsheet: Spreadsheet, filename: str) -> None:
+    def load(spreadsheet: SpreadsheetProtocol, filename: str) -> None:
         """Load spreadsheet from JSON file."""
         with open(filename, "r", encoding="utf-8") as f:
             data = json.load(f)

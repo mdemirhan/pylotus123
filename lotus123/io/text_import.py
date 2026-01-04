@@ -11,10 +11,8 @@ import csv
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 
 class ImportFormat(Enum):
@@ -60,7 +58,7 @@ class ImportOptions:
 class TextImporter:
     """Import text files into the spreadsheet."""
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol) -> None:
         self.spreadsheet = spreadsheet
 
     def import_file(self, filename: str | Path, options: ImportOptions | None = None) -> int:

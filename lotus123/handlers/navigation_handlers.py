@@ -1,12 +1,7 @@
 """Navigation handler methods for LotusApp."""
 
-from typing import TYPE_CHECKING
-
 from ..ui import CommandInput
-from .base import BaseHandler
-
-if TYPE_CHECKING:
-    from .base import AppProtocol
+from .base import AppProtocol, BaseHandler
 
 
 class NavigationHandler(BaseHandler):

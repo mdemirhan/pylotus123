@@ -8,10 +8,8 @@ Implements Lotus 1-2-3 style window management:
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 
 class SplitType(Enum):
@@ -172,7 +170,7 @@ class WindowManager:
     - /Worksheet Window - Split view
     """
 
-    def __init__(self, spreadsheet: Spreadsheet | None = None) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol | None = None) -> None:
         self.spreadsheet = spreadsheet
         self.titles = FrozenTitles()
         self.split = WindowSplit()

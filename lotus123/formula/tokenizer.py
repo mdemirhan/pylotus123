@@ -3,10 +3,9 @@
 import re
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 
 class TokenType(Enum):
@@ -42,7 +41,7 @@ class Tokenizer:
     # Regex patterns
     NUMBER_PATTERN = re.compile(r"\d+\.?\d*([eE][+-]?\d+)?")
 
-    def __init__(self, spreadsheet: Spreadsheet | None = None) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol | None = None) -> None:
         self.spreadsheet = spreadsheet
 
     def tokenize(self, formula: str) -> list[Token]:

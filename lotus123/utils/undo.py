@@ -3,10 +3,9 @@
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Sequence
+from typing import Sequence
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 
 class Command(ABC):
@@ -37,7 +36,7 @@ class Command(ABC):
 class CellChangeCommand(Command):
     """Command for changing a single cell's value."""
 
-    spreadsheet: Spreadsheet
+    spreadsheet: SpreadsheetProtocol
     row: int
     col: int
     new_value: str
@@ -96,7 +95,7 @@ class CellChangeCommand(Command):
 class RangeChangeCommand(Command):
     """Command for changing a range of cells."""
 
-    spreadsheet: Spreadsheet
+    spreadsheet: SpreadsheetProtocol
     changes: list[tuple[int, int, str, str]] = field(default_factory=list)
     # Each tuple: (row, col, new_value, old_value)
 
@@ -133,7 +132,7 @@ class RangeChangeCommand(Command):
 class InsertRowCommand(Command):
     """Command for inserting a row."""
 
-    spreadsheet: Spreadsheet
+    spreadsheet: SpreadsheetProtocol
     row: int
     deleted_data: dict = field(default_factory=dict)
 
@@ -158,7 +157,7 @@ class InsertRowCommand(Command):
 class DeleteRowCommand(Command):
     """Command for deleting a row."""
 
-    spreadsheet: Spreadsheet
+    spreadsheet: SpreadsheetProtocol
     row: int
     saved_data: dict = field(default_factory=dict)
     saved_formulas: dict = field(default_factory=dict)
@@ -210,7 +209,7 @@ class DeleteRowCommand(Command):
 class InsertColCommand(Command):
     """Command for inserting a column."""
 
-    spreadsheet: Spreadsheet
+    spreadsheet: SpreadsheetProtocol
     col: int
 
     def execute(self) -> None:
@@ -236,7 +235,7 @@ class InsertColCommand(Command):
 class DeleteColCommand(Command):
     """Command for deleting a column."""
 
-    spreadsheet: Spreadsheet
+    spreadsheet: SpreadsheetProtocol
     col: int
     saved_data: dict = field(default_factory=dict)
     saved_width: int | None = None
@@ -298,7 +297,7 @@ class DeleteColCommand(Command):
 class ClearRangeCommand(Command):
     """Command for clearing a range of cells."""
 
-    spreadsheet: Spreadsheet
+    spreadsheet: SpreadsheetProtocol
     start_row: int
     start_col: int
     end_row: int
@@ -351,7 +350,7 @@ class ClearRangeCommand(Command):
 class RangeFormatCommand(Command):
     """Command for changing the format of a range of cells."""
 
-    spreadsheet: Spreadsheet
+    spreadsheet: SpreadsheetProtocol
     changes: list[tuple[int, int, str, str]] = field(default_factory=list)
     # Each tuple: (row, col, new_format, old_format)
 
@@ -380,7 +379,7 @@ class RangeFormatCommand(Command):
 class ColWidthCommand(Command):
     """Command for changing column widths."""
 
-    spreadsheet: Spreadsheet
+    spreadsheet: SpreadsheetProtocol
     changes: dict[int, tuple[int, int]] = field(default_factory=dict)
     # Dict mapping col -> (new_width, old_width)
 

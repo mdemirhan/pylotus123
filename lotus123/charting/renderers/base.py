@@ -5,11 +5,9 @@ This module defines the interface that all chart type renderers must implement.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ...core.spreadsheet import Spreadsheet
-    from ..chart import Chart, ChartSeries
+from ...core.spreadsheet_protocol import SpreadsheetProtocol
+from ..chart import Chart, ChartSeries
 
 
 # Box drawing characters shared across renderers
@@ -47,7 +45,7 @@ class RenderContext:
     chart: Chart
     width: int
     height: int
-    spreadsheet: Spreadsheet | None = None
+    spreadsheet: SpreadsheetProtocol | None = None
 
     # Computed values (populated by prepare())
     all_values: list[float] = field(default_factory=list)
@@ -92,14 +90,14 @@ class RenderContext:
         self.plot_width = self.width - y_axis_width
 
 
-def get_series_values(series: ChartSeries, spreadsheet: Spreadsheet | None) -> list[float]:
+def get_series_values(series: ChartSeries, spreadsheet: SpreadsheetProtocol | None) -> list[float]:
     """Get numeric values from a chart series.
 
     Handles both direct values and spreadsheet range references.
 
     Args:
         series: The chart series to get values from
-        spreadsheet: Spreadsheet instance for range lookups
+        spreadsheet: SpreadsheetProtocol instance for range lookups
 
     Returns:
         List of float values
@@ -125,12 +123,12 @@ def get_series_values(series: ChartSeries, spreadsheet: Spreadsheet | None) -> l
     return []
 
 
-def get_x_labels(chart: Chart, spreadsheet: Spreadsheet | None) -> list[str]:
+def get_x_labels(chart: Chart, spreadsheet: SpreadsheetProtocol | None) -> list[str]:
     """Get X-axis labels from the chart's x_range.
 
     Args:
         chart: The chart with x_range set
-        spreadsheet: Spreadsheet instance for range lookups
+        spreadsheet: SpreadsheetProtocol instance for range lookups
 
     Returns:
         List of string labels for the X-axis

@@ -6,13 +6,10 @@ implementation that delegates to type-specific renderers.
 """
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 from .chart import Chart
 from .renderers import RenderContext, get_renderer
-
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
 
 
 class ChartRenderer(ABC):
@@ -39,11 +36,11 @@ class TextChartRenderer(ChartRenderer):
     This class delegates to type-specific renderers for each chart type.
     """
 
-    def __init__(self, spreadsheet: Spreadsheet | None = None) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol | None = None) -> None:
         """Initialize the text chart renderer.
 
         Args:
-            spreadsheet: Spreadsheet instance for resolving range references
+            spreadsheet: SpreadsheetProtocol instance for resolving range references
         """
         self.spreadsheet = spreadsheet
 

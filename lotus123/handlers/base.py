@@ -2,14 +2,15 @@
 
 from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol
 
+from ..charting import Chart
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
+from ..formula.recalc_types import RecalcMode, RecalcOrder
+from ..utils.undo import UndoManager
+
 if TYPE_CHECKING:
     from textual.screen import Screen
 
-    from ..charting import Chart
-    from ..core import Spreadsheet
-    from ..formula.recalc import RecalcMode, RecalcOrder
     from ..ui import SpreadsheetGrid
-    from ..utils.undo import UndoManager
 
 
 class AppProtocol(Protocol):
@@ -20,7 +21,7 @@ class AppProtocol(Protocol):
     """
 
     # Core data
-    spreadsheet: Spreadsheet
+    spreadsheet: SpreadsheetProtocol
     chart: Chart
     undo_manager: UndoManager
     config: Any  # AppConfig
@@ -122,7 +123,7 @@ class BaseHandler:
         self._pending_overwrite_cancel: str = ""
 
     @property
-    def spreadsheet(self) -> Spreadsheet:
+    def spreadsheet(self) -> SpreadsheetProtocol:
         """Access the spreadsheet data model."""
         return self._app.spreadsheet
 

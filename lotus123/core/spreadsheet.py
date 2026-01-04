@@ -8,10 +8,11 @@ from .errors import FormulaError
 from .formatting import format_value, parse_format_code
 from .named_ranges import NamedRangeManager
 from .reference import adjust_for_structural_change, adjust_formula_references, parse_cell_ref
+from ..formula.context import EvaluationContext
+from ..formula.recalc_types import RecalcMode, RecalcOrder
 
 if TYPE_CHECKING:
-    from ..formula.recalc import RecalcEngine, RecalcMode, RecalcOrder
-    from ..formula.evaluator import EvaluationContext
+    from ..formula.recalc import RecalcEngine
 
 
 # Lotus 1-2-3 dimensions

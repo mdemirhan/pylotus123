@@ -2,13 +2,10 @@
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Literal
+from typing import Callable, Literal
 
 from ..ui import THEMES, CommandInput, FileDialog, ThemeDialog, ThemeType
-from .base import BaseHandler
-
-if TYPE_CHECKING:
-    from .base import AppProtocol
+from .base import AppProtocol, BaseHandler
 
 
 class FileHandler(BaseHandler):

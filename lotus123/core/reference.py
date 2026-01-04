@@ -2,12 +2,9 @@
 
 import re
 from dataclasses import dataclass
-from typing import Iterator, TYPE_CHECKING
+from typing import Iterator
 
 from .errors import FormulaError
-
-if TYPE_CHECKING:
-    pass
 
 # Pattern for cell references: optional $ before column and/or row
 CELL_REF_PATTERN = re.compile(r"^(\$?)([A-Za-z]+)(\$?)(\d+)$")

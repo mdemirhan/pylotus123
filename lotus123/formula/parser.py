@@ -2,15 +2,13 @@
 
 import math
 import operator
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ..core.errors import FormulaError
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
+from .context import EvaluationContext
 from .functions import REGISTRY
 from .tokenizer import Token, Tokenizer, TokenType
-
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
-    from .evaluator import EvaluationContext
 
 
 class FormulaParser:
@@ -45,7 +43,9 @@ class FormulaParser:
         ">=": operator.ge,
     }
 
-    def __init__(self, spreadsheet: Spreadsheet, context: EvaluationContext | None = None) -> None:
+    def __init__(
+        self, spreadsheet: SpreadsheetProtocol, context: EvaluationContext | None = None
+    ) -> None:
         self.spreadsheet = spreadsheet
         # Use singleton registry to avoid expensive re-initialization
         self.functions = REGISTRY

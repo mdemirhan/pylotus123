@@ -1,16 +1,13 @@
 """Import/Export handler for CSV, TSV, WK1, and XLSX file formats."""
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import Callable
 
-from ..io.text_import import ImportFormat
 from ..io.text_export import ExportFormat
+from ..io.text_import import ImportFormat
 from ..ui import FileDialog
 from ..ui.dialogs import SheetSelectDialog
-from .base import BaseHandler
-
-if TYPE_CHECKING:
-    from .base import AppProtocol
+from .base import AppProtocol, BaseHandler
 
 
 class ImportExportHandler(BaseHandler):

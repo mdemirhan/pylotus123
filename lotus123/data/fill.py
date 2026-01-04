@@ -6,10 +6,9 @@ Implements /Data Fill command functionality.
 import datetime
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import Any, Iterator
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 
 class FillType(Enum):
@@ -43,7 +42,7 @@ class FillOperations:
     - Pattern detection and continuation
     """
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol) -> None:
         self.spreadsheet = spreadsheet
 
     def fill_series(

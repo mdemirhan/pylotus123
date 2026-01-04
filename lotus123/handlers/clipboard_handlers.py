@@ -1,15 +1,10 @@
 """Clipboard-related handler methods for LotusApp."""
 
-from typing import TYPE_CHECKING
-
 from ..core import adjust_formula_references, make_cell_ref, parse_cell_ref
 from ..ui import CommandInput
 from ..utils.os_clipboard import copy_to_clipboard, format_cells_as_tsv
 from ..utils.undo import CellChangeCommand, RangeChangeCommand
-from .base import BaseHandler
-
-if TYPE_CHECKING:
-    from .base import AppProtocol
+from .base import AppProtocol, BaseHandler
 
 
 class ClipboardHandler(BaseHandler):

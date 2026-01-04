@@ -11,10 +11,8 @@ import csv
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 
 class ExportFormat(Enum):
@@ -61,7 +59,7 @@ class ExportOptions:
 class TextExporter:
     """Export spreadsheet data to text files."""
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol) -> None:
         self.spreadsheet = spreadsheet
 
     def export_file(self, filename: str | Path, options: ExportOptions | None = None) -> int:

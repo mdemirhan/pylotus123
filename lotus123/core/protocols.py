@@ -4,10 +4,9 @@ These protocols define interfaces that allow components to interact
 without tight coupling to concrete implementations.
 """
 
-from typing import TYPE_CHECKING, Any, Iterator, Protocol
+from typing import Any, Iterator, Protocol
 
-if TYPE_CHECKING:
-    from .cell import Cell
+from .cell import Cell
 
 
 class CellStore(Protocol):

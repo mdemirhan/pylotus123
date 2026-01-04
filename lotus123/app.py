@@ -1,10 +1,6 @@
 """Lotus 1-2-3 Clone - Main TUI Application."""
 
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .formula.recalc import RecalcMode, RecalcOrder
 
 from textual import events, on
 from textual.app import App, ComposeResult
@@ -15,6 +11,7 @@ from textual.widgets import Footer, Input, Static
 
 from .charting import Chart, ChartType
 from .core import Spreadsheet, make_cell_ref
+from .formula.recalc_types import RecalcMode, RecalcOrder
 
 # Handler classes
 from .handlers import (
@@ -263,8 +260,6 @@ class LotusApp(App[None]):
         Args:
             mode: RecalcMode.AUTOMATIC or RecalcMode.MANUAL
         """
-        from .formula.recalc import RecalcMode
-
         self.recalc_mode = "manual" if mode == RecalcMode.MANUAL else "auto"
         self.spreadsheet.set_recalc_mode(mode)
 

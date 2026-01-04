@@ -12,10 +12,9 @@ References:
 
 import math
 import struct
-from typing import TYPE_CHECKING, BinaryIO
+from typing import BinaryIO
 
-if TYPE_CHECKING:
-    from ..core.spreadsheet import Spreadsheet
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
 # fmt: off
 # WK1 Record Opcodes (per Lotus 1-2-3 Release 2 specification)
@@ -1142,11 +1141,11 @@ def compile_formula(formula: str, formula_row: int = 0, formula_col: int = 0) ->
 class Wk1Reader:
     """Read Lotus WK1 files."""
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol) -> None:
         """Initialize reader with target spreadsheet.
 
         Args:
-            spreadsheet: Spreadsheet to load data into
+            spreadsheet: SpreadsheetProtocol to load data into
         """
         self.spreadsheet = spreadsheet
 
@@ -1477,11 +1476,11 @@ class Wk1Reader:
 class Wk1Writer:
     """Write Lotus WK1 files."""
 
-    def __init__(self, spreadsheet: Spreadsheet) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol) -> None:
         """Initialize writer with source spreadsheet.
 
         Args:
-            spreadsheet: Spreadsheet to save
+            spreadsheet: SpreadsheetProtocol to save
         """
         self.spreadsheet = spreadsheet
 

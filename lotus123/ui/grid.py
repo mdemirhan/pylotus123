@@ -13,7 +13,8 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Static
 
-from ..core import Spreadsheet, index_to_col, parse_cell_ref
+from ..core import index_to_col, parse_cell_ref
+from ..core.spreadsheet_protocol import SpreadsheetProtocol
 from ..core.cell import TextAlignment
 from .themes import Theme
 
@@ -58,7 +59,7 @@ class SpreadsheetGrid(Static, can_focus=True):
             self.end_col = end_col
             super().__init__()
 
-    def __init__(self, spreadsheet: Spreadsheet, theme: Theme, **kwargs: Any) -> None:
+    def __init__(self, spreadsheet: SpreadsheetProtocol, theme: Theme, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.spreadsheet = spreadsheet
         self.theme = theme

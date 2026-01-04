@@ -1,13 +1,10 @@
 """Data Query handler methods for LotusApp."""
 
-from typing import TYPE_CHECKING, Callable
+from typing import Callable
 
 from ..core import make_cell_ref, parse_cell_ref
 from ..ui import CommandInput
-from .base import BaseHandler
-
-if TYPE_CHECKING:
-    from .base import AppProtocol
+from .base import AppProtocol, BaseHandler
 
 
 class QueryHandler(BaseHandler):

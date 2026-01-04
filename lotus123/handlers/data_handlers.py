@@ -1,15 +1,10 @@
 """Data operation handler methods for LotusApp (fill, sort)."""
 
-from typing import TYPE_CHECKING
-
 from ..core import col_to_index, index_to_col
 from ..data.database import DatabaseOperations, SortKey, SortOrder
 from ..ui import CommandInput
 from ..utils.undo import RangeChangeCommand
-from .base import BaseHandler
-
-if TYPE_CHECKING:
-    from .base import AppProtocol
+from .base import AppProtocol, BaseHandler
 
 
 class DataHandler(BaseHandler):

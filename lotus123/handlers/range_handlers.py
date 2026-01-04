@@ -1,15 +1,10 @@
 """Range operation handler methods for LotusApp."""
 
-from typing import TYPE_CHECKING
-
 from ..core import make_cell_ref
 from ..core.formatting import normalize_format_code
 from ..ui import CommandInput
 from ..utils.undo import RangeChangeCommand, RangeFormatCommand
-from .base import BaseHandler
-
-if TYPE_CHECKING:
-    from .base import AppProtocol
+from .base import AppProtocol, BaseHandler
 
 
 class RangeHandler(BaseHandler):

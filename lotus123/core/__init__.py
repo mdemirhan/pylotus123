@@ -15,6 +15,7 @@ from .reference import (
     parse_range_ref,
 )
 from .spreadsheet import Spreadsheet
+from .spreadsheet_protocol import SpreadsheetProtocol
 
 __all__ = [
     "Cell",
@@ -34,6 +35,7 @@ __all__ = [
     "format_value",
     "parse_format_code",
     "Spreadsheet",
+    "SpreadsheetProtocol",
     "NamedRangeManager",
     "FormulaError",
     "ERROR_TYPE_MAP",

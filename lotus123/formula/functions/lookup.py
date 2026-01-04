@@ -5,12 +5,9 @@ Implements Lotus 1-2-3 compatible lookup functions:
 @CELL, @CELLPOINTER, @COLS, @ROWS
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ...core.errors import FormulaError
-
-if TYPE_CHECKING:
-    pass
 
 
 # These functions need access to the spreadsheet for range operations
