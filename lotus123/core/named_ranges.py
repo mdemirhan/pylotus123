@@ -84,8 +84,7 @@ class NamedRangeManager:
         """
         if not self.is_valid_name(name):
             raise ValueError(
-                f"Invalid name '{name}': must start with letter, "
-                "contain only letters, numbers, underscores"
+                f"Invalid name '{name}': must start with letter, contain only letters, numbers, underscores"
             )
 
         named_range = NamedRange(name, reference, description)

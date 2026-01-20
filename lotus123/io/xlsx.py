@@ -72,8 +72,7 @@ class XlsxImportWarnings:
 
         if self.sheet_count > 1:
             parts.append(
-                f"Workbook has {self.sheet_count} sheets. "
-                f"Imported '{self.imported_sheet_name}' only."
+                f"Workbook has {self.sheet_count} sheets. Imported '{self.imported_sheet_name}' only."
             )
 
         if self.unsupported_formulas:

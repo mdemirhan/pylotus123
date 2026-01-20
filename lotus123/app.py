@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from typing import override
+
 from textual import events, on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -355,6 +357,7 @@ class LotusApp(App[None]):
         }}
         """
 
+    @override
     def compose(self) -> ComposeResult:
         yield LotusMenu(self.color_theme, id="menu-bar")
         with Horizontal(id="cell-input-container"):
@@ -671,6 +674,7 @@ class LotusApp(App[None]):
     def action_save(self) -> None:
         self._file_handler.save()
 
+    @override
     def action_change_theme(self) -> None:
         self._file_handler.change_theme()
 

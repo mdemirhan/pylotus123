@@ -3,6 +3,8 @@
 Renders vertical bar charts with series values stacked on top of each other.
 """
 
+from typing import override
+
 from .base import (
     BOX_CORNER_BL,
     BOX_HORIZONTAL,
@@ -20,6 +22,7 @@ class StackedBarChartRenderer(ChartTypeRenderer):
     # Fill characters for different series
     FILL_CHARS = ["#", "@", "*", "+", "=", "%"]
 
+    @override
     def render(self, ctx: RenderContext) -> list[str]:
         """Render a stacked bar chart.
 

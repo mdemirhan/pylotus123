@@ -3,6 +3,8 @@
 Renders XY scatter plots with data points.
 """
 
+from typing import override
+
 from .base import (
     BOX_CORNER_BL,
     BOX_HORIZONTAL,
@@ -19,6 +21,7 @@ class ScatterChartRenderer(ChartTypeRenderer):
     # Default point marker
     POINT_MARKER = "*"
 
+    @override
     def render(self, ctx: RenderContext) -> list[str]:
         """Render an XY scatter plot.
 

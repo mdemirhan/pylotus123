@@ -68,7 +68,7 @@ def fn_false() -> bool:
     return False
 
 
-def fn_and(*args) -> bool:
+def fn_and(*args: Any) -> bool:
     """@AND - Logical AND.
 
     Returns TRUE if all arguments are true.
@@ -79,7 +79,7 @@ def fn_and(*args) -> bool:
     return all(_to_bool(v) for v in values)
 
 
-def fn_or(*args) -> bool:
+def fn_or(*args: Any) -> bool:
     """@OR - Logical OR.
 
     Returns TRUE if any argument is true.

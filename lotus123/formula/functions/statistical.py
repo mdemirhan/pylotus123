@@ -42,7 +42,7 @@ def _get_numbers(args: tuple[Any, ...]) -> list[float]:
     return numbers
 
 
-def fn_avg(*args) -> float:
+def fn_avg(*args: Any) -> float:
     """@AVG - Arithmetic mean of numeric values.
 
     Also known as @AVERAGE.
@@ -53,7 +53,7 @@ def fn_avg(*args) -> float:
     return sum(numbers) / len(numbers)
 
 
-def fn_count(*args) -> int:
+def fn_count(*args: Any) -> int:
     """@COUNT - Count of numeric values.
 
     Only counts cells containing numbers.
@@ -77,7 +77,7 @@ def fn_countblank(*args: Any) -> int:
     return sum(1 for v in values if v == "" or v is None)
 
 
-def fn_min(*args) -> float:
+def fn_min(*args: Any) -> float:
     """@MIN - Minimum numeric value."""
     numbers = _get_numbers(args)
     if not numbers:
@@ -85,7 +85,7 @@ def fn_min(*args) -> float:
     return min(numbers)
 
 
-def fn_max(*args) -> float:
+def fn_max(*args: Any) -> float:
     """@MAX - Maximum numeric value."""
     numbers = _get_numbers(args)
     if not numbers:
@@ -93,7 +93,7 @@ def fn_max(*args) -> float:
     return max(numbers)
 
 
-def fn_std(*args) -> float:
+def fn_std(*args: Any) -> float:
     """@STD - Sample standard deviation.
 
     Uses n-1 denominator (sample std dev).
@@ -126,7 +126,7 @@ def fn_stdp(*args: Any) -> float:
     return math.sqrt(variance)
 
 
-def fn_var(*args) -> float:
+def fn_var(*args: Any) -> float:
     """@VAR - Sample variance.
 
     Uses n-1 denominator.
@@ -401,7 +401,7 @@ def fn_fact(n: Any) -> int:
     return result
 
 
-def fn_sum(*args) -> float:
+def fn_sum(*args: Any) -> float:
     """@SUM - Sum of numeric values."""
     numbers = _get_numbers(args)
     return sum(numbers)
@@ -424,7 +424,7 @@ def fn_product(*args: Any) -> float:
     return result
 
 
-def fn_geomean(*args) -> float:
+def fn_geomean(*args: Any) -> float:
     """@GEOMEAN - Geometric mean."""
     numbers = _get_numbers(args)
     if not numbers:
@@ -437,7 +437,7 @@ def fn_geomean(*args) -> float:
     return product ** (1 / len(numbers))
 
 
-def fn_harmean(*args) -> float:
+def fn_harmean(*args: Any) -> float:
     """@HARMEAN - Harmonic mean."""
     numbers = _get_numbers(args)
     if not numbers:

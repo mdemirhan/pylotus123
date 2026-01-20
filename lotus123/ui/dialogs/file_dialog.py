@@ -5,7 +5,7 @@ with directory tree navigation and filename input.
 """
 
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, override
 
 from textual import on
 from textual.app import ComposeResult
@@ -38,6 +38,7 @@ class FilteredDirectoryTree(DirectoryTree):
         self._show_all = show_all
         self.reload()
 
+    @override
     def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
         """Filter paths to only show matching extensions."""
         if self._show_all or not self._extensions:
@@ -134,6 +135,7 @@ class FileDialog(ModalScreen[str | None]):
         self._current_path = Path(initial_path).resolve()
         self._tree_counter = 0  # For generating unique tree IDs
 
+    @override
     def compose(self) -> ComposeResult:
         if self._custom_title:
             title = self._custom_title

@@ -6,7 +6,8 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "openpyxl>=3.1.0",
-    "textual>=7.0.0",
+    "ruff==0.14.13",
+    "textual==7.3.0",
 ]
 
 [project.scripts]
@@ -25,7 +26,7 @@ addopts = "-m 'not slow'"
 
 [dependency-groups]
 dev = [
-    "basedpyright>=1.37.0",
+    "basedpyright>=1.37.1",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
     "pytest-cov>=7.0.0",
@@ -36,6 +37,12 @@ dev = [
 [tool.basedpyright]
 pythonVersion = "3.14"
 typeCheckingMode = "standard"  # Not "strict" or "all"
+reportImplicitOverride = true
+reportIncompatibleMethodOverride = true
+reportImplicitStringConcatenation = true
+reportCallInDefaultInitializer = "warning"
+reportMissingParameterType = "warning"
+reportUnnecessaryCast = true
 # Loosen the most annoying rules
 reportAny = false                       # Don't flag every Any usage
 reportUnknownMemberType = false         # Too noisy with third-party libs
@@ -53,6 +60,8 @@ reportUnknownMemberType = false
 reportAttributeAccessIssue = false
 reportArgumentType = false
 reportAny = false
+reportCallInDefaultInitializer = "none"
+reportMissingParameterType = "none"
 
 [tool.ruff]
 line-length = 100

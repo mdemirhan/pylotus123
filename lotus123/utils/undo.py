@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Sequence
+from typing import Sequence, override
 
 from ..core.spreadsheet_protocol import SpreadsheetProtocol
 
@@ -44,6 +44,7 @@ class CellChangeCommand(Command):
     old_format: str = "G"
     new_format: str | None = None
 
+    @override
     def execute(self) -> None:
         """Set the new value."""
         cell = self.spreadsheet.get_cell(self.row, self.col)
@@ -59,6 +60,7 @@ class CellChangeCommand(Command):
 
         self.spreadsheet.invalidate_cache()
 
+    @override
     def undo(self) -> None:
         """Restore the old value."""
         cell = self.spreadsheet.get_cell(self.row, self.col)
@@ -71,6 +73,7 @@ class CellChangeCommand(Command):
 
         self.spreadsheet.invalidate_cache()
 
+    @override
     def redo(self) -> None:
         """Set the new value again."""
         cell = self.spreadsheet.get_cell(self.row, self.col)
@@ -85,6 +88,7 @@ class CellChangeCommand(Command):
         self.spreadsheet.invalidate_cache()
 
     @property
+    @override
     def description(self) -> str:
         from ..core.reference import make_cell_ref
 
@@ -99,6 +103,7 @@ class RangeChangeCommand(Command):
     changes: list[tuple[int, int, str, str]] = field(default_factory=list)
     # Each tuple: (row, col, new_value, old_value)
 
+    @override
     def execute(self) -> None:
         """Apply all changes."""
         for row, col, new_val, _ in self.changes:
@@ -109,6 +114,7 @@ class RangeChangeCommand(Command):
             self.spreadsheet.update_cell_dependency(row, col, formula)
         self.spreadsheet.invalidate_cache()
 
+    @override
     def undo(self) -> None:
         """Restore all old values."""
         for row, col, _, old_val in self.changes:
@@ -119,11 +125,13 @@ class RangeChangeCommand(Command):
             self.spreadsheet.update_cell_dependency(row, col, formula)
         self.spreadsheet.invalidate_cache()
 
+    @override
     def redo(self) -> None:
         """Apply all changes again."""
         self.execute()
 
     @property
+    @override
     def description(self) -> str:
         return f"Edit {len(self.changes)} cells"
 
@@ -136,19 +144,23 @@ class InsertRowCommand(Command):
     row: int
     deleted_data: dict = field(default_factory=dict)
 
+    @override
     def execute(self) -> None:
         """Insert the row."""
         self.spreadsheet.insert_row(self.row)
 
+    @override
     def undo(self) -> None:
         """Delete the inserted row."""
         self.spreadsheet.delete_row(self.row)
 
+    @override
     def redo(self) -> None:
         """Insert the row again."""
         self.execute()
 
     @property
+    @override
     def description(self) -> str:
         return f"Insert row {self.row + 1}"
 
@@ -162,6 +174,7 @@ class DeleteRowCommand(Command):
     saved_data: dict = field(default_factory=dict)
     saved_formulas: dict = field(default_factory=dict)
 
+    @override
     def execute(self) -> None:
         """Delete the row, saving its data."""
         # Save all cells in this row
@@ -177,6 +190,7 @@ class DeleteRowCommand(Command):
 
         self.spreadsheet.delete_row(self.row)
 
+    @override
     def undo(self) -> None:
         """Restore the deleted row."""
         # First insert the row back
@@ -196,11 +210,13 @@ class DeleteRowCommand(Command):
         self.spreadsheet.invalidate_cache()
         self.spreadsheet.rebuild_dependency_graph()
 
+    @override
     def redo(self) -> None:
         """Delete the row again."""
         self.spreadsheet.delete_row(self.row)
 
     @property
+    @override
     def description(self) -> str:
         return f"Delete row {self.row + 1}"
 
@@ -212,19 +228,23 @@ class InsertColCommand(Command):
     spreadsheet: SpreadsheetProtocol
     col: int
 
+    @override
     def execute(self) -> None:
         """Insert the column."""
         self.spreadsheet.insert_col(self.col)
 
+    @override
     def undo(self) -> None:
         """Delete the inserted column."""
         self.spreadsheet.delete_col(self.col)
 
+    @override
     def redo(self) -> None:
         """Insert the column again."""
         self.execute()
 
     @property
+    @override
     def description(self) -> str:
         from ..core.reference import index_to_col
 
@@ -241,6 +261,7 @@ class DeleteColCommand(Command):
     saved_width: int | None = None
     saved_formulas: dict = field(default_factory=dict)
 
+    @override
     def execute(self) -> None:
         """Delete the column, saving its data."""
         # Save all cells in this column
@@ -259,6 +280,7 @@ class DeleteColCommand(Command):
 
         self.spreadsheet.delete_col(self.col)
 
+    @override
     def undo(self) -> None:
         """Restore the deleted column."""
         # First insert the column back
@@ -282,11 +304,13 @@ class DeleteColCommand(Command):
         self.spreadsheet.invalidate_cache()
         self.spreadsheet.rebuild_dependency_graph()
 
+    @override
     def redo(self) -> None:
         """Delete the column again."""
         self.spreadsheet.delete_col(self.col)
 
     @property
+    @override
     def description(self) -> str:
         from ..core.reference import index_to_col
 
@@ -304,6 +328,7 @@ class ClearRangeCommand(Command):
     end_col: int
     saved_data: dict = field(default_factory=dict)
 
+    @override
     def execute(self) -> None:
         """Clear the range, saving its data."""
         self.saved_data = {}
@@ -318,6 +343,7 @@ class ClearRangeCommand(Command):
 
         self.spreadsheet.invalidate_cache()
 
+    @override
     def undo(self) -> None:
         """Restore the cleared data."""
         for (r, c), cell_data in self.saved_data.items():
@@ -329,6 +355,7 @@ class ClearRangeCommand(Command):
 
         self.spreadsheet.invalidate_cache()
 
+    @override
     def redo(self) -> None:
         """Clear the range again."""
         for r in range(self.start_row, self.end_row + 1):
@@ -342,6 +369,7 @@ class ClearRangeCommand(Command):
         self.spreadsheet.invalidate_cache()
 
     @property
+    @override
     def description(self) -> str:
         return "Clear range"
 
@@ -354,23 +382,27 @@ class RangeFormatCommand(Command):
     changes: list[tuple[int, int, str, str]] = field(default_factory=list)
     # Each tuple: (row, col, new_format, old_format)
 
+    @override
     def execute(self) -> None:
         """Apply format to all cells."""
         for row, col, new_fmt, _ in self.changes:
             cell = self.spreadsheet.get_cell(row, col)
             cell.format_code = new_fmt
 
+    @override
     def undo(self) -> None:
         """Restore all old formats."""
         for row, col, _, old_fmt in self.changes:
             cell = self.spreadsheet.get_cell(row, col)
             cell.format_code = old_fmt
 
+    @override
     def redo(self) -> None:
         """Apply format again."""
         self.execute()
 
     @property
+    @override
     def description(self) -> str:
         return f"Format {len(self.changes)} cells"
 
@@ -383,21 +415,25 @@ class ColWidthCommand(Command):
     changes: dict[int, tuple[int, int]] = field(default_factory=dict)
     # Dict mapping col -> (new_width, old_width)
 
+    @override
     def execute(self) -> None:
         """Apply new widths."""
         for col, (new_width, _) in self.changes.items():
             self.spreadsheet.set_col_width(col, new_width)
 
+    @override
     def undo(self) -> None:
         """Restore old widths."""
         for col, (_, old_width) in self.changes.items():
             self.spreadsheet.set_col_width(col, old_width)
 
+    @override
     def redo(self) -> None:
         """Apply new widths again."""
         self.execute()
 
     @property
+    @override
     def description(self) -> str:
         if len(self.changes) == 1:
             col = next(iter(self.changes.keys()))
@@ -414,22 +450,26 @@ class CompositeCommand(Command):
         self._commands = list(commands)
         self._description = description
 
+    @override
     def execute(self) -> None:
         """Execute all commands in order."""
         for cmd in self._commands:
             cmd.execute()
 
+    @override
     def undo(self) -> None:
         """Undo all commands in reverse order."""
         for cmd in reversed(self._commands):
             cmd.undo()
 
+    @override
     def redo(self) -> None:
         """Redo all commands in order."""
         for cmd in self._commands:
             cmd.redo()
 
     @property
+    @override
     def description(self) -> str:
         return self._description
 

@@ -33,7 +33,7 @@ def _flatten_args(args: tuple) -> list:
     return result
 
 
-def fn_sum(*args) -> float:
+def fn_sum(*args: Any) -> float:
     """@SUM - Sum of all numeric values.
 
     Can take individual values, ranges, or mixed arguments.

@@ -6,6 +6,7 @@ implementation that delegates to type-specific renderers.
 """
 
 from abc import ABC, abstractmethod
+from typing import override
 
 from ..core.spreadsheet_protocol import SpreadsheetProtocol
 from .chart import Chart
@@ -44,6 +45,7 @@ class TextChartRenderer(ChartRenderer):
         """
         self.spreadsheet = spreadsheet
 
+    @override
     def render(self, chart: Chart, width: int, height: int) -> list[str]:
         """Render a chart to text.
 

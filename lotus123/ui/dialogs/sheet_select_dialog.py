@@ -4,7 +4,7 @@ Provides a modal dialog for selecting which sheet to import from an
 Excel workbook with multiple sheets.
 """
 
-from typing import Any
+from typing import Any, override
 
 from textual import on
 from textual.app import ComposeResult
@@ -22,6 +22,7 @@ class SheetItem(ListItem):
         self.sheet_name = sheet_name
         self.index = index
 
+    @override
     def compose(self) -> ComposeResult:
         yield Label(f"  {self.index + 1}. {self.sheet_name}")
 
@@ -101,6 +102,7 @@ class SheetSelectDialog(ModalScreen[str | None]):
         super().__init__(**kwargs)
         self.sheet_names = sheet_names
 
+    @override
     def compose(self) -> ComposeResult:
         with Container(id="sheet-dialog-container"):
             yield Label(

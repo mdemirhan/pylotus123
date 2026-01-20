@@ -3,6 +3,8 @@
 Renders line charts with data points and optional connecting lines.
 """
 
+from typing import override
+
 from .base import (
     BOX_CORNER_BL,
     BOX_HORIZONTAL,
@@ -20,6 +22,7 @@ class LineChartRenderer(ChartTypeRenderer):
     # Symbols for different data series
     SYMBOLS = ["*", "+", "o", "x", "#", "@"]
 
+    @override
     def render(self, ctx: RenderContext) -> list[str]:
         """Render a line chart.
 

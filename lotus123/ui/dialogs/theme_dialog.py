@@ -4,7 +4,7 @@ Provides a modal dialog for selecting the application color theme
 with keyboard and mouse support.
 """
 
-from typing import Any
+from typing import Any, override
 
 from textual import on
 from textual.app import ComposeResult
@@ -24,6 +24,7 @@ class ThemeItem(ListItem):
         self.theme_type = theme_type
         self.theme_data = theme
 
+    @override
     def compose(self) -> ComposeResult:
         yield Label(f"  {self.theme_data.name}")
 
@@ -80,6 +81,7 @@ class ThemeDialog(ModalScreen[ThemeType | None]):
         self.current = current
         self._theme_types = list(THEMES.keys())
 
+    @override
     def compose(self) -> ComposeResult:
         num_themes = len(self._theme_types)
         with Container(id="theme-dialog-container"):

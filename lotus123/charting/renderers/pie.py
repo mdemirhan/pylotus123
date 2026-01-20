@@ -3,6 +3,8 @@
 Renders pie charts using ASCII representation with percentage bars.
 """
 
+from typing import override
+
 from .base import ChartTypeRenderer, RenderContext, get_series_values, get_x_labels
 
 
@@ -12,6 +14,7 @@ class PieChartRenderer(ChartTypeRenderer):
     # Symbols for different slices
     SYMBOLS = ["#", "@", "*", "+", "=", "-"]
 
+    @override
     def render(self, ctx: RenderContext) -> list[str]:
         """Render a pie chart.
 

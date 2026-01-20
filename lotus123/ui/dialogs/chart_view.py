@@ -3,7 +3,7 @@
 Provides a modal screen for displaying rendered ASCII/Unicode charts.
 """
 
-from typing import Any
+from typing import Any, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -49,6 +49,7 @@ class ChartViewScreen(ModalScreen[None]):
         super().__init__(**kwargs)
         self.chart_lines = chart_lines
 
+    @override
     def compose(self) -> ComposeResult:
         with Container(id="chart-container"):
             yield Static("\n".join(self.chart_lines), id="chart-content")

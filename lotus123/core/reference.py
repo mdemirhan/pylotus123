@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass
-from typing import Iterator
+from typing import Iterator, override
 
 from .errors import FormulaError
 
@@ -162,12 +162,15 @@ class CellReference:
         new_col = self.col if self.col_absolute else min(max(0, self.col + col_delta), max_col)
         return CellReference(new_row, new_col, self.col_absolute, self.row_absolute)
 
+    @override
     def __str__(self) -> str:
         return self.to_string()
 
+    @override
     def __hash__(self) -> int:
         return hash((self.row, self.col))
 
+    @override
     def __eq__(self, other: object) -> bool:
         if isinstance(other, CellReference):
             return self.row == other.row and self.col == other.col
@@ -255,6 +258,7 @@ class RangeReference:
         norm = self.normalized
         return norm.start.row <= row <= norm.end.row and norm.start.col <= col <= norm.end.col
 
+    @override
     def __str__(self) -> str:
         return self.to_string()
 

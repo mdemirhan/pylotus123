@@ -4,7 +4,7 @@ Provides a modal dialog for entering commands like Goto cell reference,
 column width values, and other text inputs.
 """
 
-from typing import Any
+from typing import Any, override
 
 from textual import on
 from textual.app import ComposeResult
@@ -46,6 +46,7 @@ class CommandInput(ModalScreen[str | None]):
         self.prompt = prompt
         self.default = default
 
+    @override
     def compose(self) -> ComposeResult:
         with Container(id="cmd-dialog-container"):
             yield Label(self.prompt, id="cmd-prompt")

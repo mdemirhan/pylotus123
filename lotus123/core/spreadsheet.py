@@ -1,7 +1,7 @@
 """Main spreadsheet class with expanded dimensions and features."""
 
 import math
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator, override
 
 from .cell import Cell, TextAlignment
 from .errors import FormulaError
@@ -998,6 +998,7 @@ class Spreadsheet:
     # Utility
     # -------------------------------------------------------------------------
 
+    @override
     def __repr__(self) -> str:
         cell_count = sum(1 for c in self._cells.values() if not c.is_empty)
         return f"Spreadsheet({self.rows}x{self.cols}, {cell_count} cells)"
