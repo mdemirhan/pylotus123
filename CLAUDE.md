@@ -2,6 +2,10 @@
 
 Terminal spreadsheet app (Python/Textual). 256x65536 grid, 180+ formulas, charting, multi-format I/O.
 
+## Guidelines
+
+- Do NOT add backwards compatibility unless explicitly requested.
+
 ## Commands
 
 ```bash
